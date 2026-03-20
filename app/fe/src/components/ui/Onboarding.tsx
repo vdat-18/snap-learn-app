@@ -70,6 +70,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
     const { setTargetLanguage } = useGameStore();
     const [currentSlide, setCurrentSlide] = useState(0);
     const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'zh' | null>(null);
+    const [dragX, setDragX] = useState(0);
 
     // Auto-play TTS on slide change (except language select)
     useEffect(() => {
@@ -92,6 +93,12 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
             setCurrentSlide(currentSlide + 1);
         } else {
             onFinish();
+        }
+    };
+
+    const previousSlide = () => {
+        if (currentSlide > 0) {
+            setCurrentSlide(currentSlide - 1);
         }
     };
 
@@ -124,13 +131,54 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                 </button>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 flex flex-col items-center justify-center px-6">
+            {/* Content - Swipe-enabled */}
+            <div 
+                className="flex-1 flex flex-col items-center justify-center px-6 cursor-grab active:cursor-grabbing"
+                onMouseDown={(e) => {
+                    const startX = e.clientX;
+                    const handleMouseMove = (moveEvent: MouseEvent) => {
+                        setDragX(moveEvent.clientX - startX);
+                    };
+                    const handleMouseUp = (upEvent: MouseEvent) => {
+                        const endX = upEvent.clientX;
+                        const distance = endX - startX;
+                        if (distance > 50) {
+                            previousSlide(); // Swiped right
+                        } else if (distance < -50) {
+                            nextSlide(); // Swiped left
+                        }
+                        setDragX(0);
+                        document.removeEventListener('mousemove', handleMouseMove);
+                        document.removeEventListener('mouseup', handleMouseUp);
+                    };
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                }}
+                onTouchStart={(e) => {
+                    const startX = e.touches[0].clientX;
+                    const handleTouchMove = (moveEvent: React.TouchEvent) => {
+                        setDragX(moveEvent.touches[0].clientX - startX);
+                    };
+                    const handleTouchEnd = (upEvent: React.TouchEvent) => {
+                        const endX = upEvent.changedTouches[0].clientX;
+                        const distance = endX - startX;
+                        if (distance > 50) {
+                            previousSlide(); // Swiped right
+                        } else if (distance < -50) {
+                            nextSlide(); // Swiped left
+                        }
+                        setDragX(0);
+                    };
+                    const element = e.currentTarget;
+                    element.addEventListener('touchmove', handleTouchMove as any);
+                    element.addEventListener('touchend', handleTouchEnd as any);
+                }}
+            >
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentSlide}
                         initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
+                        animate={{ opacity: 1, x: dragX }}
                         exit={{ opacity: 0, x: -50 }}
                         transition={{ duration: 0.3 }}
                         className="flex flex-col items-center w-full"
@@ -165,6 +213,13 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                                         {activeSlide.btnLabel}
                                         {currentSlide !== slides.length - 1 && <ArrowRight className="w-6 h-6 stroke-[3px]" />}
                                     </button>
+
+                                    {/* Swipe hint */}
+                                    {currentSlide > 0 && currentSlide < slides.length - 1 && (
+                                        <p className="text-xs text-slate-400 font-bold mt-4">
+                                            ← Swipe or tap → to navigate
+                                        </p>
+                                    )}
                                 </div>
                             </>
                         )}

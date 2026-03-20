@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
+import { useSoundEffects } from '../../hooks/useSoundEffects';
+import { triggerSparkles } from '../../utils/confetti';
 
 export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
 
@@ -15,6 +17,7 @@ interface RevealCardProps {
     rarity: Rarity;
     imageUrl: string;
     category: string;
+    onCardFlyToCollection?: () => void;
 }
 
 const rarityGlowMap: Record<Rarity, string> = {
@@ -71,6 +74,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
     rarity,
     imageUrl,
     category,
+    onCardFlyToCollection,
 }) => {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState('');
@@ -78,7 +82,10 @@ const RevealCard: React.FC<RevealCardProps> = ({
     const [attemptCount, setAttemptCount] = useState(0);
     const [stars, setStars] = useState<PronunciationTier | null>(null);
     const [showAutoCloseMessage, setShowAutoCloseMessage] = useState(false);
+    const [isFlyingToCollection, setIsFlyingToCollection] = useState(false);
+    const cardRef = useRef<HTMLDivElement>(null);
     const { addCollection, target_language, secondary_language } = useGameStore();
+    const { playSound } = useSoundEffects();
 
     // Auto-play TTS sequence when card opens (audio-first principle)
     useEffect(() => {
@@ -231,6 +238,21 @@ const RevealCard: React.FC<RevealCardProps> = ({
                     practiceCount: newAttemptCount,
                     isEvolved: false
                 });
+
+                // Trigger card fly-to-collection animation after 1.5 seconds
+                setTimeout(() => {
+                    setIsFlyingToCollection(true);
+                    playSound('reveal');
+                    triggerSparkles(window.innerWidth / 2, window.innerHeight / 2);
+                    
+                    // Close after flight animation completes (1.2 seconds)
+                    setTimeout(() => {
+                        if (onCardFlyToCollection) {
+                            onCardFlyToCollection();
+                        }
+                        onClose();
+                    }, 1200);
+                }, 1500);
             }
         };
 
@@ -262,10 +284,23 @@ const RevealCard: React.FC<RevealCardProps> = ({
 
                     {/* Card Content */}
                     <motion.div
+                        ref={cardRef}
                         initial={{ y: '100%' }}
-                        animate={{ y: 0 }}
+                        animate={isFlyingToCollection ? { 
+                            scale: 0.1, 
+                            x: window.innerWidth - 100, 
+                            y: window.innerHeight - 140,
+                            opacity: 0
+                        } : { y: 0 }}
                         exit={{ y: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        transition={isFlyingToCollection ? { 
+                            duration: 1.2, 
+                            ease: 'easeInOut' 
+                        } : { 
+                            type: 'spring', 
+                            damping: 25, 
+                            stiffness: 200 
+                        }}
                         className="relative w-full max-w-md bg-white rounded-t-[32px] p-8 pb-12 shadow-level-3"
                     >
                         {/* Close Button */}

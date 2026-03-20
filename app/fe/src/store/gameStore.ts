@@ -80,6 +80,19 @@ interface GameState {
     syncLevel: () => void;
     clearLevelUpMessage: () => void;
     
+    // Daily Time Limit (Phase 4.7)
+    dailyLimitMinutes: number;
+    todayUsageSeconds: number;
+    lastUsageDate: string | null;
+    setDailyLimitMinutes: (minutes: number) => void;
+    incrementUsageSeconds: () => void;
+    isTimeLimitExceeded: () => boolean;
+    checkAndResetDailyUsage: () => void;
+    
+    // Online status tracking (Phase 4.2)
+    isOnline: boolean;
+    setIsOnline: (online: boolean) => void;
+    
     // General
     setOnboardingSeen: () => void;
     addCollection: (word: CapturedWord) => void;
@@ -113,8 +126,41 @@ export const useGameStore = create<GameState>()(
             quests: [],
             lastStreakUpdateDate: null,
             levelUpMessage: null,
+            dailyLimitMinutes: 30, // Default 30 minutes
+            todayUsageSeconds: 0,
+            lastUsageDate: null,
+            isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
 
             setOnboardingSeen: () => set({ hasSeenOnboarding: true }),
+
+            // Daily Time Limit (Phase 4.7)
+            setDailyLimitMinutes: (minutes: number) => set({ dailyLimitMinutes: Math.max(15, Math.min(minutes, 120)) }),
+
+            incrementUsageSeconds: () => {
+                const state = get();
+                const today = new Date().toDateString();
+                if (state.lastUsageDate !== today) {
+                    // New day, reset counter
+                    set({ todayUsageSeconds: 1, lastUsageDate: today });
+                } else {
+                    set({ todayUsageSeconds: state.todayUsageSeconds + 1 });
+                }
+            },
+
+            isTimeLimitExceeded: (): boolean => {
+                const state = get();
+                return state.todayUsageSeconds >= state.dailyLimitMinutes * 60;
+            },
+
+            checkAndResetDailyUsage: () => {
+                const state = get();
+                const today = new Date().toDateString();
+                if (state.lastUsageDate && state.lastUsageDate !== today) {
+                    set({ todayUsageSeconds: 0, lastUsageDate: today });
+                }
+            },
+
+            setIsOnline: (online: boolean) => set({ isOnline: online }),
 
             // Check and update streak based on date
             checkAndUpdateStreak: () => {

@@ -104,8 +104,8 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                                 })}
                             </div>
                         ) : (
-                            /* Vocab Word Grid */
-                            <div className="grid grid-cols-2 gap-4">
+                            /* Vocab Word Grid - 3-4 columns for compact view */
+                            <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
                                 {getCategoryWords(selectedCategory).map((word) => (
                                     <motion.button
                                         key={word.id}
@@ -113,27 +113,27 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                                         animate={{ opacity: 1, scale: 1 }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => setSelectedWord(word)}
-                                        className="bg-white rounded-[24px] overflow-hidden shadow-level-2 border-b-4 border-slate-100 text-left"
+                                        className="bg-white rounded-[16px] overflow-hidden shadow-level-1 border-b-2 border-slate-100 text-left"
                                     >
                                         <div className="aspect-square w-full relative">
                                             <img src={word.image} alt={word.word_en} className="w-full h-full object-cover" />
                                             {word.isEvolved && (
-                                                <div className="absolute top-2 left-2 bg-sunshineYellow p-1 rounded-lg shadow-sm">
-                                                    <Sparkles className="w-4 h-4 text-deepNavy" />
+                                                <div className="absolute top-1 left-1 bg-sunshineYellow p-0.5 rounded-lg shadow-sm">
+                                                    <Sparkles className="w-3 h-3 text-deepNavy" />
                                                 </div>
                                             )}
-                                            <div className="absolute top-2 right-2 px-2 py-1 bg-white/90 backdrop-blur rounded-lg text-[10px] font-black text-deepNavy shadow-sm uppercase tracking-tighter">
-                                                {word.rarity}
+                                            <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-white/90 backdrop-blur rounded text-[8px] font-black text-deepNavy shadow-sm uppercase tracking-tighter">
+                                                {word.rarity.substring(0, 3)}
                                             </div>
                                         </div>
-                                        <div className="p-3 text-center">
-                                            <h4 className="font-black text-deepNavy leading-tight mb-1">{word.word_vi}</h4>
-                                            <p className="text-xs font-bold text-sky-400">{word.word_en}</p>
-                                            <div className="flex justify-center mt-2 gap-0.5">
+                                        <div className="p-2 text-center">
+                                            <h4 className="font-black text-deepNavy leading-tight text-xs mb-0.5">{word.word_vi}</h4>
+                                            <p className="text-[10px] font-bold text-sky-400">{word.word_en}</p>
+                                            <div className="flex justify-center mt-1 gap-0.5">
                                                 {[1, 2, 3].map(s => (
                                                     <Star
                                                         key={s}
-                                                        className={`w-3 h-3 ${s <= word.stars ? 'text-sunshineYellow fill-sunshineYellow' : 'text-slate-200 fill-slate-200'}`}
+                                                        className={`w-2 h-2 ${s <= word.stars ? 'text-sunshineYellow fill-sunshineYellow' : 'text-slate-200 fill-slate-200'}`}
                                                     />
                                                 ))}
                                             </div>
@@ -142,10 +142,10 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                                 ))}
 
                                 {/* Locked Placeholders */}
-                                {Array.from({ length: Math.max(0, 4 - getCategoryWords(selectedCategory).length) }).map((_, i) => (
-                                    <div key={`lock-${i}`} className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[24px] aspect-square flex flex-col items-center justify-center opacity-40 grayscale">
-                                        <Lock className="w-8 h-8 text-slate-300" />
-                                        <span className="text-[10px] font-black mt-2 text-slate-300">LOCKED</span>
+                                {Array.from({ length: Math.max(0, 12 - getCategoryWords(selectedCategory).length) }).map((_, i) => (
+                                    <div key={`lock-${i}`} className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[16px] aspect-square flex flex-col items-center justify-center opacity-40 grayscale">
+                                        <Lock className="w-5 h-5 text-slate-300" />
+                                        <span className="text-[8px] font-black mt-1 text-slate-300">LOCKED</span>
                                     </div>
                                 ))}
                             </div>

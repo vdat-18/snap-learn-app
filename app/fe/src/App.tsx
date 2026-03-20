@@ -9,8 +9,10 @@ import LoginScreen from './components/ui/LoginScreen';
 import LevelUpCelebration from './components/ui/LevelUpCelebration';
 import DuplicateCaptureModal from './components/ui/DuplicateCaptureModal';
 import MissionOverlay from './components/ui/MissionOverlay';
+import ErrorOverlay from './components/ui/ErrorOverlay';
+import AIProcessingLoading from './components/ui/AIProcessingLoading';
 import { useGameStore } from './store/gameStore';
-import { Settings, Book, BarChart3, User, Scan, Target } from 'lucide-react';
+import { Settings, Book, BarChart3, User, Scan, Target, Wifi, WifiOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const App: React.FC = () => {
@@ -22,11 +24,57 @@ const App: React.FC = () => {
   const [isRankOpen, setIsRankOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [cameraError, setCameraError] = useState(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [showTimeLimitError, setShowTimeLimitError] = useState(false);
+  const [bookBounce, setBookBounce] = useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
   // Connect to global state
-  const { xp, level, streak, userName, addXP, recordCapture, hasSeenOnboarding, setOnboardingSeen } = useGameStore();
+  const { 
+    xp, 
+    level, 
+    streak, 
+    userName, 
+    addXP, 
+    recordCapture, 
+    hasSeenOnboarding, 
+    setOnboardingSeen,
+    isTimeLimitExceeded,
+    checkAndResetDailyUsage,
+    incrementUsageSeconds,
+    setIsOnline: setStoreOnline
+  } = useGameStore();
+
+  // Track online/offline status
+  React.useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setStoreOnline(true);
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setStoreOnline(false);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [setStoreOnline]);
+
+  // Track daily usage time when app is active
+  React.useEffect(() => {
+    checkAndResetDailyUsage();
+    const interval = setInterval(() => {
+      incrementUsageSeconds();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [checkAndResetDailyUsage, incrementUsageSeconds]);
 
   // Handle Splash Screen Timeout
   React.useEffect(() => {
@@ -63,6 +111,17 @@ const App: React.FC = () => {
    }, [showSplash, userName, hasSeenOnboarding]);
 
   const handleCaptureClick = () => {
+    // Check if capture is allowed
+    if (isTimeLimitExceeded()) {
+      setShowTimeLimitError(true);
+      return;
+    }
+
+    if (!isOnline) {
+      // Disable capture when offline
+      return;
+    }
+
     if (!videoRef.current || !canvasRef.current) return;
 
     const video = videoRef.current;
@@ -127,6 +186,12 @@ const App: React.FC = () => {
             {/* Global Overlays */}
             <LevelUpCelebration />
             <DuplicateCaptureModal />
+            <ErrorOverlay 
+              type="time-limit"
+              isVisible={showTimeLimitError}
+              onClose={() => setShowTimeLimitError(false)}
+            />
+            <AIProcessingLoading isVisible={false} />
 
            {/* Camera Permission Denied Overlay */}
            {cameraError && (
@@ -193,7 +258,26 @@ const App: React.FC = () => {
            )}
 
            {/* Hidden Canvas for Capture */}
-          <canvas ref={canvasRef} className="hidden" />
+           <canvas ref={canvasRef} className="hidden" />
+
+           {/* Offline Mode Banner */}
+           <AnimatePresence>
+             {!isOnline && (
+               <motion.div
+                 initial={{ opacity: 0, y: -20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -20 }}
+                 className="fixed top-20 left-0 right-0 z-[100] flex justify-center pointer-events-none px-4"
+               >
+                 <div className="bg-deepNavy/95 backdrop-blur-lg border border-white/20 rounded-[20px] px-6 py-3 shadow-lg flex items-center gap-3 max-w-sm">
+                   <WifiOff className="w-5 h-5 text-coralRed flex-shrink-0" />
+                   <p className="font-bold text-white text-sm">
+                     📡 Mất kết nối! Xem bộ sưu tập trong lúc chờ nhé.
+                   </p>
+                 </div>
+               </motion.div>
+             )}
+           </AnimatePresence>
 
           {/* 1. TOP HUD (Head-Up Display) */}
           <div className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 pt-12 pb-4 pointer-events-none">
@@ -292,17 +376,20 @@ const App: React.FC = () => {
           {/* 4. BOTTOM NAVIGATION */}
           <nav className="fixed bottom-8 left-6 right-6 z-50">
             <div className="bg-white/70 backdrop-blur-3xl h-24 rounded-[48px] border border-white/40 shadow-level-3 flex items-center justify-around px-8">
-              {/* Active Tab: BOOK */}
-              <motion.button
-                whileHover={{ y: -5 }}
-                onClick={() => setIsBookOpen(true)}
-                className="flex flex-col items-center justify-center gap-1.5 -translate-y-10 pointer-events-auto"
-              >
-                <div className="w-20 h-20 bg-sunshineYellow rounded-[28px] shadow-[0_10px_0_rgb(161,98,7)] flex items-center justify-center border-t-2 border-white/40">
-                  <Book className="w-10 h-10 text-deepNavy fill-deepNavy/20" />
-                </div>
-                <span className="text-[12px] font-black text-sunshineYellow uppercase tracking-[2px] drop-shadow-sm">Book</span>
-              </motion.button>
+               {/* Active Tab: BOOK */}
+               <motion.button
+                 whileHover={{ y: -5 }}
+                 animate={bookBounce ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : {}}
+                 transition={{ duration: 0.6 }}
+                 onClick={() => setIsBookOpen(true)}
+                 onAnimationComplete={() => setBookBounce(false)}
+                 className="flex flex-col items-center justify-center gap-1.5 -translate-y-10 pointer-events-auto"
+               >
+                 <div className="w-20 h-20 bg-sunshineYellow rounded-[28px] shadow-[0_10px_0_rgb(161,98,7)] flex items-center justify-center border-t-2 border-white/40">
+                   <Book className="w-10 h-10 text-deepNavy fill-deepNavy/20" />
+                 </div>
+                 <span className="text-[12px] font-black text-sunshineYellow uppercase tracking-[2px] drop-shadow-sm">Book</span>
+               </motion.button>
 
               <NavItem
                 icon={<Target className="w-9 h-9" />}
@@ -322,18 +409,19 @@ const App: React.FC = () => {
             </div>
           </nav>
 
-          <RevealCard
-            isOpen={isRevealOpen}
-            onClose={() => setIsRevealOpen(false)}
-            word_vi="Con mèo"
-            word_en="Cat"
-            word_zh="猫"
-            pinyin="māo"
-            phonetic_en="/kæt/"
-            rarity="Legendary"
-            category="Animals"
-            imageUrl={capturedImage || ""}
-          />
+           <RevealCard
+             isOpen={isRevealOpen}
+             onClose={() => setIsRevealOpen(false)}
+             word_vi="Con mèo"
+             word_en="Cat"
+             word_zh="猫"
+             pinyin="māo"
+             phonetic_en="/kæt/"
+             rarity="Legendary"
+             category="Animals"
+             imageUrl={capturedImage || ""}
+             onCardFlyToCollection={() => setBookBounce(true)}
+           />
         </>
       )}
     </div>
