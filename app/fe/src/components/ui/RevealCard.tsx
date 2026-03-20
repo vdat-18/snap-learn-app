@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
-import { triggerSparkles } from '../../utils/confetti';
+import { triggerSparkles, triggerLegendaryBurst } from '../../utils/confetti';
 
 export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
 
@@ -85,7 +85,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
     const [isFlyingToCollection, setIsFlyingToCollection] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     const { addCollection, target_language, secondary_language } = useGameStore();
-    const { playSound } = useSoundEffects();
+    const { playPop, playChime } = useSoundEffects();
 
     // Helper to save common word data
     const handleSaveCollection = (scoredStars: PronunciationTier, practiceCount: number) => {
@@ -105,7 +105,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
     };
 
     // TTS Sequence: VI → Scaffolding → Target Language
-    const playTTSSequence = () => {
+    const playTTSSequence = useCallback(() => {
         // Cancel any ongoing speech
         window.speechSynthesis.cancel();
 
@@ -139,7 +139,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
         };
 
         window.speechSynthesis.speak(viUtterance);
-    };
+    }, [target_language, word_en, word_vi, word_zh]);
 
     // Auto-play TTS sequence when card opens (audio-first principle)
     useEffect(() => {
@@ -157,8 +157,16 @@ const RevealCard: React.FC<RevealCardProps> = ({
             setHasPlayedAudio(false);
             setAttemptCount(0);
             setShowAutoCloseMessage(false);
+
+            // Trigger Legendary celebration if rarity is Legendary
+            if (rarity === 'Legendary') {
+                setTimeout(() => {
+                    triggerLegendaryBurst();
+                    playChime();
+                }, 500);
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, rarity, playChime]);
 
 
     // Manual replay button
@@ -236,7 +244,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                 // Trigger card fly-to-collection animation after 1.5 seconds
                 setTimeout(() => {
                     setIsFlyingToCollection(true);
-                    playSound('reveal');
+                    playChime();
                     triggerSparkles(window.innerWidth / 2, window.innerHeight / 2);
 
                     // Close after flight animation completes (1.2 seconds)

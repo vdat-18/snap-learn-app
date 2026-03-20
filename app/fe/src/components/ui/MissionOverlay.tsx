@@ -57,11 +57,11 @@ const MissionOverlay: React.FC<MissionOverlayProps> = () => {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="absolute top-32 left-6 z-40 max-w-[220px]"
+            className="absolute top-44 left-6 z-40 max-w-[200px]"
         >
             <motion.div
                 whileHover={{ scale: 1.02 }}
-                className="bg-white/40 backdrop-blur-2xl p-4 rounded-[32px] border border-white/50 shadow-level-3 hover:bg-white/50 transition-colors"
+                className="bg-white/30 backdrop-blur-xl p-3.5 rounded-[28px] border border-white/50 shadow-level-3 hover:bg-white/40 transition-colors"
             >
                 {/* Mission icon + emoji (icon-driven, minimal text) */}
                 <div className="flex items-center gap-2 mb-3">

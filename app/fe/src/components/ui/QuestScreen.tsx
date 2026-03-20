@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle2, Gift } from 'lucide-react';
 import { useGameStore, type Quest } from '../../store/gameStore';
+import { useSoundEffects } from '../../hooks/useSoundEffects';
 
 interface QuestScreenProps {
     isOpen: boolean;
@@ -10,6 +11,7 @@ interface QuestScreenProps {
 
 const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
     const { xp, quests, completeQuest } = useGameStore();
+    const { playPop } = useSoundEffects();
 
     return (
         <AnimatePresence>
@@ -24,7 +26,7 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                     {/* Header (icon-driven, minimal text) */}
                     <header className="px-6 pt-12 pb-6 bg-white shadow-sm flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <button onClick={onClose} className="p-2 -ml-2">
+                            <button onClick={() => { onClose(); playPop(); }} className="p-2 -ml-2">
                                 <X className="w-8 h-8 text-deepNavy" />
                             </button>
                             <h1 className="text-3xl drop-shadow-sm">

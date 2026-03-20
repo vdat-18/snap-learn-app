@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, Star, Lock, Sparkles } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
+import { useSoundEffects } from '../../hooks/useSoundEffects';
 import type { CapturedWord } from '../../store/gameStore';
 import VocabDetail from './VocabDetail';
 
@@ -11,8 +12,8 @@ interface CollectionBookProps {
 }
 
 const categories = [
-    { id: 'Animals', name: 'Động vật', icon: '🐾', total: 20 },
-    { id: 'Food', name: 'Đồ ăn', icon: '🍎', total: 15 },
+    { id: 'Animals', name: 'Động vật', icon: '/icon-cat-animals.png', total: 20 },
+    { id: 'Food', name: 'Đồ ăn', icon: '/icon-cat-food.png', total: 15 },
     { id: 'Nature', name: 'Tự nhiên', icon: '🌿', total: 25 },
     { id: 'School', name: 'Trường học', icon: '🏫', total: 18 },
     { id: 'Home', name: 'Nhà cửa', icon: '🏠', total: 22 },
@@ -20,9 +21,10 @@ const categories = [
 ];
 
 const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
-    const { collections, target_language, secondary_language } = useGameStore();
+    const { collections } = useGameStore();
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedWord, setSelectedWord] = useState<CapturedWord | null>(null);
+    const { playPop, playChime } = useSoundEffects();
 
     const getCategoryProgress = (catId: string) => {
         return collections.filter(w => w.category === catId).length;
@@ -40,26 +42,40 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                     animate={{ x: 0 }}
                     exit={{ x: '100%' }}
                     transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                    className="fixed inset-0 z-[150] bg-snowWhite flex flex-col font-outfit"
+                    className="fixed inset-0 z-[150] bg-snowWhite flex flex-col font-outfit overflow-hidden"
                 >
                     {/* Header */}
-                    <header className="px-6 pt-12 pb-6 bg-white shadow-sm flex items-center justify-between">
+                    <header className="px-6 pt-12 pb-6 flex items-center justify-between border-b border-slate-100">
                         <div className="flex items-center gap-4">
                             {selectedCategory ? (
-                                <button onClick={() => setSelectedCategory(null)} className="p-2 -ml-2">
+                                <button onClick={() => { playPop(); setSelectedCategory(null); }} className="w-12 h-12 bg-white rounded-2xl shadow-level-2 flex items-center justify-center border-t-2 border-white/40">
                                     <ArrowLeft className="w-8 h-8 text-deepNavy" />
                                 </button>
                             ) : (
-                                <button onClick={onClose} className="p-2 -ml-2">
+                                <button onClick={() => { playPop(); onClose(); }} className="w-12 h-12 bg-white rounded-2xl shadow-level-2 flex items-center justify-center border-t-2 border-white/40">
                                     <X className="w-8 h-8 text-deepNavy" />
                                 </button>
                             )}
                             <div>
-                                <h1 className="text-3xl font-black text-deepNavy">
-                                    {selectedCategory ? categories.find(c => c.id === selectedCategory)?.icon : '📖'}
+                                <h1 className="text-2xl font-black text-deepNavy tracking-tight flex items-center gap-3">
+                                    {selectedCategory ? (
+                                        <>
+                                            {categories.find(c => c.id === selectedCategory)?.icon.startsWith('/') ? (
+                                                <img src={categories.find(c => c.id === selectedCategory)?.icon} alt="" className="w-8 h-8 object-contain mix-blend-multiply" />
+                                            ) : (
+                                                <span>{categories.find(c => c.id === selectedCategory)?.icon}</span>
+                                            )}
+                                            {categories.find(c => c.id === selectedCategory)?.name}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <img src="/icon-book.png" alt="" className="w-10 h-10 object-contain mix-blend-multiply" />
+                                            Bộ sưu tập
+                                        </>
+                                    )}
                                 </h1>
-                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                    {collections.length} captured
+                                <p className="text-xs font-black text-sky-400 uppercase tracking-widest mt-0.5">
+                                    {collections.length} Captured Cards
                                 </p>
                             </div>
                         </div>
@@ -68,31 +84,39 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                     <div className="flex-1 overflow-y-auto p-6">
                         {!selectedCategory ? (
                             /* Category Grid */
-                            <div className="grid grid-cols-2 gap-4">
-                                {categories.map((cat) => {
+                            <div className="grid grid-cols-2 gap-5 pb-20">
+                                {categories.map((cat, i) => {
                                     const count = getCategoryProgress(cat.id);
                                     const progressPercent = (count / cat.total) * 100;
 
                                     return (
                                         <motion.button
                                             key={cat.id}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.05 }}
                                             whileTap={{ scale: 0.95 }}
-                                            onClick={() => setSelectedCategory(cat.id)}
-                                            className="bg-white rounded-[24px] p-6 shadow-level-2 border-b-4 border-slate-100 flex flex-col items-center text-center group"
+                                            onClick={() => { playPop(); setSelectedCategory(cat.id); }}
+                                            className="bg-white rounded-[32px] p-5 shadow-level-2 border-b-[6px] border-slate-100 flex flex-col items-center text-center group relative overflow-hidden"
                                         >
-                                            <div className="text-5xl mb-3 group-hover:scale-110 transition-transform">
-                                                {cat.icon}
+                                            <div className="w-24 h-24 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                                                {cat.icon.startsWith('/') ? (
+                                                    <img src={cat.icon} alt={cat.name} className="w-full h-full object-contain mix-blend-multiply" />
+                                                ) : (
+                                                    <span className="text-5xl drop-shadow-lg">{cat.icon}</span>
+                                                )}
                                             </div>
+                                            <h3 className="font-black text-deepNavy text-lg mb-1">{cat.name}</h3>
                                             <div className="w-full mt-2">
-                                                <div className="flex justify-between text-[10px] font-black text-slate-400 mb-1">
+                                                <div className="flex justify-between text-[10px] font-black text-slate-400 mb-1.5 px-1">
                                                     <span>{count}/{cat.total}</span>
                                                     <span>{Math.round(progressPercent)}%</span>
                                                 </div>
-                                                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                                <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
                                                     <motion.div
                                                         initial={{ width: 0 }}
                                                         animate={{ width: `${progressPercent}%` }}
-                                                        className="h-full bg-sky-400"
+                                                        className="h-full bg-sunshineYellow rounded-full shadow-[0_0_8px_rgba(255,210,52,0.6)]"
                                                     />
                                                 </div>
                                             </div>
@@ -101,54 +125,57 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                                 })}
                             </div>
                         ) : (
-                            /* Vocab Word Grid - 3-4 columns for compact view */
-                            <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                                {getCategoryWords(selectedCategory).map((word) => (
-                                    <motion.button
-                                        key={word.id}
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => setSelectedWord(word)}
-                                        className="bg-white rounded-[16px] overflow-hidden shadow-level-1 border-b-2 border-slate-100 text-left"
-                                    >
-                                        <div className="aspect-square w-full relative">
-                                            <img src={word.image} alt={word.word_en} className="w-full h-full object-cover" />
-                                            {word.isEvolved && (
-                                                <div className="absolute top-1 left-1 bg-sunshineYellow p-0.5 rounded-lg shadow-sm">
-                                                    <Sparkles className="w-3 h-3 text-deepNavy" />
+                            /* Vocab Word Grid - Trading Card Style */
+                            <div className="grid grid-cols-3 gap-4 pb-24">
+                                {getCategoryWords(selectedCategory).map((word, i) => {
+                                    const rarityColors: any = {
+                                        'Common': 'from-mintGreen/20 to-mintGreen/5',
+                                        'Uncommon': 'from-skyBlue/20 to-skyBlue/5',
+                                        'Rare': 'from-sunshineYellow/20 to-sunshineYellow/5',
+                                        'Legendary': 'from-coralRed/20 to-coralRed/5'
+                                    };
+
+                                    return (
+                                        <motion.button
+                                            key={word.id}
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: i * 0.03 }}
+                                            whileTap={{ scale: 0.92 }}
+                                            onClick={() => { playChime(); setSelectedWord(word); }}
+                                            className={`relative aspect-[3/4] rounded-[24px] bg-gradient-to-br ${rarityColors[word.rarity] || 'bg-white'} border-[3px] border-white shadow-level-2 overflow-hidden flex flex-col`}
+                                        >
+                                            <div className="flex-1 w-full relative p-2">
+                                                <div className="w-full h-full rounded-[18px] overflow-hidden bg-white/50 backdrop-blur-sm shadow-inner">
+                                                    <img src={word.image} alt={word.word_en} className="w-full h-full object-cover" />
                                                 </div>
-                                            )}
-                                            <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-white/90 backdrop-blur rounded text-[8px] font-black text-deepNavy shadow-sm uppercase tracking-tighter">
-                                                {word.rarity.substring(0, 3)}
-                                            </div>
-                                        </div>
-                                        <div className="p-2 text-center overflow-hidden">
-                                            <h4 className="font-black text-deepNavy leading-tight text-[11px] mb-0.5 truncate">{word.word_vi}</h4>
-
-                                            {/* Responsive Language Display */}
-                                            <div className="flex flex-col gap-0.5 min-h-[24px]">
-                                                {target_language === 'en' && <p className="text-[9px] font-bold text-sky-400 leading-none">{word.word_en}</p>}
-                                                {target_language === 'zh' && <p className="text-[9px] font-bold text-mintGreen leading-none">{word.word_zh}</p>}
-
-                                                {secondary_language && (
-                                                    <p className="text-[8px] font-black text-slate-300 leading-none">
-                                                        {secondary_language === 'en' ? word.word_en : word.word_zh}
-                                                    </p>
+                                                {word.isEvolved && (
+                                                    <div className="absolute top-3 left-3 bg-sunshineYellow p-1 rounded-full shadow-lg">
+                                                        <Sparkles className="w-4 h-4 text-deepNavy" />
+                                                    </div>
                                                 )}
+                                                <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[8px] font-black text-white shadow-md uppercase tracking-wide ${word.rarity === 'Legendary' ? 'bg-coralRed' :
+                                                    word.rarity === 'Rare' ? 'bg-sunshineYellow text-deepNavy' :
+                                                        word.rarity === 'Uncommon' ? 'bg-skyBlue' : 'bg-mintGreen'
+                                                    }`}>
+                                                    {word.rarity}
+                                                </div>
                                             </div>
-
-                                            <div className="flex justify-center mt-1 gap-0.5">
-                                                {[1, 2, 3].map(s => (
-                                                    <Star
-                                                        key={s}
-                                                        className={`w-2.5 h-2.5 ${s <= word.stars ? 'text-sunshineYellow fill-sunshineYellow' : 'text-slate-200 fill-slate-200'}`}
-                                                    />
-                                                ))}
+                                            <div className="px-2 pb-3 pt-1 text-center bg-white/40 backdrop-blur">
+                                                <h4 className="font-black text-deepNavy leading-tight text-[11px] truncate mb-0.5">{word.word_vi}</h4>
+                                                <p className="text-[9px] font-bold text-sky-500 leading-none">{word.word_en}</p>
+                                                <div className="flex justify-center mt-1.5 gap-0.5">
+                                                    {[1, 2, 3].map(s => (
+                                                        <Star
+                                                            key={s}
+                                                            className={`w-2.5 h-2.5 ${s <= word.stars ? 'text-sunshineYellow fill-sunshineYellow' : 'text-slate-200 fill-slate-200'}`}
+                                                        />
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </motion.button>
-                                ))}
+                                        </motion.button>
+                                    );
+                                })}
 
                                 {/* Locked Placeholders */}
                                 {Array.from({ length: Math.max(0, 12 - getCategoryWords(selectedCategory).length) }).map((_, i) => (

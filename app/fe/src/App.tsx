@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import RevealCard from './components/ui/RevealCard';
 import Onboarding from './components/ui/Onboarding';
 import CollectionBook from './components/ui/CollectionBook';
@@ -7,45 +7,46 @@ import ProfileScreen from './components/ui/ProfileScreen';
 import LeaderboardScreen from './components/ui/LeaderboardScreen';
 import LoginScreen from './components/ui/LoginScreen';
 import LevelUpCelebration from './components/ui/LevelUpCelebration';
-import DuplicateCaptureModal from './components/ui/DuplicateCaptureModal';
-import MissionOverlay from './components/ui/MissionOverlay';
 import ErrorOverlay from './components/ui/ErrorOverlay';
 import AIProcessingLoading from './components/ui/AIProcessingLoading';
 import { useGameStore } from './store/gameStore';
-import { Settings, Book, BarChart3, User, Scan, Target, WifiOff } from 'lucide-react';
+import { useSoundEffects } from './hooks/useSoundEffects';
+import { triggerHaptic } from './utils/feedbackUtils';
+import { Scan, WifiOff, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const App: React.FC = () => {
+  // UI States
   const [isRevealOpen, setIsRevealOpen] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [capturedResult, setCapturedResult] = useState<{
-    word_vi: string;
     word_en: string;
+    word_vi: string;
     word_zh: string;
-    pinyin: string;
-    phonetic_en: string;
-    rarity: any;
+    rarity: 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
     category: string;
   } | null>(null);
+
   const [isAIProcessing, setIsAIProcessing] = useState(false);
   const [isBookOpen, setIsBookOpen] = useState(false);
   const [isQuestOpen, setIsQuestOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isRankOpen, setIsRankOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const [cameraError, setCameraError] = useState(false);
-  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const [showTimeLimitError, setShowTimeLimitError] = useState(false);
   const [bookBounce, setBookBounce] = useState(false);
-  const videoRef = React.useRef<HTMLVideoElement>(null);
-  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const [devMode, setDevMode] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Connect to global state
   const {
-    xp,
-    level,
-    streak,
     userName,
+    userAvatar,
+    level,
     addXP,
     recordCapture,
     hasSeenOnboarding,
@@ -53,274 +54,214 @@ const App: React.FC = () => {
     isTimeLimitExceeded,
     checkAndResetDailyUsage,
     incrementUsageSeconds,
-    setIsOnline: setStoreOnline
   } = useGameStore();
 
-  // Track online/offline status
-  React.useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      setStoreOnline(true);
-    };
-    const handleOffline = () => {
-      setIsOnline(false);
-      setStoreOnline(false);
-    };
+  const { playPop, playShutter, playChime } = useSoundEffects();
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+  // Initialization
+  useEffect(() => {
+    // Handle splash
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2500);
 
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [setStoreOnline]);
-
-  // Track daily usage time when app is active
-  React.useEffect(() => {
+    // Initial check for daily usage
     checkAndResetDailyUsage();
-    const interval = setInterval(() => {
-      incrementUsageSeconds();
-    }, 1000);
 
-    return () => clearInterval(interval);
-  }, [checkAndResetDailyUsage, incrementUsageSeconds]);
-
-  // Handle Splash Screen Timeout
-  React.useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 2000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [checkAndResetDailyUsage]);
 
-  // Helper: Camera setup
-  const setupCamera = React.useCallback(async () => {
+  // Usage timer
+  useEffect(() => {
+    const usageInterval = setInterval(() => {
+      if (!showSplash && userName && hasSeenOnboarding) {
+        incrementUsageSeconds();
+        // Periodically check if limit exceeded
+        if (isTimeLimitExceeded()) {
+          setShowTimeLimitError(true);
+        }
+      }
+    }, 1000);
+    return () => clearInterval(usageInterval);
+  }, [showSplash, userName, hasSeenOnboarding, incrementUsageSeconds, isTimeLimitExceeded]);
+
+  // Camera Setup
+  const setupCamera = useCallback(async (mode: 'user' | 'environment') => {
+    if (!videoRef.current) return;
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } },
-        audio: false,
+        video: {
+          facingMode: mode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
       });
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+        };
       }
-      setCameraError(false);
-    } catch (err: any) {
-      console.error("Error accessing camera:", err);
-      setCameraError(true);
+      setCameraError(null);
+    } catch (err) {
+      console.error('Camera Error:', err);
+      setCameraError('Bé ơi, hãy cho phép app dùng Camera để bắt học từ mới nhé!');
     }
   }, []);
 
-  // Handle Camera Access
-  React.useEffect(() => {
+  useEffect(() => {
     if (!showSplash && userName && hasSeenOnboarding) {
-      setupCamera();
+      setupCamera(facingMode);
     }
-
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
+      if (videoRef.current?.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [showSplash, userName, hasSeenOnboarding, setupCamera]);
+  }, [showSplash, userName, hasSeenOnboarding, setupCamera, facingMode]);
 
-  const handleCaptureClick = () => {
-    // Check if capture is allowed
+  const handleCaptureClick = async () => {
     if (isTimeLimitExceeded()) {
       setShowTimeLimitError(true);
       return;
     }
 
-    if (!isOnline) {
-      // Disable capture when offline
-      return;
-    }
-
     if (!videoRef.current || !canvasRef.current) return;
+
+    playShutter();
+    triggerHaptic(50);
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
     if (context) {
-      // Set canvas dimensions to match video
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-
-      // Draw the current video frame to canvas
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Convert to base64 image URL
-      const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-      setCapturedImage(imageDataUrl);
+      const imageData = canvas.toDataURL('image/jpeg');
+      setCapturedImage(imageData);
 
-      // Simulating AI processing delay
+      // Start "AI Processing" mock
       setIsAIProcessing(true);
 
-      const mockResults = [
-        { word_vi: "Con mèo", word_en: "Cat", word_zh: "猫", pinyin: "māo", phonetic_en: "/kæt/", rarity: "Common", category: "Animals" },
-        { word_vi: "Cái bàn", word_en: "Table", word_zh: "桌子", pinyin: "zhuōzi", phonetic_en: "/ˈteɪbl/", rarity: "Common", category: "Furniture" },
-        { word_vi: "Bông hoa", word_en: "Flower", word_zh: "花", pinyin: "huā", phonetic_en: "/ˈflaʊər/", rarity: "Uncommon", category: "Nature" },
-        { word_vi: "Quyển sách", word_en: "Book", word_zh: "书", pinyin: "shū", phonetic_en: "/bʊk/", rarity: "Rare", category: "Objects" }
-      ];
-      const randomResult = mockResults[Math.floor(Math.random() * mockResults.length)];
-
       setTimeout(() => {
+        const mockResults = [
+          { word_en: 'Cat', word_vi: 'Con mèo', word_zh: '猫', rarity: 'Common', category: 'Animals' },
+          { word_en: 'Dog', word_vi: 'Con chó', word_zh: '狗', rarity: 'Uncommon', category: 'Animals' },
+          { word_en: 'Apple', word_vi: 'Quả táo', word_zh: '苹果', rarity: 'Rare', category: 'Food' },
+          { word_en: 'Starry Night', word_vi: 'Đêm đầy sao', word_zh: '星月夜', rarity: 'Legendary', category: 'Nature' },
+        ];
+
+        const result = mockResults[Math.floor(Math.random() * mockResults.length)] as any;
+
         setIsAIProcessing(false);
-        setCapturedResult(randomResult);
+        setCapturedResult(result);
         setIsRevealOpen(true);
 
-        // Reward XP based on rarity
-        addXP(100);
-        recordCapture(randomResult.rarity);
-      }, 1500);
+        if (result.rarity === 'Legendary') {
+          playChime();
+        }
+
+        addXP(10);
+        recordCapture(result.rarity);
+      }, 2500);
     }
   };
 
-  return (
-    <div className="flex h-screen w-full flex-col bg-deepNavy relative overflow-hidden font-outfit select-none">
-      {/* 1. SPLASH SCREEN */}
-      <AnimatePresence>
-        {showSplash && (
+  if (showSplash) {
+    return (
+      <div className="fixed inset-0 bg-sky-400 flex flex-col items-center justify-center p-8 text-white">
+        <motion.div
+          animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+          className="w-32 h-32 mb-8"
+        >
+          <img src="/owl-mascot.png" alt="SnapLearn Mascot" className="w-full h-full object-contain" />
+        </motion.div>
+        <h1 className="text-4xl font-black italic tracking-tighter mb-2">SnapLearn</h1>
+        <div className="w-48 h-2 bg-white/20 rounded-full overflow-hidden">
           <motion.div
-            key="splash"
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[500] bg-white flex flex-col items-center justify-center p-6"
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              className="w-32 h-32 bg-skyBlue rounded-[40px] flex items-center justify-center shadow-level-3 mb-6"
-            >
-              <Scan className="w-16 h-16 text-white stroke-[3px]" />
-            </motion.div>
-            <h1 className="text-4xl font-black text-deepNavy tracking-tight">SnapLearn</h1>
-            <p className="text-skyBlue font-bold tracking-[3px] uppercase text-xs mt-2">World Explorer</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 2. LOGIN SCREEN (First time or if logged out) */}
-      {!showSplash && !userName && <LoginScreen />}
-
-      {/* 3. ONBOARDING (After login if not seen) */}
-      {!showSplash && userName && !hasSeenOnboarding && <Onboarding onFinish={setOnboardingSeen} />}
-
-      {/* 4. MAIN APP CONTENT (Only show when ready) */}
-      {(!showSplash && userName && hasSeenOnboarding) && (
-        <>
-          <CollectionBook isOpen={isBookOpen} onClose={() => setIsBookOpen(false)} />
-          <QuestScreen isOpen={isQuestOpen} onClose={() => setIsQuestOpen(false)} />
-          <ProfileScreen isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
-          <LeaderboardScreen isOpen={isRankOpen} onClose={() => setIsRankOpen(false)} />
-
-          {/* Global Overlays */}
-          <LevelUpCelebration />
-          <DuplicateCaptureModal />
-          <ErrorOverlay
-            type="time-limit"
-            isVisible={showTimeLimitError}
-            onClose={() => setShowTimeLimitError(false)}
+            initial={{ width: 0 }}
+            animate={{ width: '100%' }}
+            transition={{ duration: 2 }}
+            className="h-full bg-sunshineYellow"
           />
-          <AIProcessingLoading isVisible={isAIProcessing} />
+        </div>
+      </div>
+    );
+  }
 
-          {/* Camera Permission Denied Overlay */}
-          {cameraError && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-6"
-            >
-              <div className="flex flex-col items-center gap-8 max-w-sm">
-                {/* Mascot Illustration */}
-                <motion.img
-                  src="/owl-mascot.png"
-                  alt="Mascot"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="w-32 h-32 object-contain"
-                />
+  if (!userName) {
+    return <LoginScreen />;
+  }
 
-                {/* Main Message */}
-                <div className="text-center space-y-3">
-                  <h2 className="text-4xl font-black text-white mb-4">📸</h2>
-                  <p className="text-white font-black text-2xl leading-tight">
-                    Cho mình xem thế giới nhé!
-                  </p>
-                  <p className="text-white/70 font-bold text-sm">
-                    SnapLearn cần quyền truy cập camera để tìm kiếm các từ vựng xung quanh bạn.
-                  </p>
-                </div>
+  if (!hasSeenOnboarding) {
+    return <Onboarding onFinish={() => setOnboardingSeen()} />;
+  }
 
-                {/* Action Button */}
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={setupCamera}
-                  className="w-full bg-skyBlue hover:bg-skyBlue/90 text-white font-black text-lg py-4 px-8 rounded-[28px] shadow-level-3 border-t-2 border-white/20 transition-all"
-                >
-                  ✨ Cho phép Camera
-                </motion.button>
+  return (
+    <div className="relative w-full h-screen bg-black overflow-hidden font-outfit select-none">
 
-                {/* Subtext */}
-                <p className="text-white/50 font-medium text-xs text-center">
-                  Bạn có thể thay đổi cài đặt quyền bất kỳ lúc nào trong Cài đặt.
-                </p>
+      <AnimatePresence>
+        {/* 1. TOP HUD (Head-Up Display) */}
+        <div className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 pt-12 pb-4 pointer-events-none">
+          <div className="flex-1 flex flex-col pointer-events-auto">
+            {/* Profile - Visual only */}
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-4xl shadow-level-2 border-t-2 border-slate-100">
+                {userAvatar}
               </div>
-            </motion.div>
-          )}
-
-          {/* Hidden Canvas for Capture */}
-          <canvas ref={canvasRef} className="hidden" />
-
-          {/* Offline Mode Banner */}
-          <AnimatePresence>
-            {!isOnline && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="fixed top-20 left-0 right-0 z-[100] flex justify-center pointer-events-none px-4"
-              >
-                <div className="bg-deepNavy/95 backdrop-blur-lg border border-white/20 rounded-[20px] px-6 py-3 shadow-lg flex items-center gap-3 max-w-sm">
-                  <WifiOff className="w-5 h-5 text-coralRed flex-shrink-0" />
-                  <p className="font-bold text-white text-sm">
-                    📡 Mất kết nối! Xem bộ sưu tập trong lúc chờ nhé.
-                  </p>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5 bg-skyBlue/90 backdrop-blur px-2 py-0.5 rounded-full w-fit mb-1 shadow-sm">
+                  <span className="text-[14px]">⭐</span>
+                  <span className="text-[12px] font-black text-white leading-none">{level}</span>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* 1. TOP HUD (Head-Up Display) */}
-          <div className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 pt-12 pb-4 pointer-events-none">
-            <div className="flex items-center gap-3 pointer-events-auto">
-              <motion.div
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 bg-deepNavy/80 backdrop-blur-xl rounded-full p-1.5 pr-5 border border-white/20 shadow-level-2"
-              >
-                <div className="w-11 h-11 rounded-full bg-deepNavy border-2 border-sunshineYellow flex items-center justify-center text-white font-black text-lg shadow-[0_0_15px_rgba(255,210,52,0.3)]">
-                  L{level}
-                </div>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-white font-black text-xl tracking-tight">{xp.toLocaleString()}</span>
-                  <span className="text-white/60 font-bold text-xs tracking-wider">XP</span>
-                  <span className="text-white/30 mx-0.5">|</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xl">🔥</span>
-                    <span className="text-white font-black text-xl">{streak}</span>
-                  </div>
-                </div>
-              </motion.div>
+                <span className="text-xl font-black text-white drop-shadow-md leading-none">{userName}</span>
+              </div>
             </div>
-
-            <button className="w-13 h-13 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-slate-500 shadow-level-2 border border-white pointer-events-auto transition-transform active:scale-90">
-              <Settings className="w-7 h-7" />
-            </button>
           </div>
 
-          {/* 2. CAMERA VIEWFINDER & MAIN CONTENT */}
-          <main className="flex-1 w-full relative z-0 flex items-center justify-center overflow-hidden bg-black">
-            {/* Real-world camera feed */}
-            <div className="absolute inset-0 z-0">
+          <div className="flex items-center gap-3 pointer-events-auto">
+            {/* Stats - Visual only */}
+            <div className="flex items-center gap-2 bg-black/30 backdrop-blur-lg pl-2 pr-4 py-2 rounded-[24px] border border-white/20 shadow-xl">
+              <div className="w-10 h-10 rounded-full bg-sunshineYellow flex items-center justify-center shadow-[0_4px_0_rgb(161,98,7)] border-t-2 border-white/40">
+                <span className="text-xl">⚡</span>
+              </div>
+              <span className="text-xl font-black text-white leading-none">85</span>
+            </div>
+
+            <button
+              onClick={() => playPop()}
+              className="w-13 h-13 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-level-2 border border-white pointer-events-auto transition-transform active:scale-90"
+            >
+              <img src="/icon-settings.png" alt="Settings" className="w-9 h-9 object-contain mix-blend-multiply" />
+            </button>
+          </div>
+        </div>
+
+        {/* 2. CAMERA VIEWFINDER & MAIN CONTENT */}
+        <main className="relative w-full h-full pt-20">
+          <div className="absolute inset-0 z-0">
+            {cameraError ? (
+              <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-20 h-20 mb-4 bg-white/10 rounded-full flex items-center justify-center">
+                  <WifiOff className="w-10 h-10 text-white/40" />
+                </div>
+                <p className="text-white font-bold">{cameraError}</p>
+                <button
+                  onClick={() => setupCamera(facingMode)}
+                  className="mt-6 bg-skyBlue px-6 py-3 rounded-xl font-black text-white"
+                >
+                  THỬ LẠI
+                </button>
+              </div>
+            ) : (
               <video
                 ref={videoRef}
                 autoPlay
@@ -328,132 +269,153 @@ const App: React.FC = () => {
                 muted
                 className="w-full h-full object-cover"
               />
-              {/* Overlays for better visibility */}
-              <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]"></div>
-              {/* Vignette effect */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle,transparent_40%,rgba(0,0,0,0.5)_100%)]"></div>
-            </div>
+            )}
+            <canvas ref={canvasRef} className="hidden" />
+          </div>
 
-            {/* Mission Overlay */}
-            <MissionOverlay userName={userName || 'Small Explorer'} />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <motion.div
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="w-64 h-64 border-[3px] border-white/40 rounded-[48px] shadow-[0_0_0_9999px_rgba(0,0,0,0.3)] relative -translate-y-8"
+            >
+              <div className="absolute -top-1 -left-1 w-10 h-10 border-t-4 border-l-4 border-sunshineYellow rounded-tl-2xl" />
+              <div className="absolute -top-1 -right-1 w-10 h-10 border-t-4 border-r-4 border-sunshineYellow rounded-tr-2xl" />
+              <div className="absolute -bottom-1 -left-1 w-10 h-10 border-b-4 border-l-4 border-sunshineYellow rounded-bl-2xl" />
+              <div className="absolute -bottom-1 -right-1 w-10 h-10 border-b-4 border-r-4 border-sunshineYellow rounded-br-2xl" />
 
-            {/* Dashed Scanning Box (Central focus) */}
-            <div className="relative group z-10">
-              <div className="w-72 h-72 md:w-80 md:h-80 border-[4px] border-dashed border-sunshineYellow rounded-[56px] flex items-center justify-center animate-pulse duration-[2000ms]">
-                <div className="absolute inset-0 bg-sunshineYellow/5 rounded-[56px]"></div>
-
-                {/* Target Identification Tooltip */}
-                <div className="absolute -bottom-16 z-30 transform -translate-y-2">
-                  <div className="bg-white/30 backdrop-blur-xl px-8 py-3 rounded-2xl border border-white/40 shadow-level-3 text-center min-w-[180px]">
-                    <span className="block text-[10px] font-black text-white/80 uppercase tracking-[3px] mb-1">Target Identified</span>
-                    <span className="text-sunshineYellow font-black text-xl tracking-[1px] uppercase drop-shadow-md">Cat</span>
-                  </div>
-                </div>
-
-                {/* L-Shaped Corners */}
-                <div className="absolute -top-12 -right-12 w-20 h-20 border-t-[10px] border-r-[10px] border-white/60 rounded-tr-[40px]"></div>
-                <div className="absolute -bottom-12 -left-12 w-20 h-20 border-b-[10px] border-l-[10px] border-white/60 rounded-bl-[40px]"></div>
-
-                {/* Central Scan Button */}
-                <motion.button
-                  whileTap={{ y: 6 }}
-                  className="w-24 h-24 rounded-3xl bg-sunshineYellow shadow-[0_10px_0_rgb(161,98,7)] flex items-center justify-center border-t-2 border-white/30"
-                >
-                  <Scan className="w-12 h-12 text-deepNavy stroke-[3px]" />
-                </motion.button>
+              <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2">
+                <Scan className="w-10 h-10 text-white opacity-40 animate-pulse" />
+                <span className="text-[10px] font-black text-white/40 uppercase tracking-[4px]">Scanning...</span>
               </div>
-            </div>
+            </motion.div>
+          </div>
+        </main>
 
-            {/* Floating XP Particles (Visual effect) */}
-            <div className="absolute bottom-60 right-10">
-              <div className="text-sunshineYellow font-black text-2xl animate-bounce drop-shadow-lg">✨</div>
-            </div>
+        {/* 3. CAPTURE / ACTION CONTROLS */}
+        <div className="fixed bottom-36 left-0 w-full z-50 px-8 flex items-center justify-between pointer-events-none">
+          <div className="flex-1 flex justify-center items-center gap-8 translate-x-12">
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={handleCaptureClick}
+              disabled={isAIProcessing}
+              className="relative w-24 h-24 pointer-events-auto"
+            >
+              <div className="absolute inset-0 bg-white rounded-full shadow-2xl scale-110" />
+              <div className="absolute inset-1.5 border-[6px] border-black rounded-full" />
+              <div className="absolute inset-3.5 bg-black rounded-full flex items-center justify-center">
+                <div className="w-14 h-14 bg-white/20 rounded-full" />
+              </div>
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.8, rotate: 180 }}
+              onClick={() => {
+                triggerHaptic(30);
+                playPop();
+                setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+              }}
+              className="w-14 h-14 rounded-full bg-black/30 backdrop-blur-md border border-white/20 flex items-center justify-center text-white pointer-events-auto"
+            >
+              <RefreshCw className="w-7 h-7" />
+            </motion.button>
+          </div>
+        </div>
 
-            {/* Primary Capture Button Area */}
-            <div className="absolute bottom-40 flex flex-col items-center z-20">
-              <motion.button
-                whileTap={{ scale: 0.85 }}
-                onClick={handleCaptureClick}
-                className="relative flex items-center justify-center p-3 rounded-full bg-black/20 backdrop-blur-md"
-              >
-                <div className="w-24 h-24 rounded-full border-[8px] border-white bg-transparent flex items-center justify-center shadow-level-3">
-                  <div className="w-16 h-16 bg-coralRed rounded-full shadow-[inset_0_4px_10px_rgba(0,0,0,0.3)] border-2 border-white/20"></div>
-                </div>
-              </motion.button>
-            </div>
-          </main>
-
-
-          {/* 4. BOTTOM NAVIGATION */}
-          <nav className="fixed bottom-8 left-6 right-6 z-50">
-            <div className="bg-white/70 backdrop-blur-3xl h-24 rounded-[48px] border border-white/40 shadow-level-3 flex items-center justify-around px-8">
-              {/* Active Tab: BOOK */}
-              <motion.button
-                whileHover={{ y: -5 }}
-                animate={bookBounce ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : {}}
-                transition={{ duration: 0.6 }}
-                onClick={() => setIsBookOpen(true)}
-                onAnimationComplete={() => setBookBounce(false)}
-                className="flex flex-col items-center justify-center gap-1.5 -translate-y-10 pointer-events-auto"
-              >
-                <div className="w-20 h-20 bg-sunshineYellow rounded-[28px] shadow-[0_10px_0_rgb(161,98,7)] flex items-center justify-center border-t-2 border-white/40">
-                  <Book className="w-10 h-10 text-deepNavy fill-deepNavy/20" />
-                </div>
-                <span className="text-[12px] font-black text-sunshineYellow uppercase tracking-[2px] drop-shadow-sm">Book</span>
-              </motion.button>
-
-              <NavItem
-                icon={<Target className="w-9 h-9" />}
-                label="Quest"
-                onClick={() => setIsQuestOpen(true)}
-              />
-              <NavItem
-                icon={<BarChart3 className="w-9 h-9" />}
-                label="Rank"
-                onClick={() => setIsRankOpen(true)}
-              />
-              <NavItem
-                icon={<User className="w-9 h-9" />}
-                label="Me"
-                onClick={() => setIsProfileOpen(true)}
-              />
-            </div>
-          </nav>
-
-          {capturedResult && (
-            <RevealCard
-              isOpen={isRevealOpen}
-              onClose={() => setIsRevealOpen(false)}
-              word_vi={capturedResult.word_vi}
-              word_en={capturedResult.word_en}
-              word_zh={capturedResult.word_zh}
-              pinyin={capturedResult.pinyin}
-              phonetic_en={capturedResult.phonetic_en}
-              rarity={capturedResult.rarity as any}
-              category={capturedResult.category}
-              imageUrl={capturedImage || ""}
-              onCardFlyToCollection={() => setBookBounce(true)}
+        <nav className="fixed bottom-8 left-6 right-6 z-50">
+          <div className="bg-white/70 backdrop-blur-3xl h-24 rounded-[48px] border border-white/40 shadow-level-3 flex items-center justify-around px-4 text-deepNavy">
+            <NavItem
+              image="/icon-book.png"
+              label="Book"
+              bounce={bookBounce}
+              onClick={() => {
+                setIsBookOpen(true);
+                playPop();
+                setBookBounce(false);
+              }}
             />
-          )}
-        </>
+            <NavItem
+              image="/icon-quest.png"
+              label="Quest"
+              onClick={() => {
+                setIsQuestOpen(true);
+                playPop();
+              }}
+            />
+            <NavItem
+              image="/icon-rank.png"
+              label="Rank"
+              onClick={() => {
+                setIsRankOpen(true);
+                playPop();
+              }}
+            />
+            <NavItem
+              image="/icon-me.png"
+              label="Me"
+              onClick={() => {
+                setIsProfileOpen(true);
+                playPop();
+              }}
+            />
+          </div>
+        </nav>
+      </AnimatePresence>
+
+      <CollectionBook isOpen={isBookOpen} onClose={() => setIsBookOpen(false)} />
+      <QuestScreen isOpen={isQuestOpen} onClose={() => setIsQuestOpen(false)} />
+      <ProfileScreen isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
+      <LeaderboardScreen isOpen={isRankOpen} onClose={() => setIsRankOpen(false)} />
+
+      {capturedResult && (
+        <RevealCard
+          isOpen={isRevealOpen}
+          onClose={() => setIsRevealOpen(false)}
+          word_vi={capturedResult.word_vi}
+          word_en={capturedResult.word_en}
+          word_zh={capturedResult.word_zh}
+          rarity={capturedResult.rarity}
+          imageUrl={capturedImage || ''}
+          category={capturedResult.category}
+          pinyin=""
+          phonetic_en=""
+        />
+      )}
+
+      <LevelUpCelebration />
+      <ErrorOverlay
+        type="time-limit"
+        isVisible={showTimeLimitError}
+        onClose={() => setShowTimeLimitError(false)}
+      />
+
+      <AIProcessingLoading isVisible={isAIProcessing} />
+
+      {devMode && (
+        <button
+          onClick={() => setDevMode(false)}
+          className="fixed top-24 right-4 z-[100] bg-red-500 text-white p-2 rounded text-xs"
+        >
+          DEV MODE
+        </button>
       )}
     </div>
   );
 };
 
-const NavItem: React.FC<{ icon: React.ReactNode; label: string; onClick?: () => void }> = ({ icon, label, onClick }) => (
-  <button
+const NavItem: React.FC<{ image: string; label: string; bounce?: boolean; onClick?: () => void }> = ({ image, label, bounce, onClick }) => (
+  <motion.button
+    whileTap={{ scale: 0.9 }}
+    animate={bounce ? { scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] } : {}}
     onClick={onClick}
-    className="flex flex-col items-center justify-center gap-1 group active:scale-90 transition-all"
+    className="flex flex-col items-center justify-center gap-1.5 pointer-events-auto"
   >
-    <div className="text-slate-400 group-hover:text-skyBlue group-hover:scale-110 transition-all duration-300 transform">
-      {icon}
+    <div className="w-14 h-14 bg-sunshineYellow rounded-[18px] shadow-[0_5px_0_rgb(161,98,7)] flex items-center justify-center border-t-2 border-white/40 overflow-hidden">
+      <img src={image} alt={label} className="w-10 h-10 object-contain mix-blend-multiply" />
     </div>
-    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[2px] group-hover:text-skyBlue transition-colors">
+    <span className="text-[10px] font-black text-sunshineYellow uppercase tracking-[2px] drop-shadow-sm">
       {label}
     </span>
-  </button>
+  </motion.button>
 );
 
 export default App;
-

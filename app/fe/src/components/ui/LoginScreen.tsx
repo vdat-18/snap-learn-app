@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
+import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { Rocket } from 'lucide-react';
 
 // Animal avatars for child selection — visual, not text
@@ -29,6 +30,7 @@ const LoginScreen: React.FC = () => {
     const [selectedAvatar, setSelectedAvatar] = useState(avatars[0]);
     const [isJoining, setIsJoining] = useState(false);
     const [nameError, setNameError] = useState(false);
+    const { playPop } = useSoundEffects();
 
     // Auto-play TTS greeting on mount (audio-first principle)
     useEffect(() => {
@@ -39,6 +41,7 @@ const LoginScreen: React.FC = () => {
     }, []);
 
     const handleAvatarSelect = (avatar: typeof avatars[0]) => {
+        playPop();
         setSelectedAvatar(avatar);
         speak(avatar.sound);
     };
@@ -51,6 +54,7 @@ const LoginScreen: React.FC = () => {
         }
         setNameError(false);
         setIsJoining(true);
+        playPop();
         speak(`Xin chào ${name}! Bắt đầu khám phá nào!`);
         setTimeout(() => {
             setUserName(name.trim());
@@ -141,11 +145,10 @@ const LoginScreen: React.FC = () => {
                             key={a.emoji}
                             whileTap={{ scale: 0.85 }}
                             onClick={() => handleAvatarSelect(a)}
-                            className={`h-16 rounded-[20px] flex items-center justify-center text-3xl transition-all duration-200 ${
-                                selectedAvatar.emoji === a.emoji
+                            className={`h-16 rounded-[20px] flex items-center justify-center text-3xl transition-all duration-200 ${selectedAvatar.emoji === a.emoji
                                     ? 'bg-white shadow-[0_6px_0_rgba(0,0,0,0.15)] scale-105 ring-4 ring-white/60'
                                     : 'bg-white/30 backdrop-blur-sm hover:bg-white/50 active:bg-white/70'
-                            }`}
+                                }`}
                         >
                             {a.emoji}
                         </motion.button>
@@ -167,11 +170,10 @@ const LoginScreen: React.FC = () => {
                             onChange={handleNameChange}
                             onKeyDown={(e) => e.key === 'Enter' && handleStartClick()}
                             maxLength={20}
-                            className={`w-full h-16 bg-white rounded-2xl px-5 text-xl font-black text-deepNavy placeholder:text-slate-300 placeholder:font-medium shadow-[0_6px_0_rgba(0,0,0,0.1)] border-[3px] transition-all focus:outline-none ${
-                                nameError
+                            className={`w-full h-16 bg-white rounded-2xl px-5 text-xl font-black text-deepNavy placeholder:text-slate-300 placeholder:font-medium shadow-[0_6px_0_rgba(0,0,0,0.1)] border-[3px] transition-all focus:outline-none ${nameError
                                     ? 'border-coralRed ring-4 ring-coralRed/20 animate-bounce-scale'
                                     : 'border-white/0 focus:border-skyBlue focus:ring-4 focus:ring-skyBlue/20'
-                            }`}
+                                }`}
                         />
                     </div>
                     {nameError && (
@@ -231,7 +233,10 @@ const LoginScreen: React.FC = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1 }}
-                    onClick={() => speak('Xin chào! Tên gọi ở nhà của bé là gì? Hãy chọn một linh vật nhé!')}
+                    onClick={() => {
+                        playPop();
+                        speak('Xin chào! Tên gọi ở nhà của bé là gì? Hãy chọn một linh vật nhé!');
+                    }}
                     className="mt-6 flex items-center gap-2 text-white/70 font-bold text-sm active:text-white transition-colors"
                 >
                     🔊 Nghe lại hướng dẫn

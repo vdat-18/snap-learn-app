@@ -92,7 +92,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
                         {/* Words Info */}
                         <div className="text-center mb-8">
                             <h2 className="text-4xl font-black text-deepNavy mb-2">{word.word_vi}</h2>
-                            
+
                             {/* Vietnamese Word with TTS */}
                             <div className="flex items-center justify-center gap-3 mb-4">
                                 <span className="text-lg font-bold text-lang-vi">{word.word_vi}</span>
@@ -107,7 +107,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
                                     <Volume2 className="w-5 h-5" />
                                 </button>
                             </div>
-                            
+
                             {/* English Word with TTS */}
                             <div className="flex items-center justify-center gap-3 mb-2">
                                 <span className="text-2xl font-bold text-skyBlue">{word.word_en}</span>
@@ -122,7 +122,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
                                     <Volume2 className="w-5 h-5" />
                                 </button>
                             </div>
-                            
+
                             {/* Chinese Word with TTS */}
                             <div className="flex items-center justify-center gap-3">
                                 <span className="text-xl font-bold text-lang-zh">{word.word_zh}</span>
@@ -143,10 +143,10 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
                         {/* Evolution Progress */}
                         <section className="bg-white rounded-[32px] p-6 shadow-level-2 border-b-4 border-slate-100 mb-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4" /> Evolution Progress
+                                <h3 className="text-xl font-bold flex items-center gap-2">
+                                    🌱 <span className="text-deepNavy">Lớn lên nào!</span>
                                 </h3>
-                                <span className="text-sm font-black text-deepNavy">{word.practiceCount}/5</span>
+                                <span className="text-lg font-black text-skyBlue bg-skyBlue/10 px-3 py-0.5 rounded-full">{word.practiceCount}/5</span>
                             </div>
 
                             <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden mb-4 p-0.5">
@@ -170,11 +170,11 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
                             : 'bg-slate-50 border-2 border-dashed border-slate-200 opacity-60'
                             }`}>
                             <div className="flex items-center gap-3 mb-4">
-                                <div className={`p-2 rounded-xl ${word.isEvolved ? 'bg-lavenderPurple text-white' : 'bg-slate-300 text-white'}`}>
-                                    <Info className="w-5 h-5" />
+                                <div className={`p-3 rounded-2xl ${word.isEvolved ? 'bg-sunshineYellow text-white' : 'bg-slate-300 text-white shadow-inner'}`}>
+                                    <span className="text-2xl">💡</span>
                                 </div>
-                                <h3 className={`font-black uppercase tracking-widest text-sm ${word.isEvolved ? 'text-lavenderPurple' : 'text-slate-400'}`}>
-                                    Bật mí thú vị {word.isEvolved ? '' : '(Khóa)'}
+                                <h3 className={`font-black uppercase tracking-widest text-lg ${word.isEvolved ? 'text-deepNavy' : 'text-slate-400'}`}>
+                                    Bí mật thẻ bài {word.isEvolved ? '✨' : '🔒'}
                                 </h3>
                             </div>
 

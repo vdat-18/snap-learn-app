@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
+import { useSoundEffects } from '../../hooks/useSoundEffects';
 
 interface OnboardingProps {
     onFinish: () => void;
@@ -81,6 +82,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
     const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'zh' | null>(null);
     const [selectedSecondary, setSelectedSecondary] = useState<'en' | 'zh' | 'none' | null>(null);
     const [dragX, setDragX] = useState(0);
+    const { playPop } = useSoundEffects();
 
     // Auto-play TTS on slide change (except language select)
     useEffect(() => {
@@ -105,14 +107,17 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
 
     const nextSlide = () => {
         if (currentSlide < slides.length - 1) {
+            playPop();
             setCurrentSlide(currentSlide + 1);
         } else {
+            playPop();
             onFinish();
         }
     };
 
     const previousSlide = () => {
         if (currentSlide > 0) {
+            playPop();
             setCurrentSlide(currentSlide - 1);
         }
     };
@@ -149,11 +154,11 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
         <div className={`fixed inset-0 z-[200] flex flex-col transition-all duration-700 bg-gradient-to-b ${activeSlide.bgClass} font-outfit`}>
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-12 pb-4">
-                <button onClick={onFinish} className="w-10 h-10 flex items-center justify-center text-deepNavy/40 hover:text-deepNavy">
+                <button onClick={() => { playPop(); onFinish(); }} className="w-10 h-10 flex items-center justify-center text-deepNavy/40 hover:text-deepNavy">
                     <X className="w-8 h-8" />
                 </button>
                 <h1 className="text-deepNavy font-black text-2xl tracking-tight">SnapLearn</h1>
-                <button onClick={onFinish} className="text-deepNavy/40 font-bold text-lg hover:text-deepNavy px-2">
+                <button onClick={() => { playPop(); onFinish(); }} className="text-deepNavy/40 font-bold text-lg hover:text-deepNavy px-2">
                     Skip
                 </button>
             </div>
@@ -215,11 +220,11 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                             <>
                                 {activeSlide.image && (
                                     <div className="relative mb-8">
-                                        <div className="w-64 h-64 md:w-80 md:h-80 rounded-[40px] bg-white/40 backdrop-blur-sm border-4 border-white/60 flex items-center justify-center overflow-hidden shadow-level-3">
+                                        <div className="w-64 h-64 md:w-80 md:h-80 rounded-[40px] bg-white border-4 border-white/40 flex items-center justify-center overflow-hidden shadow-level-3">
                                             <img
                                                 src={activeSlide.image}
                                                 alt="Mascot"
-                                                className="w-full h-full object-contain p-4 transition-transform duration-500 hover:scale-110"
+                                                className="w-full h-full object-contain p-0 transition-transform duration-500 hover:scale-110"
                                             />
                                         </div>
                                     </div>
