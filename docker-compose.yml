@@ -1,0 +1,173 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: snaplearn-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-snaplearn}
+      POSTGRES_USER: ${DB_USER:-snaplearn}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-snaplearn_dev_password}
+      TZ: 'UTC+7'
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./app/be/data/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-snaplearn}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - snaplearn-network
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: snaplearn-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-snaplearn_redis_password}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - snaplearn-network
+    restart: unless-stopped
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./app/be
+      dockerfile: Dockerfile
+    container_name: snaplearn-backend
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${DB_USER:-snaplearn}:${DB_PASSWORD:-snaplearn_dev_password}@postgres:5432/${DB_NAME:-snaplearn}
+
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-snaplearn_redis_password}@redis:6379/0
+
+      # API Keys (from .env file)
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_VISION_MODEL: ${OPENROUTER_VISION_MODEL:-google/gemini-flash-2.5}
+
+      # Security
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
+      REFRESH_TOKEN_EXPIRATION_DAYS: ${REFRESH_TOKEN_EXPIRATION_DAYS:-30}
+
+      # App Settings
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+      # Allowed Origins
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8000}
+
+      # File Storage
+      UPLOAD_DIR: /app/uploads
+      TTS_CACHE_DIR: /app/tts_cache
+      LOG_DIR: /app/logs
+
+      # Rate Limiting
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      CAPTURES_PER_DAY: ${CAPTURES_PER_DAY:-5}
+
+      # Timezone
+      TZ: 'UTC+7'
+
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+
+    volumes:
+      - ./app/be:/app
+      - backend_uploads:/app/uploads
+      - backend_tts_cache:/app/tts_cache
+      - backend_logs:/app/logs
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    networks:
+      - snaplearn-network
+
+    restart: unless-stopped
+
+    # Command override if using uvicorn directly (for development)
+    command: >
+      sh -c "
+      alembic upgrade head &&
+      python scripts/seed_reference_vocab.py &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./app/fe
+      dockerfile: Dockerfile
+    container_name: snaplearn-frontend
+    environment:
+      # Next.js
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NODE_ENV: ${NODE_ENV:-development}
+
+      # Analytics/Monitoring (optional)
+      NEXT_PUBLIC_ANALYTICS_ID: ${NEXT_PUBLIC_ANALYTICS_ID}
+
+      # PWA
+      NEXT_PUBLIC_PWA_ENABLED: ${NEXT_PUBLIC_PWA_ENABLED:-true}
+
+      # Timezone
+      TZ: 'UTC+7'
+
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+
+    volumes:
+      - ./app/fe:/app
+      - /app/node_modules
+      - /app/.next
+
+    depends_on:
+      - backend
+
+    networks:
+      - snaplearn-network
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  snaplearn-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_uploads:
+    driver: local
+  backend_tts_cache:
+    driver: local
+  backend_logs:
+    driver: local
