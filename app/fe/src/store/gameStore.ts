@@ -20,9 +20,17 @@ interface GameState {
     hasSeenOnboarding: boolean;
     collections: CapturedWord[];
 
-    // Actions
+    // User profile
     userName: string | null;
+    userAvatar: string | null;
     setUserName: (name: string) => void;
+    setUserAvatar: (avatar: string) => void;
+
+    // Language settings (required + optional)
+    target_language: 'en' | 'zh' | null;
+    secondary_language: 'en' | 'zh' | null;
+    setTargetLanguage: (lang: 'en' | 'zh') => void;
+    setSecondaryLanguage: (lang: 'en' | 'zh' | null) => void;
     addXP: (amount: number) => void;
     incrementStreak: () => void;
     resetStreak: () => void;
@@ -98,8 +106,16 @@ export const useGameStore = create<GameState>()(
                 };
             }),
 
+            userAvatar: null,
+            setUserAvatar: (avatar) => set({ userAvatar: avatar }),
+
             userName: null,
             setUserName: (name) => set({ userName: name }),
+
+            target_language: null,
+            secondary_language: null,
+            setTargetLanguage: (lang) => set({ target_language: lang }),
+            setSecondaryLanguage: (lang) => set({ secondary_language: lang }),
 
             addXP: (amount: number) => {
                 set((state) => ({ xp: state.xp + amount }));

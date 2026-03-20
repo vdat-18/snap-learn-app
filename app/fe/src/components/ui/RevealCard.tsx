@@ -48,7 +48,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
     const [isListening, setIsListening] = useState(false);
     const [isCorrect, setIsCorrect] = useState(false);
     const [transcript, setTranscript] = useState('');
-    const addCollection = useGameStore((state) => state.addCollection);
+    const { addCollection, target_language, secondary_language } = useGameStore();
 
     // Reset state when card opens
     useEffect(() => {
@@ -66,8 +66,12 @@ const RevealCard: React.FC<RevealCardProps> = ({
             return;
         }
 
+        // Determine language based on target_language
+        const langCode = target_language === 'zh' ? 'zh-CN' : 'en-US';
+        const targetWord = target_language === 'zh' ? word_zh.toLowerCase() : word_en.toLowerCase();
+
         const recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
+        recognition.lang = langCode;
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
 
@@ -80,8 +84,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
             const speechResult = event.results[0][0].transcript.toLowerCase();
             setTranscript(speechResult);
 
-            // Basic match logic: Check if speech contains the English word
-            if (speechResult.includes(word_en.toLowerCase())) {
+            // Match logic: Check if speech contains the target language word
+            if (speechResult.includes(targetWord)) {
                 setIsCorrect(true);
                 // Save to collection
                 addCollection({
@@ -157,39 +161,84 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             {!imageUrl && <div className="w-full h-full flex items-center justify-center text-4xl">📸</div>}
                         </div>
 
-                        {/* Trilingual Details */}
+                        {/* Multilingual Details — filtered by target_language */}
                         <div className="text-center space-y-3 mb-8">
+                            {/* Vietnamese — always shown as scaffold */}
                             <h2 className="text-3xl font-bold text-lang-vi">{word_vi}</h2>
 
                             <div className="flex flex-col gap-1">
-                                <div className="flex items-center justify-center gap-2">
-                                    <span className="text-xl font-bold text-lang-en">{word_en}</span>
-                                    <span className="text-sm font-medium text-slate-400">{phonetic_en}</span>
-                                    <button
-                                        onClick={() => {
-                                            const utterance = new SpeechSynthesisUtterance(word_en);
-                                            utterance.lang = 'en-US';
-                                            window.speechSynthesis.speak(utterance);
-                                        }}
-                                        className="w-8 h-8 rounded-full bg-skyBlue/10 flex items-center justify-center text-skyBlue text-sm"
-                                    >
-                                        🔊
-                                    </button>
-                                </div>
-                                <div className="flex items-center justify-center gap-2">
-                                    <span className="text-xl font-bold text-lang-zh">{word_zh}</span>
-                                    <span className="text-sm font-medium text-slate-400">{pinyin}</span>
-                                    <button
-                                        onClick={() => {
-                                            const utterance = new SpeechSynthesisUtterance(word_zh);
-                                            utterance.lang = 'zh-CN';
-                                            window.speechSynthesis.speak(utterance);
-                                        }}
-                                        className="w-8 h-8 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-sm"
-                                    >
-                                        🔊
-                                    </button>
-                                </div>
+                                {/* Target Language (Primary) */}
+                                {target_language === 'en' && (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <span className="text-xl font-bold text-lang-en">{word_en}</span>
+                                        <span className="text-sm font-medium text-slate-400">{phonetic_en}</span>
+                                        <button
+                                            onClick={() => {
+                                                const utterance = new SpeechSynthesisUtterance(word_en);
+                                                utterance.lang = 'en-US';
+                                                window.speechSynthesis.speak(utterance);
+                                            }}
+                                            className="w-8 h-8 rounded-full bg-skyBlue/10 flex items-center justify-center text-skyBlue text-sm"
+                                        >
+                                            🔊
+                                        </button>
+                                    </div>
+                                )}
+                                {target_language === 'zh' && (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <span className="text-xl font-bold text-lang-zh">{word_zh}</span>
+                                        <span className="text-sm font-medium text-slate-400">{pinyin}</span>
+                                        <button
+                                            onClick={() => {
+                                                const utterance = new SpeechSynthesisUtterance(word_zh);
+                                                utterance.lang = 'zh-CN';
+                                                window.speechSynthesis.speak(utterance);
+                                            }}
+                                            className="w-8 h-8 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-sm"
+                                        >
+                                            🔊
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Secondary Language (if enabled) */}
+                                {secondary_language && (
+                                    <>
+                                        <div className="h-px bg-slate-200 my-2" />
+                                        {secondary_language === 'en' && (
+                                            <div className="flex items-center justify-center gap-2">
+                                                <span className="text-lg font-semibold text-lang-en">{word_en}</span>
+                                                <span className="text-xs font-medium text-slate-400">{phonetic_en}</span>
+                                                <button
+                                                    onClick={() => {
+                                                        const utterance = new SpeechSynthesisUtterance(word_en);
+                                                        utterance.lang = 'en-US';
+                                                        window.speechSynthesis.speak(utterance);
+                                                    }}
+                                                    className="w-7 h-7 rounded-full bg-skyBlue/10 flex items-center justify-center text-skyBlue text-xs"
+                                                >
+                                                    🔊
+                                                </button>
+                                            </div>
+                                        )}
+                                        {secondary_language === 'zh' && (
+                                            <div className="flex items-center justify-center gap-2">
+                                                <span className="text-lg font-semibold text-lang-zh">{word_zh}</span>
+                                                <span className="text-xs font-medium text-slate-400">{pinyin}</span>
+                                                <button
+                                                    onClick={() => {
+                                                        const utterance = new SpeechSynthesisUtterance(word_zh);
+                                                        utterance.lang = 'zh-CN';
+                                                        window.speechSynthesis.speak(utterance);
+                                                    }}
+                                                    className="w-7 h-7 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-xs"
+                                                >
+                                                    🔊
+                                                </button>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         </div>
 
