@@ -18,6 +18,7 @@ const App: React.FC = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isRankOpen, setIsRankOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [cameraError, setCameraError] = useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
@@ -30,32 +31,33 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Handle Camera Access
-  React.useEffect(() => {
-    if (!showSplash && userName && hasSeenOnboarding) {
-      async function setupCamera() {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } },
-            audio: false,
-          });
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-          }
-        } catch (err) {
-          console.error("Error accessing camera:", err);
-        }
-      }
-      setupCamera();
-    }
+   // Handle Camera Access
+   React.useEffect(() => {
+     if (!showSplash && userName && hasSeenOnboarding) {
+       async function setupCamera() {
+         try {
+           const stream = await navigator.mediaDevices.getUserMedia({
+             video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } },
+             audio: false,
+           });
+           if (videoRef.current) {
+             videoRef.current.srcObject = stream;
+           }
+         } catch (err: any) {
+           console.error("Error accessing camera:", err);
+           setCameraError(true);
+         }
+       }
+       setupCamera();
+     }
 
-    return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [showSplash, userName, hasSeenOnboarding]);
+     return () => {
+       if (videoRef.current && videoRef.current.srcObject) {
+         const stream = videoRef.current.srcObject as MediaStream;
+         stream.getTracks().forEach(track => track.stop());
+       }
+     };
+   }, [showSplash, userName, hasSeenOnboarding]);
 
   const handleCaptureClick = () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -111,15 +113,79 @@ const App: React.FC = () => {
       {/* 3. ONBOARDING (After login if not seen) */}
       {!showSplash && userName && !hasSeenOnboarding && <Onboarding onFinish={setOnboardingSeen} />}
 
-      {/* 4. MAIN APP CONTENT (Only show when ready) */}
-      {(!showSplash && userName && hasSeenOnboarding) && (
-        <>
-          <CollectionBook isOpen={isBookOpen} onClose={() => setIsBookOpen(false)} />
-          <QuestScreen isOpen={isQuestOpen} onClose={() => setIsQuestOpen(false)} />
-          <ProfileScreen isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
-          <LeaderboardScreen isOpen={isRankOpen} onClose={() => setIsRankOpen(false)} />
+       {/* 4. MAIN APP CONTENT (Only show when ready) */}
+       {(!showSplash && userName && hasSeenOnboarding) && (
+         <>
+           <CollectionBook isOpen={isBookOpen} onClose={() => setIsBookOpen(false)} />
+           <QuestScreen isOpen={isQuestOpen} onClose={() => setIsQuestOpen(false)} />
+           <ProfileScreen isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
+           <LeaderboardScreen isOpen={isRankOpen} onClose={() => setIsRankOpen(false)} />
 
-          {/* Hidden Canvas for Capture */}
+           {/* Camera Permission Denied Overlay */}
+           {cameraError && (
+             <motion.div
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-6"
+             >
+               <div className="flex flex-col items-center gap-8 max-w-sm">
+                 {/* Mascot Illustration */}
+                 <motion.img
+                   src="/owl-mascot.png"
+                   alt="Mascot"
+                   initial={{ scale: 0.8, opacity: 0 }}
+                   animate={{ scale: 1, opacity: 1 }}
+                   transition={{ delay: 0.2 }}
+                   className="w-32 h-32 object-contain"
+                 />
+
+                 {/* Main Message */}
+                 <div className="text-center space-y-3">
+                   <h2 className="text-4xl font-black text-white mb-4">📸</h2>
+                   <p className="text-white font-black text-2xl leading-tight">
+                     Cho mình xem thế giới nhé!
+                   </p>
+                   <p className="text-white/70 font-bold text-sm">
+                     SnapLearn cần quyền truy cập camera để tìm kiếm các từ vựng xung quanh bạn.
+                   </p>
+                 </div>
+
+                 {/* Action Button */}
+                 <motion.button
+                   whileTap={{ scale: 0.95 }}
+                   onClick={() => {
+                     setCameraError(false);
+                     // Retry camera permission
+                     async function retryCamera() {
+                       try {
+                         const stream = await navigator.mediaDevices.getUserMedia({
+                           video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } },
+                           audio: false,
+                         });
+                         if (videoRef.current) {
+                           videoRef.current.srcObject = stream;
+                         }
+                       } catch (err) {
+                         console.error("Error accessing camera:", err);
+                         setCameraError(true);
+                       }
+                     }
+                     retryCamera();
+                   }}
+                   className="w-full bg-skyBlue hover:bg-skyBlue/90 text-white font-black text-lg py-4 px-8 rounded-[28px] shadow-level-3 border-t-2 border-white/20 transition-all"
+                 >
+                   ✨ Cho phép Camera
+                 </motion.button>
+
+                 {/* Subtext */}
+                 <p className="text-white/50 font-medium text-xs text-center">
+                   Bạn có thể thay đổi cài đặt quyền bất kỳ lúc nào trong Cài đặt.
+                 </p>
+               </div>
+             </motion.div>
+           )}
+
+           {/* Hidden Canvas for Capture */}
           <canvas ref={canvasRef} className="hidden" />
 
           {/* 1. TOP HUD (Head-Up Display) */}

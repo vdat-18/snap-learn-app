@@ -33,6 +33,33 @@ const rarityBadgeColor: Record<Rarity, string> = {
     Legendary: 'bg-rarity-legendary',
 };
 
+// Levenshtein distance for fuzzy matching
+const levenshteinDistance = (a: string, b: string): number => {
+    const matrix: number[][] = [];
+    for (let i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+    }
+    for (let j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+    }
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+    return matrix[b.length][a.length];
+};
+
+type PronunciationTier = 3 | 2 | 1; // 3 stars, 2 stars, 1 star
+
 const RevealCard: React.FC<RevealCardProps> = ({
     isOpen,
     onClose,
@@ -46,19 +73,80 @@ const RevealCard: React.FC<RevealCardProps> = ({
     category,
 }) => {
     const [isListening, setIsListening] = useState(false);
-    const [isCorrect, setIsCorrect] = useState(false);
     const [transcript, setTranscript] = useState('');
+    const [hasPlayedAudio, setHasPlayedAudio] = useState(false);
+    const [attemptCount, setAttemptCount] = useState(0);
+    const [stars, setStars] = useState<PronunciationTier | null>(null);
+    const [showAutoCloseMessage, setShowAutoCloseMessage] = useState(false);
     const { addCollection, target_language, secondary_language } = useGameStore();
+
+    // Auto-play TTS sequence when card opens (audio-first principle)
+    useEffect(() => {
+        if (isOpen && !hasPlayedAudio) {
+            setHasPlayedAudio(true);
+            playTTSSequence();
+        }
+    }, [isOpen, hasPlayedAudio]);
 
     // Reset state when card opens
     useEffect(() => {
         if (isOpen) {
-            setIsCorrect(false);
+            setStars(null);
             setTranscript('');
+            setHasPlayedAudio(false);
+            setAttemptCount(0);
+            setShowAutoCloseMessage(false);
         }
     }, [isOpen]);
 
+    // TTS Sequence: VI → Scaffolding → Target Language
+    const playTTSSequence = () => {
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+
+        const langLabel = target_language === 'zh' ? 'Tiếng Trung là:' : 'Tiếng Anh là:';
+        const targetWord = target_language === 'zh' ? word_zh : word_en;
+        const targetLang = target_language === 'zh' ? 'zh-CN' : 'en-US';
+
+        // 1. Play Vietnamese word
+        const viUtterance = new SpeechSynthesisUtterance(word_vi);
+        viUtterance.lang = 'vi-VN';
+        viUtterance.rate = 0.9;
+
+        // 2. After VI word finishes, play scaffolding + target language
+        viUtterance.onend = () => {
+            setTimeout(() => {
+                // Scaffolding narration
+                const scaffoldUtterance = new SpeechSynthesisUtterance(langLabel);
+                scaffoldUtterance.lang = 'vi-VN';
+                scaffoldUtterance.rate = 0.9;
+
+                scaffoldUtterance.onend = () => {
+                    // Target language word
+                    const targetUtterance = new SpeechSynthesisUtterance(targetWord);
+                    targetUtterance.lang = targetLang;
+                    targetUtterance.rate = 0.9;
+                    window.speechSynthesis.speak(targetUtterance);
+                };
+
+                window.speechSynthesis.speak(scaffoldUtterance);
+            }, 500);
+        };
+
+        window.speechSynthesis.speak(viUtterance);
+    };
+
+    // Manual replay button
+    const handleReplayAudio = () => {
+        playTTSSequence();
+    };
+
     const startSpeechRecognition = () => {
+        // Don't allow more than 3 attempts
+        if (attemptCount >= 3) {
+            return;
+        }
+
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
@@ -84,25 +172,65 @@ const RevealCard: React.FC<RevealCardProps> = ({
             const speechResult = event.results[0][0].transcript.toLowerCase();
             setTranscript(speechResult);
 
-            // Match logic: Check if speech contains the target language word
-            if (speechResult.includes(targetWord)) {
-                setIsCorrect(true);
-                // Save to collection
+            // 3-tier Scoring Logic
+            let scoredStars: PronunciationTier;
+
+            // Exact match: ★★★
+            if (speechResult === targetWord) {
+                scoredStars = 3;
+            } 
+            // Fuzzy match: includes target word OR Levenshtein distance ≤ 2 → ★★
+            else if (
+                speechResult.includes(targetWord) ||
+                levenshteinDistance(speechResult, targetWord) <= 2
+            ) {
+                scoredStars = 2;
+            } 
+            // No match: ★ (encouraging)
+            else {
+                scoredStars = 1;
+            }
+
+            setStars(scoredStars);
+            const newAttemptCount = attemptCount + 1;
+            setAttemptCount(newAttemptCount);
+
+            // If all 3 attempts used and not yet 3-star, show auto-close message
+            if (newAttemptCount >= 3 && scoredStars < 3) {
+                setShowAutoCloseMessage(true);
+                // Auto-close after 2 seconds
+                setTimeout(() => {
+                    addCollection({
+                        id: Date.now().toString(),
+                        word_en,
+                        word_vi,
+                        word_zh,
+                        image: imageUrl,
+                        stars: scoredStars,
+                        rarity,
+                        category,
+                        capturedAt: new Date().toISOString(),
+                        practiceCount: newAttemptCount,
+                        isEvolved: false
+                    });
+                    onClose();
+                }, 2000);
+            } 
+            // If got 3 stars, save and allow card to stay for celebration
+            else if (scoredStars === 3) {
                 addCollection({
                     id: Date.now().toString(),
                     word_en,
                     word_vi,
                     word_zh,
                     image: imageUrl,
-                    stars: 3,
+                    stars: scoredStars,
                     rarity,
                     category,
                     capturedAt: new Date().toISOString(),
-                    practiceCount: 1,
+                    practiceCount: newAttemptCount,
                     isEvolved: false
                 });
-            } else {
-                setIsCorrect(false);
             }
         };
 
@@ -240,43 +368,74 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                     </>
                                 )}
                             </div>
+                            {/* Replay Audio Button */}
+                            <motion.button
+                                whileTap={{ scale: 0.85 }}
+                                onClick={handleReplayAudio}
+                                className="w-10 h-10 rounded-full bg-skyBlue/20 hover:bg-skyBlue/40 flex items-center justify-center text-skyBlue transition-all mt-2"
+                                title="Nghe lại"
+                            >
+                                🔊
+                            </motion.button>
                         </div>
 
                         {/* Practice Area (PTT) */}
-                        <div className={`transition-all duration-300 rounded-[24px] p-6 border ${isCorrect ? 'bg-mintGreen/10 border-mintGreen/20' : 'bg-softCream border-sunshineYellow/20'}`}>
-                            <span className={`block text-center text-sm font-bold mb-4 uppercase tracking-wider ${isCorrect ? 'text-mintGreen' : 'text-skyBlue'}`}>
-                                {isCorrect ? 'Perfect! You got it.' : isListening ? 'Listening...' : 'Say it to capture!'}
-                            </span>
-
-                            <div className="flex flex-col items-center gap-4">
-                                <motion.button
-                                    whileTap={{ scale: 0.9 }}
-                                    onClick={startSpeechRecognition}
-                                    disabled={isListening || isCorrect}
-                                    className={`w-20 h-20 rounded-full shadow-level-2 flex items-center justify-center text-3xl transition-all ${isCorrect ? 'bg-mintGreen text-white' : isListening ? 'bg-coralRed text-white animate-pulse' : 'bg-skyBlue text-white hover:bg-skyBlue/90'}`}
-                                >
-                                    {isCorrect ? '✅' : isListening ? '🎤' : '🎤'}
-                                </motion.button>
-
-                                {transcript && !isListening && (
-                                    <p className={`text-sm font-bold animate-in fade-in slide-in-from-bottom-1 ${isCorrect ? 'text-mintGreen' : 'text-coralRed'}`}>
-                                        You said: "{transcript}"
-                                    </p>
-                                )}
-
-                                <div className="flex gap-2">
-                                    {[1, 2, 3].map((s) => (
-                                        <motion.span
-                                            key={s}
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: isCorrect ? 1.2 : 1 }}
-                                            className={`text-2xl transition-colors ${isCorrect ? 'text-yellow-400' : 'text-slate-200'}`}
-                                        >
-                                            {isCorrect ? '★' : '☆'}
-                                        </motion.span>
-                                    ))}
+                        <div className={`transition-all duration-300 rounded-[24px] p-6 border ${stars === 3 ? 'bg-mintGreen/10 border-mintGreen/20' : stars ? 'bg-skyBlue/10 border-skyBlue/20' : 'bg-softCream border-sunshineYellow/20'}`}>
+                            {showAutoCloseMessage ? (
+                                <div className="text-center space-y-3">
+                                    <span className="block text-lg font-bold text-coralRed">👏 Great job! Let's try again later!</span>
+                                    <p className="text-sm text-slate-600">You practiced {attemptCount} times — that's awesome!</p>
                                 </div>
-                            </div>
+                            ) : (
+                                <>
+                                    <span className={`block text-center text-sm font-bold mb-4 uppercase tracking-wider ${stars === 3 ? 'text-mintGreen' : stars ? 'text-skyBlue' : isListening ? 'text-coralRed' : 'text-skyBlue'}`}>
+                                        {stars === 3 ? 'Perfect! You got it.' : stars === 2 ? 'Good try! 👍' : stars === 1 ? 'Let\'s practice! 🎯' : isListening ? 'Listening...' : `Say it to capture! (${attemptCount}/3 attempts)`}
+                                    </span>
+
+                                    <div className="flex flex-col items-center gap-4">
+                                        <motion.button
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={startSpeechRecognition}
+                                            disabled={isListening || stars === 3 || attemptCount >= 3}
+                                            className={`w-20 h-20 rounded-full shadow-level-2 flex items-center justify-center text-3xl transition-all ${stars === 3 ? 'bg-mintGreen text-white' : stars === 2 ? 'bg-skyBlue text-white' : isListening ? 'bg-coralRed text-white animate-pulse' : attemptCount >= 3 ? 'bg-slate-300 text-white cursor-not-allowed' : 'bg-skyBlue text-white hover:bg-skyBlue/90'}`}
+                                        >
+                                            {stars === 3 ? '✅' : isListening ? '🎤' : '🎤'}
+                                        </motion.button>
+
+                                        {transcript && !isListening && (
+                                            <p className={`text-sm font-bold animate-in fade-in slide-in-from-bottom-1 ${stars === 3 ? 'text-mintGreen' : stars === 2 ? 'text-skyBlue' : stars === 1 ? 'text-amber-500' : 'text-coralRed'}`}>
+                                                You said: "{transcript}"
+                                            </p>
+                                        )}
+
+                                        {/* 3-tier Stars with Staggered Pop-in Animation */}
+                                        {stars && (
+                                            <div className="flex gap-2">
+                                                {[1, 2, 3].map((starIdx) => (
+                                                    <motion.span
+                                                        key={starIdx}
+                                                        initial={{ scale: 0 }}
+                                                        animate={{ scale: starIdx <= stars ? 1.3 : 1 }}
+                                                        transition={{
+                                                            delay: starIdx <= stars ? (starIdx - 1) * 0.1 : 0,
+                                                            type: 'spring',
+                                                            stiffness: 300,
+                                                            damping: 15
+                                                        }}
+                                                        className={`text-3xl transition-colors ${
+                                                            starIdx <= stars 
+                                                                ? 'text-yellow-400 drop-shadow-lg' 
+                                                                : 'text-slate-200'
+                                                        }`}
+                                                    >
+                                                        {starIdx <= stars ? '★' : '☆'}
+                                                    </motion.span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </motion.div>
                 </div>
