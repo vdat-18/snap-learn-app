@@ -61,14 +61,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                     transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                     className="fixed inset-0 z-[170] bg-snowWhite flex flex-col font-outfit"
                 >
-                    {/* Header */}
+                    {/* Header (icon-driven, minimal text) */}
                     <header className="px-6 pt-12 pb-6 bg-white shadow-sm flex items-center justify-between">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                             <button onClick={onClose} className="p-2 -ml-2">
                                 <X className="w-8 h-8 text-deepNavy" />
                             </button>
-                            <h1 className="text-2xl font-black text-deepNavy uppercase tracking-tight">
-                                My Profile 👤
+                            <h1 className="text-3xl drop-shadow-sm">
+                                👤
                             </h1>
                         </div>
                         <button
@@ -90,7 +90,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                                     <img src={userAvatar || '/avatar-owl.png'} alt="Avatar" className="w-full h-full object-cover" />
                                 </div>
                                 <div className="absolute -bottom-2 -right-2 bg-skyBlue p-2 rounded-2xl border-4 border-white shadow-level-1">
-                                    <span className="text-white font-black text-xs">Lvl {level}</span>
+                                    <span className="text-white font-black text-sm">{level}</span>
                                 </div>
                             </div>
 
@@ -100,22 +100,19 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                             </div>
                         </div>
 
-                        {/* Summary Stats Grid */}
+                        {/* Summary Stats Grid (icon-driven, no labels) */}
                         <div className="grid grid-cols-3 gap-4 mb-10">
                             <div className="bg-white p-4 rounded-[24px] shadow-level-1 text-center border-b-4 border-slate-100">
-                                <span className="block text-2xl mb-1">📖</span>
-                                <span className="block text-lg font-black text-deepNavy">{collections.length}</span>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase">Words</span>
+                                <span className="block text-3xl mb-2">📖</span>
+                                <span className="block text-xl font-black text-deepNavy">{collections.length}</span>
                             </div>
                             <div className="bg-white p-4 rounded-[24px] shadow-level-1 text-center border-b-4 border-slate-100">
-                                <span className="block text-2xl mb-1">🔥</span>
-                                <span className="block text-lg font-black text-deepNavy">{streak}</span>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase">Streak</span>
+                                <span className="block text-3xl mb-2">🔥</span>
+                                <span className="block text-xl font-black text-deepNavy">{streak}</span>
                             </div>
                             <div className="bg-white p-4 rounded-[24px] shadow-level-1 text-center border-b-4 border-slate-100">
-                                <span className="block text-2xl mb-1">⭐</span>
-                                <span className="block text-lg font-black text-deepNavy">{rareCount}</span>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase">Rare</span>
+                                <span className="block text-3xl mb-2">⭐</span>
+                                <span className="block text-xl font-black text-deepNavy">{rareCount}</span>
                             </div>
                         </div>
 

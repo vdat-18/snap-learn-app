@@ -77,20 +77,15 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                     transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                     className="fixed inset-0 z-[160] bg-snowWhite flex flex-col font-outfit"
                 >
-                    {/* Header */}
+                    {/* Header (icon-driven, minimal text) */}
                     <header className="px-6 pt-12 pb-6 bg-white shadow-sm flex items-center justify-between">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                             <button onClick={onClose} className="p-2 -ml-2">
                                 <X className="w-8 h-8 text-deepNavy" />
                             </button>
-                            <div>
-                                <h1 className="text-2xl font-black text-deepNavy uppercase tracking-tight flex items-center gap-2">
-                                    ⚔️ Quests
-                                </h1>
-                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
-                                    Complete mission to get XP
-                                </p>
-                            </div>
+                            <h1 className="text-3xl drop-shadow-sm">
+                                ⚔️
+                            </h1>
                         </div>
                         <div className="bg-sunshineYellow/20 px-4 py-2 rounded-2xl border border-sunshineYellow/30">
                             <span className="font-black text-deepNavy text-sm">⭐ {xp}</span>
@@ -101,8 +96,8 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                         {/* Categories */}
                         {['Today', 'Weekly', 'Challenge'].map((cat) => (
                             <section key={cat} className="space-y-4">
-                                <h2 className="text-lg font-black text-slate-400 uppercase tracking-[3px]">
-                                    {cat === 'Today' ? '── Today ──' : cat === 'Weekly' ? '── This Week ──' : '── Real Challenge ──'}
+                                <h2 className="text-2xl font-black text-slate-300 drop-shadow-sm">
+                                    {cat === 'Today' ? '🌅' : cat === 'Weekly' ? '📅' : '🏆'}
                                 </h2>
 
                                 <div className="space-y-4">
@@ -152,11 +147,11 @@ const QuestCard: React.FC<{ quest: Quest; onClaim: () => void }> = ({ quest, onC
 
             <div className="space-y-3">
                 <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider">
-                    <span className={isCompleted ? 'text-mintGreen' : 'text-skyBlue'}>
-                        Progress {quest.progress}/{quest.total}
+                    <span className={isCompleted ? 'text-mintGreen text-lg' : 'text-skyBlue text-lg'}>
+                        {isCompleted ? '✓' : '◉'}
                     </span>
                     <span className="flex items-center gap-1 text-sunshineYellow">
-                        Reward: {quest.rewardXP} XP {quest.rewardBadge}
+                        ⭐ +{quest.rewardXP} {quest.rewardBadge}
                     </span>
                 </div>
 
@@ -178,8 +173,7 @@ const QuestCard: React.FC<{ quest: Quest; onClaim: () => void }> = ({ quest, onC
                         }}
                         className="w-full mt-2 bg-sunshineYellow text-deepNavy font-black py-3 rounded-2xl shadow-[0_5px_0_rgb(161,98,7)] active:shadow-none active:translate-y-[5px] transition-all flex items-center justify-center gap-2 border-t-2 border-white/30"
                     >
-                        <Gift className="w-5 h-5" />
-                        CLAIM REWARD!
+                        <Gift className="w-6 h-6" />
                     </motion.button>
                 )}
             </div>

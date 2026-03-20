@@ -55,11 +55,11 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                                 </button>
                             )}
                             <div>
-                                <h1 className="text-2xl font-black text-deepNavy uppercase tracking-tight">
-                                    {selectedCategory ? categories.find(c => c.id === selectedCategory)?.name : '📖 Collection Book'}
+                                <h1 className="text-3xl font-black text-deepNavy">
+                                    {selectedCategory ? categories.find(c => c.id === selectedCategory)?.icon : '📖'}
                                 </h1>
-                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
-                                    {collections.length} words collected
+                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                    {collections.length} captured
                                 </p>
                             </div>
                         </div>
@@ -78,14 +78,11 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                                             key={cat.id}
                                             whileTap={{ scale: 0.95 }}
                                             onClick={() => setSelectedCategory(cat.id)}
-                                            className="bg-white rounded-[24px] p-5 shadow-level-2 border-b-4 border-slate-100 flex flex-col items-center text-center group"
+                                            className="bg-white rounded-[24px] p-6 shadow-level-2 border-b-4 border-slate-100 flex flex-col items-center text-center group"
                                         >
-                                            <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">
+                                            <div className="text-5xl mb-3 group-hover:scale-110 transition-transform">
                                                 {cat.icon}
                                             </div>
-                                            <h3 className="font-black text-deepNavy mb-1 uppercase text-sm tracking-wide">
-                                                {cat.name}
-                                            </h3>
                                             <div className="w-full mt-2">
                                                 <div className="flex justify-between text-[10px] font-black text-slate-400 mb-1">
                                                     <span>{count}/{cat.total}</span>

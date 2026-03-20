@@ -137,16 +137,16 @@ const ErrorOverlay: React.FC<ErrorOverlayProps> = ({
               ✨ {actionLabel || config.actionText}
             </motion.button>
 
-            {/* Dismiss Option - Small Text */}
+            {/* Dismiss Option - Icon Only */}
             {type !== 'time-limit' && (
               <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
                 onClick={onClose}
-                className="text-white/40 hover:text-white/60 font-medium text-xs text-center transition-colors"
+                className="text-white/40 hover:text-white/60 text-2xl transition-colors"
               >
-                Đóng
+                ✕
               </motion.button>
             )}
           </div>

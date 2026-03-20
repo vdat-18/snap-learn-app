@@ -63,15 +63,17 @@ const MissionOverlay: React.FC<MissionOverlayProps> = ({ userName = 'Small Explo
                 whileHover={{ scale: 1.02 }}
                 className="bg-white/40 backdrop-blur-2xl p-4 rounded-[32px] border border-white/50 shadow-level-3 hover:bg-white/50 transition-colors"
             >
-                {/* User greeting */}
-                <p className="text-white/60 font-black text-[10px] uppercase tracking-widest mb-1">
-                    Hi, {userName}! 👋
-                </p>
-
-                {/* Mission title */}
-                <p className="text-white font-black text-base mb-3 drop-shadow-md tracking-tight leading-tight">
-                    {currentMission.title}
-                </p>
+                {/* Mission icon + emoji (icon-driven, minimal text) */}
+                <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl drop-shadow-md">
+                        {currentMission.title.includes('🔴') ? '🔴' :
+                         currentMission.title.includes('🎤') ? '🎤' :
+                         currentMission.title.includes('🐾') ? '🐾' : '⭐'}
+                    </span>
+                    <span className="text-white font-black text-sm drop-shadow-md tracking-tight flex-1 line-clamp-2">
+                        {currentMission.title.split(' ').slice(0, 3).join(' ')}
+                    </span>
+                </div>
 
                 {/* Progress bar */}
                 <div className="flex items-center gap-3 mb-2">
@@ -88,9 +90,9 @@ const MissionOverlay: React.FC<MissionOverlayProps> = ({ userName = 'Small Explo
                     </span>
                 </div>
 
-                {/* Reward info */}
+                {/* Reward info (icon-driven: ⭐ instead of "Reward" text) */}
                 <div className="flex items-center justify-between bg-white/20 rounded-lg px-2 py-1">
-                    <span className="text-white/80 font-bold text-[9px] uppercase">Reward</span>
+                    <span className="text-sunshineYellow text-lg drop-shadow-md">⭐</span>
                     <span className="text-sunshineYellow font-black text-sm">+{currentMission.rewardXP}</span>
                 </div>
 

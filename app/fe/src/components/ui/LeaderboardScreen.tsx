@@ -40,10 +40,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                     <header className="px-6 pt-12 pb-6 bg-white shadow-sm">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-sunshineYellow rounded-xl">
-                                    <Trophy className="w-6 h-6 text-deepNavy" />
-                                </div>
-                                <h1 className="text-2xl font-black text-deepNavy uppercase tracking-tight">Leaderboard</h1>
+                                <h1 className="text-4xl font-black text-deepNavy">🏆</h1>
                             </div>
                             <button onClick={onClose} className="p-2 -mr-2">
                                 <X className="w-8 h-8 text-deepNavy" />
@@ -86,10 +83,10 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                                 className="flex-1 flex flex-col items-center"
                             >
-                                <div className="text-4xl mb-2 relative">
-                                    <span className="relative z-10">{top3[1].avatar}</span>
-                                    <div className="absolute -top-1 -right-1 bg-slate-300 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white text-[10px] font-black text-white">2</div>
-                                </div>
+                                 <div className="text-4xl mb-2 relative">
+                                     <span className="relative z-10">{top3[1].avatar}</span>
+                                     <div className="absolute -top-1 -right-1 text-xl">🥈</div>
+                                 </div>
                                 <div className="w-full bg-slate-100 rounded-t-2xl shadow-sm p-3 text-center border-t-4 border-slate-300 h-28 flex flex-col justify-end">
                                     <span className="block font-black text-xs text-deepNavy truncate">{top3[1].name}</span>
                                     <span className="block font-bold text-[10px] text-skyBlue">{top3[1].points} XP</span>
@@ -116,10 +113,10 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
                                 className="flex-1 flex flex-col items-center"
                             >
-                                <div className="text-4xl mb-2 relative">
-                                    <span className="relative z-10">{top3[2].avatar}</span>
-                                    <div className="absolute -top-1 -right-1 bg-amber-600 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white text-[10px] font-black text-white">3</div>
-                                </div>
+                                 <div className="text-4xl mb-2 relative">
+                                     <span className="relative z-10">{top3[2].avatar}</span>
+                                     <div className="absolute -top-1 -right-1 text-xl">🥉</div>
+                                 </div>
                                 <div className="w-full bg-amber-50 rounded-t-2xl shadow-sm p-3 text-center border-t-4 border-amber-400 h-20 flex flex-col justify-end">
                                     <span className="block font-black text-xs text-deepNavy truncate">{top3[2].name}</span>
                                     <span className="block font-bold text-[10px] text-amber-600">{top3[2].points} XP</span>
@@ -138,18 +135,16 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                     className="bg-white p-4 rounded-[20px] shadow-sm flex items-center justify-between border-b-2 border-slate-50"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <span className="w-6 text-sm font-black text-slate-400">{player.rank}</span>
+                                        <span className="text-2xl">{player.rank === 4 ? '4️⃣' : player.rank === 5 ? '5️⃣' : player.rank === 6 ? '6️⃣' : player.rank === 7 ? '7️⃣' : '8️⃣'}</span>
                                         <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-2xl shadow-sm border-2 border-white">
                                             {player.avatar}
                                         </div>
                                         <div>
                                             <h4 className="font-black text-deepNavy text-sm">{player.name}</h4>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Vocab Hunter</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <p className="font-black text-skyBlue text-sm">⭐ {player.points}</p>
-                                        <p className="text-[9px] font-bold text-slate-300 uppercase">Points</p>
                                     </div>
                                 </motion.div>
                             ))}
@@ -161,16 +156,14 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                         <div className="max-w-md mx-auto bg-deepNavy rounded-[24px] p-5 flex items-center justify-between shadow-level-3">
                             <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 bg-skyBlue rounded-full flex items-center justify-center text-xl text-white font-black border-2 border-white/20">
-                                    12
+                                    {level}
                                 </div>
                                 <div>
                                     <h4 className="font-black text-white text-sm">YOU (Dat Nguyen)</h4>
-                                    <p className="text-[10px] font-bold text-sky-100 uppercase tracking-widest opacity-70">Level {level}</p>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="font-black text-sunshineYellow text-lg">{xp}</p>
-                                <p className="text-[10px] font-bold text-sky-100 uppercase opacity-70">XP</p>
+                                <p className="font-black text-sunshineYellow text-lg">⭐ {xp}</p>
                             </div>
                         </div>
                     </div>
