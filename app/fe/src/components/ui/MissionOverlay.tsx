@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useGameStore, Quest } from '../../store/gameStore';
+import { useGameStore, type Quest } from '../../store/gameStore';
 
 interface MissionOverlayProps {
     userName?: string;
@@ -32,7 +32,7 @@ const mockMissions: Quest[] = [
     },
 ];
 
-const MissionOverlay: React.FC<MissionOverlayProps> = ({ userName = 'Small Explorer' }) => {
+const MissionOverlay: React.FC<MissionOverlayProps> = () => {
     const { quests, setQuests } = useGameStore();
     const [currentMission, setCurrentMission] = useState<Quest | null>(null);
 
@@ -67,8 +67,8 @@ const MissionOverlay: React.FC<MissionOverlayProps> = ({ userName = 'Small Explo
                 <div className="flex items-center gap-2 mb-3">
                     <span className="text-2xl drop-shadow-md">
                         {currentMission.title.includes('🔴') ? '🔴' :
-                         currentMission.title.includes('🎤') ? '🎤' :
-                         currentMission.title.includes('🐾') ? '🐾' : '⭐'}
+                            currentMission.title.includes('🎤') ? '🎤' :
+                                currentMission.title.includes('🐾') ? '🐾' : '⭐'}
                     </span>
                     <span className="text-white font-black text-sm drop-shadow-md tracking-tight flex-1 line-clamp-2">
                         {currentMission.title.split(' ').slice(0, 3).join(' ')}

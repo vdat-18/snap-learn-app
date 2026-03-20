@@ -87,24 +87,22 @@ const RevealCard: React.FC<RevealCardProps> = ({
     const { addCollection, target_language, secondary_language } = useGameStore();
     const { playSound } = useSoundEffects();
 
-    // Auto-play TTS sequence when card opens (audio-first principle)
-    useEffect(() => {
-        if (isOpen && !hasPlayedAudio) {
-            setHasPlayedAudio(true);
-            playTTSSequence();
-        }
-    }, [isOpen, hasPlayedAudio]);
-
-    // Reset state when card opens
-    useEffect(() => {
-        if (isOpen) {
-            setStars(null);
-            setTranscript('');
-            setHasPlayedAudio(false);
-            setAttemptCount(0);
-            setShowAutoCloseMessage(false);
-        }
-    }, [isOpen]);
+    // Helper to save common word data
+    const handleSaveCollection = (scoredStars: PronunciationTier, practiceCount: number) => {
+        addCollection({
+            id: Date.now().toString(),
+            word_en,
+            word_vi,
+            word_zh,
+            image: imageUrl,
+            stars: scoredStars,
+            rarity,
+            category,
+            capturedAt: new Date().toISOString(),
+            practiceCount,
+            isEvolved: false
+        });
+    };
 
     // TTS Sequence: VI → Scaffolding → Target Language
     const playTTSSequence = () => {
@@ -142,6 +140,26 @@ const RevealCard: React.FC<RevealCardProps> = ({
 
         window.speechSynthesis.speak(viUtterance);
     };
+
+    // Auto-play TTS sequence when card opens (audio-first principle)
+    useEffect(() => {
+        if (isOpen && !hasPlayedAudio) {
+            setHasPlayedAudio(true);
+            playTTSSequence();
+        }
+    }, [isOpen, hasPlayedAudio, playTTSSequence]);
+
+    // Reset state when card opens
+    useEffect(() => {
+        if (isOpen) {
+            setStars(null);
+            setTranscript('');
+            setHasPlayedAudio(false);
+            setAttemptCount(0);
+            setShowAutoCloseMessage(false);
+        }
+    }, [isOpen]);
+
 
     // Manual replay button
     const handleReplayAudio = () => {
@@ -185,14 +203,14 @@ const RevealCard: React.FC<RevealCardProps> = ({
             // Exact match: ★★★
             if (speechResult === targetWord) {
                 scoredStars = 3;
-            } 
+            }
             // Fuzzy match: includes target word OR Levenshtein distance ≤ 2 → ★★
             else if (
                 speechResult.includes(targetWord) ||
                 levenshteinDistance(speechResult, targetWord) <= 2
             ) {
                 scoredStars = 2;
-            } 
+            }
             // No match: ★ (encouraging)
             else {
                 scoredStars = 1;
@@ -207,44 +225,20 @@ const RevealCard: React.FC<RevealCardProps> = ({
                 setShowAutoCloseMessage(true);
                 // Auto-close after 2 seconds
                 setTimeout(() => {
-                    addCollection({
-                        id: Date.now().toString(),
-                        word_en,
-                        word_vi,
-                        word_zh,
-                        image: imageUrl,
-                        stars: scoredStars,
-                        rarity,
-                        category,
-                        capturedAt: new Date().toISOString(),
-                        practiceCount: newAttemptCount,
-                        isEvolved: false
-                    });
+                    handleSaveCollection(scoredStars, newAttemptCount);
                     onClose();
                 }, 2000);
-            } 
+            }
             // If got 3 stars, save and allow card to stay for celebration
             else if (scoredStars === 3) {
-                addCollection({
-                    id: Date.now().toString(),
-                    word_en,
-                    word_vi,
-                    word_zh,
-                    image: imageUrl,
-                    stars: scoredStars,
-                    rarity,
-                    category,
-                    capturedAt: new Date().toISOString(),
-                    practiceCount: newAttemptCount,
-                    isEvolved: false
-                });
+                handleSaveCollection(scoredStars, newAttemptCount);
 
                 // Trigger card fly-to-collection animation after 1.5 seconds
                 setTimeout(() => {
                     setIsFlyingToCollection(true);
                     playSound('reveal');
                     triggerSparkles(window.innerWidth / 2, window.innerHeight / 2);
-                    
+
                     // Close after flight animation completes (1.2 seconds)
                     setTimeout(() => {
                         if (onCardFlyToCollection) {
@@ -286,20 +280,20 @@ const RevealCard: React.FC<RevealCardProps> = ({
                     <motion.div
                         ref={cardRef}
                         initial={{ y: '100%' }}
-                        animate={isFlyingToCollection ? { 
-                            scale: 0.1, 
-                            x: window.innerWidth - 100, 
+                        animate={isFlyingToCollection ? {
+                            scale: 0.1,
+                            x: window.innerWidth - 100,
                             y: window.innerHeight - 140,
                             opacity: 0
                         } : { y: 0 }}
                         exit={{ y: '100%' }}
-                        transition={isFlyingToCollection ? { 
-                            duration: 1.2, 
-                            ease: 'easeInOut' 
-                        } : { 
-                            type: 'spring', 
-                            damping: 25, 
-                            stiffness: 200 
+                        transition={isFlyingToCollection ? {
+                            duration: 1.2,
+                            ease: 'easeInOut'
+                        } : {
+                            type: 'spring',
+                            damping: 25,
+                            stiffness: 200
                         }}
                         className="relative w-full max-w-md bg-white rounded-t-[32px] p-8 pb-12 shadow-level-3"
                     >
@@ -457,11 +451,10 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                                             stiffness: 300,
                                                             damping: 15
                                                         }}
-                                                        className={`text-3xl transition-colors ${
-                                                            starIdx <= stars 
-                                                                ? 'text-yellow-400 drop-shadow-lg' 
-                                                                : 'text-slate-200'
-                                                        }`}
+                                                        className={`text-3xl transition-colors ${starIdx <= stars
+                                                            ? 'text-yellow-400 drop-shadow-lg'
+                                                            : 'text-slate-200'
+                                                            }`}
                                                     >
                                                         {starIdx <= stars ? '★' : '☆'}
                                                     </motion.span>

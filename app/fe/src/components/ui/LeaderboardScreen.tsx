@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trophy, Crown, Timer } from 'lucide-react';
+import { X, Crown, Timer } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 
 interface LeaderboardScreenProps {
@@ -8,23 +8,15 @@ interface LeaderboardScreenProps {
     onClose: () => void;
 }
 
-const mockPlayers = [
-    { id: '1', name: 'An Nguyen', points: 2450, avatar: '🦊', rank: 1 },
-    { id: '2', name: 'Minh Tu', points: 1980, avatar: '🦁', rank: 2 },
-    { id: '3', name: 'Bao Bao', points: 1650, avatar: '🐼', rank: 3 },
-    { id: '4', name: 'Linh Chi', points: 1200, avatar: '🐰', rank: 4 },
-    { id: '5', name: 'Hung Vuong', points: 980, avatar: '🐯', rank: 5 },
-    { id: '6', name: 'Thao My', points: 840, avatar: '🐨', rank: 6 },
-    { id: '7', name: 'Dung Beo', points: 720, avatar: '🐷', rank: 7 },
-    { id: '8', name: 'Ngoc Anh', points: 650, avatar: '🦄', rank: 8 },
-];
+import { MOCK_LEADERBOARD } from '../../store/mockData';
 
 const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }) => {
     const { xp, level } = useGameStore();
     const [activeTab, setActiveTab] = useState('All');
 
-    const top3 = mockPlayers.slice(0, 3);
-    const others = mockPlayers.slice(3);
+    const currentPlayers = MOCK_LEADERBOARD[activeTab] || [];
+    const top3 = currentPlayers.slice(0, 3);
+    const others = currentPlayers.slice(3);
 
     return (
         <AnimatePresence>
@@ -83,10 +75,10 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                                 className="flex-1 flex flex-col items-center"
                             >
-                                 <div className="text-4xl mb-2 relative">
-                                     <span className="relative z-10">{top3[1].avatar}</span>
-                                     <div className="absolute -top-1 -right-1 text-xl">🥈</div>
-                                 </div>
+                                <div className="text-4xl mb-2 relative">
+                                    <span className="relative z-10">{top3[1].avatar}</span>
+                                    <div className="absolute -top-1 -right-1 text-xl">🥈</div>
+                                </div>
                                 <div className="w-full bg-slate-100 rounded-t-2xl shadow-sm p-3 text-center border-t-4 border-slate-300 h-28 flex flex-col justify-end">
                                     <span className="block font-black text-xs text-deepNavy truncate">{top3[1].name}</span>
                                     <span className="block font-bold text-[10px] text-skyBlue">{top3[1].points} XP</span>
@@ -113,10 +105,10 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
                                 className="flex-1 flex flex-col items-center"
                             >
-                                 <div className="text-4xl mb-2 relative">
-                                     <span className="relative z-10">{top3[2].avatar}</span>
-                                     <div className="absolute -top-1 -right-1 text-xl">🥉</div>
-                                 </div>
+                                <div className="text-4xl mb-2 relative">
+                                    <span className="relative z-10">{top3[2].avatar}</span>
+                                    <div className="absolute -top-1 -right-1 text-xl">🥉</div>
+                                </div>
                                 <div className="w-full bg-amber-50 rounded-t-2xl shadow-sm p-3 text-center border-t-4 border-amber-400 h-20 flex flex-col justify-end">
                                     <span className="block font-black text-xs text-deepNavy truncate">{top3[2].name}</span>
                                     <span className="block font-bold text-[10px] text-amber-600">{top3[2].points} XP</span>

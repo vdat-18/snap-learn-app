@@ -31,10 +31,19 @@ const slides = [
         id: 'language',
         type: 'language-select',
         title: "Chọn ngôn ngữ yêu thích",
-        description: "Bạn muốn học tiếng gì?",
+        description: "Bé muốn học tiếng gì nhất?",
         image: null,
         bgClass: "from-purple-300 to-purple-500",
-        btnLabel: null // No btn for this slide
+        btnLabel: null
+    },
+    {
+        id: 'secondary-language',
+        type: 'secondary-language-select',
+        title: "Bé muốn học song ngữ?",
+        description: "Học thêm một ngôn ngữ khác cùng lúc nhé!",
+        image: null,
+        bgClass: "from-indigo-400 to-indigo-600",
+        btnLabel: null
     },
     {
         id: 'camera',
@@ -67,9 +76,10 @@ const slides = [
 ];
 
 const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
-    const { setTargetLanguage } = useGameStore();
+    const { setTargetLanguage, setSecondaryLanguage } = useGameStore();
     const [currentSlide, setCurrentSlide] = useState(0);
     const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'zh' | null>(null);
+    const [selectedSecondary, setSelectedSecondary] = useState<'en' | 'zh' | 'none' | null>(null);
     const [dragX, setDragX] = useState(0);
 
     // Auto-play TTS on slide change (except language select)
@@ -82,7 +92,12 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
             return () => clearTimeout(timer);
         } else if (activeSlide.type === 'language-select') {
             const timer = setTimeout(() => {
-                speak('Bạn muốn học tiếng gì?', 'vi-VN');
+                speak('Bé muốn học tiếng gì nhất?', 'vi-VN');
+            }, 400);
+            return () => clearTimeout(timer);
+        } else if (activeSlide.type === 'secondary-language-select') {
+            const timer = setTimeout(() => {
+                speak('Bé có muốn học thêm một ngôn ngữ nữa không?', 'vi-VN');
             }, 400);
             return () => clearTimeout(timer);
         }
@@ -109,14 +124,26 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
         } else {
             speak('Zhōngwén', 'zh-CN');
         }
-        // Save to store
         setTargetLanguage(lang);
-        // Auto-proceed to next slide after 1s
-        setTimeout(() => nextSlide(), 1200);
+        setTimeout(() => nextSlide(), 1000);
+    };
+
+    const handleSecondarySelect = (lang: 'en' | 'zh' | 'none') => {
+        setSelectedSecondary(lang);
+        if (lang === 'none') {
+            speak('Dạ không!', 'vi-VN');
+            setSecondaryLanguage(null);
+        } else {
+            if (lang === 'en') speak('English', 'en-US');
+            else speak('Zhōngwén', 'zh-CN');
+            setSecondaryLanguage(lang);
+        }
+        setTimeout(() => nextSlide(), 1000);
     };
 
     const activeSlide = slides[currentSlide];
     const isLanguageSlide = activeSlide.type === 'language-select';
+    const isSecondarySlide = activeSlide.type === 'secondary-language-select';
 
     return (
         <div className={`fixed inset-0 z-[200] flex flex-col transition-all duration-700 bg-gradient-to-b ${activeSlide.bgClass} font-outfit`}>
@@ -132,7 +159,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
             </div>
 
             {/* Content - Swipe-enabled */}
-            <div 
+            <div
                 className="flex-1 flex flex-col items-center justify-center px-6 cursor-grab active:cursor-grabbing"
                 onMouseDown={(e) => {
                     const startX = e.clientX;
@@ -184,18 +211,19 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                         className="flex flex-col items-center w-full"
                     >
                         {/* Standard slide with image */}
-                        {!isLanguageSlide && (
+                        {!isLanguageSlide && !isSecondarySlide && (
                             <>
-                                {/* Mascot Illustration */}
-                                <div className="relative mb-8">
-                                    <div className="w-64 h-64 md:w-80 md:h-80 rounded-[40px] bg-white/40 backdrop-blur-sm border-4 border-white/60 flex items-center justify-center overflow-hidden shadow-level-3">
-                                        <img
-                                            src={activeSlide.image}
-                                            alt="Mascot"
-                                            className="w-full h-full object-contain p-4 transition-transform duration-500 hover:scale-110"
-                                        />
+                                {activeSlide.image && (
+                                    <div className="relative mb-8">
+                                        <div className="w-64 h-64 md:w-80 md:h-80 rounded-[40px] bg-white/40 backdrop-blur-sm border-4 border-white/60 flex items-center justify-center overflow-hidden shadow-level-3">
+                                            <img
+                                                src={activeSlide.image}
+                                                alt="Mascot"
+                                                className="w-full h-full object-contain p-4 transition-transform duration-500 hover:scale-110"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Info Box */}
                                 <div className={`rounded-[32px] p-8 w-full max-w-sm text-center ${currentSlide === slides.length - 1 ? 'bg-transparent' : 'bg-white shadow-level-3 border-b-[8px] border-slate-200'}`}>
@@ -227,56 +255,89 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                         {/* Language Selection Slide */}
                         {isLanguageSlide && (
                             <div className="flex flex-col items-center w-full max-w-sm">
-                                {/* Title */}
-                                <h2 className="text-deepNavy font-black text-3xl mb-2 leading-tight text-center">
+                                <h2 className="text-white font-black text-3xl mb-2 leading-tight text-center">
                                     {activeSlide.title}
                                 </h2>
-                                <p className="text-deepNavy/70 font-medium text-lg mb-12 text-center">
+                                <p className="text-white/80 font-medium text-lg mb-12 text-center">
                                     {activeSlide.description}
                                 </p>
 
-                                {/* Language Cards */}
                                 <div className="flex gap-6 w-full">
-                                    {/* English Card */}
                                     <motion.button
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => handleLanguageSelect('en')}
-                                        className={`flex-1 aspect-square rounded-[32px] flex flex-col items-center justify-center gap-4 font-black text-xl transition-all ${
-                                            selectedLanguage === 'en'
-                                                ? 'bg-white text-deepNavy shadow-[0_12px_0_rgba(0,0,0,0.2)] scale-105'
-                                                : 'bg-white/70 backdrop-blur-sm text-deepNavy/70 hover:bg-white/90'
-                                        }`}
+                                        className={`flex-1 aspect-square rounded-[32px] flex flex-col items-center justify-center gap-4 font-black text-xl transition-all ${selectedLanguage === 'en'
+                                            ? 'bg-white text-deepNavy shadow-[0_12px_0_rgba(0,0,0,0.2)] scale-105'
+                                            : 'bg-white/40 backdrop-blur-sm text-white/70 hover:bg-white/60'
+                                            }`}
                                     >
                                         <span className="text-5xl">🇬🇧</span>
                                         <span className="text-lg tracking-tight">English</span>
                                     </motion.button>
 
-                                    {/* Chinese Card */}
                                     <motion.button
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => handleLanguageSelect('zh')}
-                                        className={`flex-1 aspect-square rounded-[32px] flex flex-col items-center justify-center gap-4 font-black text-xl transition-all ${
-                                            selectedLanguage === 'zh'
-                                                ? 'bg-white text-deepNavy shadow-[0_12px_0_rgba(0,0,0,0.2)] scale-105'
-                                                : 'bg-white/70 backdrop-blur-sm text-deepNavy/70 hover:bg-white/90'
-                                        }`}
+                                        className={`flex-1 aspect-square rounded-[32px] flex flex-col items-center justify-center gap-4 font-black text-xl transition-all ${selectedLanguage === 'zh'
+                                            ? 'bg-white text-deepNavy shadow-[0_12px_0_rgba(0,0,0,0.2)] scale-105'
+                                            : 'bg-white/40 backdrop-blur-sm text-white/70 hover:bg-white/60'
+                                            }`}
                                     >
                                         <span className="text-5xl">🇨🇳</span>
                                         <span className="text-lg tracking-tight">中文</span>
                                     </motion.button>
                                 </div>
+                            </div>
+                        )}
 
-                                {/* Hint */}
-                                {!selectedLanguage && (
-                                    <motion.p
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.5 }}
-                                        className="mt-8 text-deepNavy/60 font-bold text-sm text-center"
+                        {/* Secondary Language Selection Slide */}
+                        {isSecondarySlide && (
+                            <div className="flex flex-col items-center w-full max-w-sm">
+                                <h2 className="text-white font-black text-3xl mb-2 leading-tight text-center">
+                                    {activeSlide.title}
+                                </h2>
+                                <p className="text-white/80 font-medium text-lg mb-12 text-center">
+                                    {activeSlide.description}
+                                </p>
+
+                                <div className="flex flex-col gap-4 w-full">
+                                    {selectedLanguage === 'zh' ? (
+                                        <motion.button
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => handleSecondarySelect('en')}
+                                            className={`w-full py-6 rounded-[24px] flex items-center justify-center gap-4 font-black text-xl transition-all ${selectedSecondary === 'en'
+                                                ? 'bg-white text-deepNavy shadow-[0_8px_0_rgba(0,0,0,0.2)]'
+                                                : 'bg-white/40 backdrop-blur-sm text-white hover:bg-white/60'
+                                                }`}
+                                        >
+                                            <span className="text-3xl">🇬🇧</span>
+                                            <span>Học cả Tiếng Anh nữa!</span>
+                                        </motion.button>
+                                    ) : (
+                                        <motion.button
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => handleSecondarySelect('zh')}
+                                            className={`w-full py-6 rounded-[24px] flex items-center justify-center gap-4 font-black text-xl transition-all ${selectedSecondary === 'zh'
+                                                ? 'bg-white text-deepNavy shadow-[0_8px_0_rgba(0,0,0,0.2)]'
+                                                : 'bg-white/40 backdrop-blur-sm text-white hover:bg-white/60'
+                                                }`}
+                                        >
+                                            <span className="text-3xl">🇨🇳</span>
+                                            <span>Học cả Tiếng Trung nữa!</span>
+                                        </motion.button>
+                                    )}
+
+                                    <motion.button
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => handleSecondarySelect('none')}
+                                        className={`w-full py-6 rounded-[24px] flex items-center justify-center gap-4 font-black text-xl transition-all ${selectedSecondary === 'none'
+                                            ? 'bg-white text-deepNavy shadow-[0_8px_0_rgba(0,0,0,0.2)]'
+                                            : 'bg-white/20 backdrop-blur-sm text-white/60 hover:bg-white/40'
+                                            }`}
                                     >
-                                        👆 Bấm vào để chọn
-                                    </motion.p>
-                                )}
+                                        <span>Không, chỉ học một cái thôi</span>
+                                    </motion.button>
+                                </div>
                             </div>
                         )}
                     </motion.div>
@@ -288,11 +349,10 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                 {slides.map((_, index) => (
                     <div
                         key={index}
-                        className={`h-3 rounded-full transition-all duration-300 ${
-                            index === currentSlide
-                                ? `w-8 ${currentSlide === slides.length - 1 ? 'bg-deepNavy' : 'bg-sunshineYellow'}`
-                                : 'w-3 bg-black/10'
-                        }`}
+                        className={`h-3 rounded-full transition-all duration-300 ${index === currentSlide
+                            ? `w-8 ${currentSlide === slides.length - 1 ? 'bg-deepNavy' : 'bg-sunshineYellow'}`
+                            : 'w-3 bg-black/10'
+                            }`}
                     />
                 ))}
             </div>

@@ -1,71 +1,15 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle2, Gift } from 'lucide-react';
-import { useGameStore } from '../../store/gameStore';
+import { useGameStore, type Quest } from '../../store/gameStore';
 
 interface QuestScreenProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
-interface Quest {
-    id: string;
-    title: string;
-    description: string;
-    progress: number;
-    total: number;
-    rewardXP: number;
-    rewardBadge?: string;
-    status: 'in-progress' | 'completed' | 'claimed';
-    category: 'Today' | 'Weekly' | 'Challenge';
-}
-
-const mockQuests: Quest[] = [
-    {
-        id: '1',
-        title: 'Tìm 3 vật màu đỏ 🔴',
-        description: 'Chụp ảnh các đồ vật có màu đỏ xung quanh bạn.',
-        progress: 1,
-        total: 3,
-        rewardXP: 50,
-        status: 'in-progress',
-        category: 'Today'
-    },
-    {
-        id: '2',
-        title: 'Luyện tập phát âm 🗣️',
-        description: 'Phát âm đúng 3 từ vựng bất kỳ.',
-        progress: 3,
-        total: 3,
-        rewardXP: 30,
-        status: 'completed',
-        category: 'Today'
-    },
-    {
-        id: '3',
-        title: 'Thợ săn ảnh 📷',
-        description: 'Chụp tổng cộng 10 bức ảnh mới.',
-        progress: 7,
-        total: 10,
-        rewardXP: 100,
-        status: 'in-progress',
-        category: 'Weekly'
-    },
-    {
-        id: '4',
-        title: 'Bậc thầy Động vật 🐾',
-        description: 'Hoàn thành bộ sưu tập chủ đề Động vật.',
-        progress: 8,
-        total: 20,
-        rewardXP: 500,
-        rewardBadge: '🏆',
-        status: 'in-progress',
-        category: 'Challenge'
-    }
-];
-
 const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
-    const { xp, addXP } = useGameStore();
+    const { xp, quests, completeQuest } = useGameStore();
 
     return (
         <AnimatePresence>
@@ -101,11 +45,11 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                                 </h2>
 
                                 <div className="space-y-4">
-                                    {mockQuests.filter(q => q.category === cat).map((quest) => (
+                                    {quests.filter(q => q.category === cat).map((quest) => (
                                         <QuestCard
                                             key={quest.id}
                                             quest={quest}
-                                            onClaim={() => addXP(quest.rewardXP)}
+                                            onClaim={() => completeQuest(quest.id)}
                                         />
                                     ))}
                                 </div>

@@ -12,12 +12,22 @@ import MissionOverlay from './components/ui/MissionOverlay';
 import ErrorOverlay from './components/ui/ErrorOverlay';
 import AIProcessingLoading from './components/ui/AIProcessingLoading';
 import { useGameStore } from './store/gameStore';
-import { Settings, Book, BarChart3, User, Scan, Target, Wifi, WifiOff } from 'lucide-react';
+import { Settings, Book, BarChart3, User, Scan, Target, WifiOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const App: React.FC = () => {
   const [isRevealOpen, setIsRevealOpen] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [capturedResult, setCapturedResult] = useState<{
+    word_vi: string;
+    word_en: string;
+    word_zh: string;
+    pinyin: string;
+    phonetic_en: string;
+    rarity: any;
+    category: string;
+  } | null>(null);
+  const [isAIProcessing, setIsAIProcessing] = useState(false);
   const [isBookOpen, setIsBookOpen] = useState(false);
   const [isQuestOpen, setIsQuestOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -31,14 +41,14 @@ const App: React.FC = () => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
   // Connect to global state
-  const { 
-    xp, 
-    level, 
-    streak, 
-    userName, 
-    addXP, 
-    recordCapture, 
-    hasSeenOnboarding, 
+  const {
+    xp,
+    level,
+    streak,
+    userName,
+    addXP,
+    recordCapture,
+    hasSeenOnboarding,
     setOnboardingSeen,
     isTimeLimitExceeded,
     checkAndResetDailyUsage,
@@ -82,33 +92,36 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-   // Handle Camera Access
-   React.useEffect(() => {
-     if (!showSplash && userName && hasSeenOnboarding) {
-       async function setupCamera() {
-         try {
-           const stream = await navigator.mediaDevices.getUserMedia({
-             video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } },
-             audio: false,
-           });
-           if (videoRef.current) {
-             videoRef.current.srcObject = stream;
-           }
-         } catch (err: any) {
-           console.error("Error accessing camera:", err);
-           setCameraError(true);
-         }
-       }
-       setupCamera();
-     }
+  // Helper: Camera setup
+  const setupCamera = React.useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } },
+        audio: false,
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setCameraError(false);
+    } catch (err: any) {
+      console.error("Error accessing camera:", err);
+      setCameraError(true);
+    }
+  }, []);
 
-     return () => {
-       if (videoRef.current && videoRef.current.srcObject) {
-         const stream = videoRef.current.srcObject as MediaStream;
-         stream.getTracks().forEach(track => track.stop());
-       }
-     };
-   }, [showSplash, userName, hasSeenOnboarding]);
+  // Handle Camera Access
+  React.useEffect(() => {
+    if (!showSplash && userName && hasSeenOnboarding) {
+      setupCamera();
+    }
+
+    return () => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [showSplash, userName, hasSeenOnboarding, setupCamera]);
 
   const handleCaptureClick = () => {
     // Check if capture is allowed
@@ -139,11 +152,27 @@ const App: React.FC = () => {
       // Convert to base64 image URL
       const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
       setCapturedImage(imageDataUrl);
-      setIsRevealOpen(true);
 
-      // Reward XP as per Section 4.1 in Plan
-      addXP(100);
-      recordCapture();
+      // Simulating AI processing delay
+      setIsAIProcessing(true);
+
+      const mockResults = [
+        { word_vi: "Con mèo", word_en: "Cat", word_zh: "猫", pinyin: "māo", phonetic_en: "/kæt/", rarity: "Common", category: "Animals" },
+        { word_vi: "Cái bàn", word_en: "Table", word_zh: "桌子", pinyin: "zhuōzi", phonetic_en: "/ˈteɪbl/", rarity: "Common", category: "Furniture" },
+        { word_vi: "Bông hoa", word_en: "Flower", word_zh: "花", pinyin: "huā", phonetic_en: "/ˈflaʊər/", rarity: "Uncommon", category: "Nature" },
+        { word_vi: "Quyển sách", word_en: "Book", word_zh: "书", pinyin: "shū", phonetic_en: "/bʊk/", rarity: "Rare", category: "Objects" }
+      ];
+      const randomResult = mockResults[Math.floor(Math.random() * mockResults.length)];
+
+      setTimeout(() => {
+        setIsAIProcessing(false);
+        setCapturedResult(randomResult);
+        setIsRevealOpen(true);
+
+        // Reward XP based on rarity
+        addXP(100);
+        recordCapture(randomResult.rarity);
+      }, 1500);
     }
   };
 
@@ -175,109 +204,91 @@ const App: React.FC = () => {
       {/* 3. ONBOARDING (After login if not seen) */}
       {!showSplash && userName && !hasSeenOnboarding && <Onboarding onFinish={setOnboardingSeen} />}
 
-        {/* 4. MAIN APP CONTENT (Only show when ready) */}
-        {(!showSplash && userName && hasSeenOnboarding) && (
-          <>
-            <CollectionBook isOpen={isBookOpen} onClose={() => setIsBookOpen(false)} />
-            <QuestScreen isOpen={isQuestOpen} onClose={() => setIsQuestOpen(false)} />
-            <ProfileScreen isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
-            <LeaderboardScreen isOpen={isRankOpen} onClose={() => setIsRankOpen(false)} />
-            
-            {/* Global Overlays */}
-            <LevelUpCelebration />
-            <DuplicateCaptureModal />
-            <ErrorOverlay 
-              type="time-limit"
-              isVisible={showTimeLimitError}
-              onClose={() => setShowTimeLimitError(false)}
-            />
-            <AIProcessingLoading isVisible={false} />
+      {/* 4. MAIN APP CONTENT (Only show when ready) */}
+      {(!showSplash && userName && hasSeenOnboarding) && (
+        <>
+          <CollectionBook isOpen={isBookOpen} onClose={() => setIsBookOpen(false)} />
+          <QuestScreen isOpen={isQuestOpen} onClose={() => setIsQuestOpen(false)} />
+          <ProfileScreen isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
+          <LeaderboardScreen isOpen={isRankOpen} onClose={() => setIsRankOpen(false)} />
 
-           {/* Camera Permission Denied Overlay */}
-           {cameraError && (
-             <motion.div
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-6"
-             >
-               <div className="flex flex-col items-center gap-8 max-w-sm">
-                 {/* Mascot Illustration */}
-                 <motion.img
-                   src="/owl-mascot.png"
-                   alt="Mascot"
-                   initial={{ scale: 0.8, opacity: 0 }}
-                   animate={{ scale: 1, opacity: 1 }}
-                   transition={{ delay: 0.2 }}
-                   className="w-32 h-32 object-contain"
-                 />
+          {/* Global Overlays */}
+          <LevelUpCelebration />
+          <DuplicateCaptureModal />
+          <ErrorOverlay
+            type="time-limit"
+            isVisible={showTimeLimitError}
+            onClose={() => setShowTimeLimitError(false)}
+          />
+          <AIProcessingLoading isVisible={isAIProcessing} />
 
-                 {/* Main Message */}
-                 <div className="text-center space-y-3">
-                   <h2 className="text-4xl font-black text-white mb-4">📸</h2>
-                   <p className="text-white font-black text-2xl leading-tight">
-                     Cho mình xem thế giới nhé!
-                   </p>
-                   <p className="text-white/70 font-bold text-sm">
-                     SnapLearn cần quyền truy cập camera để tìm kiếm các từ vựng xung quanh bạn.
-                   </p>
-                 </div>
+          {/* Camera Permission Denied Overlay */}
+          {cameraError && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-6"
+            >
+              <div className="flex flex-col items-center gap-8 max-w-sm">
+                {/* Mascot Illustration */}
+                <motion.img
+                  src="/owl-mascot.png"
+                  alt="Mascot"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="w-32 h-32 object-contain"
+                />
 
-                 {/* Action Button */}
-                 <motion.button
-                   whileTap={{ scale: 0.95 }}
-                   onClick={() => {
-                     setCameraError(false);
-                     // Retry camera permission
-                     async function retryCamera() {
-                       try {
-                         const stream = await navigator.mediaDevices.getUserMedia({
-                           video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } },
-                           audio: false,
-                         });
-                         if (videoRef.current) {
-                           videoRef.current.srcObject = stream;
-                         }
-                       } catch (err) {
-                         console.error("Error accessing camera:", err);
-                         setCameraError(true);
-                       }
-                     }
-                     retryCamera();
-                   }}
-                   className="w-full bg-skyBlue hover:bg-skyBlue/90 text-white font-black text-lg py-4 px-8 rounded-[28px] shadow-level-3 border-t-2 border-white/20 transition-all"
-                 >
-                   ✨ Cho phép Camera
-                 </motion.button>
+                {/* Main Message */}
+                <div className="text-center space-y-3">
+                  <h2 className="text-4xl font-black text-white mb-4">📸</h2>
+                  <p className="text-white font-black text-2xl leading-tight">
+                    Cho mình xem thế giới nhé!
+                  </p>
+                  <p className="text-white/70 font-bold text-sm">
+                    SnapLearn cần quyền truy cập camera để tìm kiếm các từ vựng xung quanh bạn.
+                  </p>
+                </div>
 
-                 {/* Subtext */}
-                 <p className="text-white/50 font-medium text-xs text-center">
-                   Bạn có thể thay đổi cài đặt quyền bất kỳ lúc nào trong Cài đặt.
-                 </p>
-               </div>
-             </motion.div>
-           )}
+                {/* Action Button */}
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={setupCamera}
+                  className="w-full bg-skyBlue hover:bg-skyBlue/90 text-white font-black text-lg py-4 px-8 rounded-[28px] shadow-level-3 border-t-2 border-white/20 transition-all"
+                >
+                  ✨ Cho phép Camera
+                </motion.button>
 
-           {/* Hidden Canvas for Capture */}
-           <canvas ref={canvasRef} className="hidden" />
+                {/* Subtext */}
+                <p className="text-white/50 font-medium text-xs text-center">
+                  Bạn có thể thay đổi cài đặt quyền bất kỳ lúc nào trong Cài đặt.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
-           {/* Offline Mode Banner */}
-           <AnimatePresence>
-             {!isOnline && (
-               <motion.div
-                 initial={{ opacity: 0, y: -20 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 exit={{ opacity: 0, y: -20 }}
-                 className="fixed top-20 left-0 right-0 z-[100] flex justify-center pointer-events-none px-4"
-               >
-                 <div className="bg-deepNavy/95 backdrop-blur-lg border border-white/20 rounded-[20px] px-6 py-3 shadow-lg flex items-center gap-3 max-w-sm">
-                   <WifiOff className="w-5 h-5 text-coralRed flex-shrink-0" />
-                   <p className="font-bold text-white text-sm">
-                     📡 Mất kết nối! Xem bộ sưu tập trong lúc chờ nhé.
-                   </p>
-                 </div>
-               </motion.div>
-             )}
-           </AnimatePresence>
+          {/* Hidden Canvas for Capture */}
+          <canvas ref={canvasRef} className="hidden" />
+
+          {/* Offline Mode Banner */}
+          <AnimatePresence>
+            {!isOnline && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="fixed top-20 left-0 right-0 z-[100] flex justify-center pointer-events-none px-4"
+              >
+                <div className="bg-deepNavy/95 backdrop-blur-lg border border-white/20 rounded-[20px] px-6 py-3 shadow-lg flex items-center gap-3 max-w-sm">
+                  <WifiOff className="w-5 h-5 text-coralRed flex-shrink-0" />
+                  <p className="font-bold text-white text-sm">
+                    📡 Mất kết nối! Xem bộ sưu tập trong lúc chờ nhé.
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* 1. TOP HUD (Head-Up Display) */}
           <div className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 pt-12 pb-4 pointer-events-none">
@@ -376,20 +387,20 @@ const App: React.FC = () => {
           {/* 4. BOTTOM NAVIGATION */}
           <nav className="fixed bottom-8 left-6 right-6 z-50">
             <div className="bg-white/70 backdrop-blur-3xl h-24 rounded-[48px] border border-white/40 shadow-level-3 flex items-center justify-around px-8">
-               {/* Active Tab: BOOK */}
-               <motion.button
-                 whileHover={{ y: -5 }}
-                 animate={bookBounce ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : {}}
-                 transition={{ duration: 0.6 }}
-                 onClick={() => setIsBookOpen(true)}
-                 onAnimationComplete={() => setBookBounce(false)}
-                 className="flex flex-col items-center justify-center gap-1.5 -translate-y-10 pointer-events-auto"
-               >
-                 <div className="w-20 h-20 bg-sunshineYellow rounded-[28px] shadow-[0_10px_0_rgb(161,98,7)] flex items-center justify-center border-t-2 border-white/40">
-                   <Book className="w-10 h-10 text-deepNavy fill-deepNavy/20" />
-                 </div>
-                 <span className="text-[12px] font-black text-sunshineYellow uppercase tracking-[2px] drop-shadow-sm">Book</span>
-               </motion.button>
+              {/* Active Tab: BOOK */}
+              <motion.button
+                whileHover={{ y: -5 }}
+                animate={bookBounce ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : {}}
+                transition={{ duration: 0.6 }}
+                onClick={() => setIsBookOpen(true)}
+                onAnimationComplete={() => setBookBounce(false)}
+                className="flex flex-col items-center justify-center gap-1.5 -translate-y-10 pointer-events-auto"
+              >
+                <div className="w-20 h-20 bg-sunshineYellow rounded-[28px] shadow-[0_10px_0_rgb(161,98,7)] flex items-center justify-center border-t-2 border-white/40">
+                  <Book className="w-10 h-10 text-deepNavy fill-deepNavy/20" />
+                </div>
+                <span className="text-[12px] font-black text-sunshineYellow uppercase tracking-[2px] drop-shadow-sm">Book</span>
+              </motion.button>
 
               <NavItem
                 icon={<Target className="w-9 h-9" />}
@@ -409,19 +420,21 @@ const App: React.FC = () => {
             </div>
           </nav>
 
-           <RevealCard
-             isOpen={isRevealOpen}
-             onClose={() => setIsRevealOpen(false)}
-             word_vi="Con mèo"
-             word_en="Cat"
-             word_zh="猫"
-             pinyin="māo"
-             phonetic_en="/kæt/"
-             rarity="Legendary"
-             category="Animals"
-             imageUrl={capturedImage || ""}
-             onCardFlyToCollection={() => setBookBounce(true)}
-           />
+          {capturedResult && (
+            <RevealCard
+              isOpen={isRevealOpen}
+              onClose={() => setIsRevealOpen(false)}
+              word_vi={capturedResult.word_vi}
+              word_en={capturedResult.word_en}
+              word_zh={capturedResult.word_zh}
+              pinyin={capturedResult.pinyin}
+              phonetic_en={capturedResult.phonetic_en}
+              rarity={capturedResult.rarity as any}
+              category={capturedResult.category}
+              imageUrl={capturedImage || ""}
+              onCardFlyToCollection={() => setBookBounce(true)}
+            />
+          )}
         </>
       )}
     </div>

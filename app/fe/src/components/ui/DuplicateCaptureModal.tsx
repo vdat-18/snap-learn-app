@@ -16,11 +16,13 @@ const DuplicateCaptureModal: React.FC = () => {
 
     // This would be called when a capture is attempted
     // For now, it's a placeholder for the capture flow
+    /* 
     const handleDuplicateCapture = (wordEn: string, wordVi: string, rarity: string) => {
         if (useGameStore.getState().isDuplicate(wordEn)) {
             setDuplicateState({ isDuplicate: true, wordEn, wordVi, rarity });
         }
     };
+    */
 
     const handleContinueCapture = () => {
         if (duplicateState) {
@@ -88,13 +90,12 @@ const DuplicateCaptureModal: React.FC = () => {
 
                             {/* Rarity Badge */}
                             <div className="inline-block">
-                                <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                                    duplicateState.rarity === 'Legendary'
+                                <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${duplicateState.rarity === 'Legendary'
                                         ? 'bg-amber-100 border-amber-300 text-amber-700'
                                         : duplicateState.rarity === 'Epic'
                                             ? 'bg-purple-100 border-purple-300 text-purple-700'
                                             : 'bg-slate-100 border-slate-300 text-slate-700'
-                                }`}>
+                                    }`}>
                                     {duplicateState.rarity} Rarity
                                 </span>
                             </div>

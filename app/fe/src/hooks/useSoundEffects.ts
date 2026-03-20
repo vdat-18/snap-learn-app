@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-export type SoundType = 
+export type SoundType =
   | 'capture'
   | 'reveal'
   | 'reveal-legendary'
@@ -71,9 +71,10 @@ const SOUNDS: Record<SoundType, SoundConfig> = {
   },
 };
 
+// Cache for Audio objects - declared outside to persist across re-renders
+const audioCache = new Map<SoundType, HTMLAudioElement>();
+
 export const useSoundEffects = () => {
-  // Cache for Audio objects
-  const audioCache = new Map<SoundType, HTMLAudioElement>();
 
   const playSound = useCallback((soundType: SoundType) => {
     // Check if audio is globally disabled (e.g., muted by parent)
@@ -91,7 +92,7 @@ export const useSoundEffects = () => {
     try {
       // Try to get from cache
       let audio = audioCache.get(soundType);
-      
+
       if (!audio) {
         // Create new audio element
         audio = new Audio(config.url);
@@ -102,7 +103,7 @@ export const useSoundEffects = () => {
       // Reset and play
       audio.currentTime = 0;
       audio.volume = Math.min(config.volume, 1);
-      
+
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch((error) => {

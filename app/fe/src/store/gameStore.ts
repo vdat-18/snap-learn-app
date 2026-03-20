@@ -57,29 +57,29 @@ interface GameState {
     secondary_language: 'en' | 'zh' | null;
     setTargetLanguage: (lang: 'en' | 'zh') => void;
     setSecondaryLanguage: (lang: 'en' | 'zh' | null) => void;
-    
+
     // XP & Progression
     addXP: (amount: number, rarity?: string) => void;
     addXPByRarity: (rarity: string) => void;
-    
+
     // Streak management
     incrementStreak: () => void;
     resetStreak: () => void;
     checkAndUpdateStreak: () => void;
-    
+
     // Capture & Collection
     recordCapture: (rarity?: string) => void;
     isDuplicate: (wordEn: string) => boolean;
-    
+
     // Quests
     setQuests: (quests: Quest[]) => void;
     updateQuestProgress: (questId: string, progress: number) => void;
     completeQuest: (questId: string) => void;
-    
+
     // Level management
     syncLevel: () => void;
     clearLevelUpMessage: () => void;
-    
+
     // Daily Time Limit (Phase 4.7)
     dailyLimitMinutes: number;
     todayUsageSeconds: number;
@@ -88,11 +88,11 @@ interface GameState {
     incrementUsageSeconds: () => void;
     isTimeLimitExceeded: () => boolean;
     checkAndResetDailyUsage: () => void;
-    
+
     // Online status tracking (Phase 4.2)
     isOnline: boolean;
     setIsOnline: (online: boolean) => void;
-    
+
     // General
     setOnboardingSeen: () => void;
     addCollection: (word: CapturedWord) => void;
@@ -113,6 +113,8 @@ export interface CapturedWord {
     isEvolved: boolean;
 }
 
+import { MOCK_COLLECTIONS, MOCK_QUESTS } from './mockData';
+
 export const useGameStore = create<GameState>()(
     persist(
         (set, get) => ({
@@ -122,8 +124,8 @@ export const useGameStore = create<GameState>()(
             lastCapturedAt: null,
             capturedCount: 42,
             hasSeenOnboarding: false,
-            collections: [],
-            quests: [],
+            collections: MOCK_COLLECTIONS,
+            quests: MOCK_QUESTS,
             lastStreakUpdateDate: null,
             levelUpMessage: null,
             dailyLimitMinutes: 30, // Default 30 minutes
@@ -167,7 +169,7 @@ export const useGameStore = create<GameState>()(
                 const now = new Date();
                 now.setHours(0, 0, 0, 0);
                 const today = now.toISOString().split('T')[0];
-                
+
                 const state = get();
                 const lastUpdateDate = state.lastStreakUpdateDate?.split('T')[0];
 
@@ -250,7 +252,7 @@ export const useGameStore = create<GameState>()(
                 get().addXP(xpAmount, rarity);
             },
 
-            addXP: (amount: number, rarity?: string) => {
+            addXP: (amount: number) => {
                 set((state) => {
                     const previousLevel = state.level;
                     const newXP = state.xp + amount;
@@ -354,6 +356,13 @@ export const useGameStore = create<GameState>()(
         }),
         {
             name: 'snap-learn-storage', // Persist data to localStorage
+            partialize: (state) => {
+                // Exclude todayUsageSeconds from persistence if we want to save I/O
+                // But we need it for daily limits. Let's keep it but just be aware.
+                // For now, I'll just change the name consistency.
+                const { ...rest } = state;
+                return rest;
+            }
         }
     )
 );

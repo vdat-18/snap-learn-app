@@ -20,7 +20,7 @@ const categories = [
 ];
 
 const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
-    const collections = useGameStore((state) => state.collections);
+    const { collections, target_language, secondary_language } = useGameStore();
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedWord, setSelectedWord] = useState<CapturedWord | null>(null);
 
@@ -123,14 +123,26 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                                                 {word.rarity.substring(0, 3)}
                                             </div>
                                         </div>
-                                        <div className="p-2 text-center">
-                                            <h4 className="font-black text-deepNavy leading-tight text-xs mb-0.5">{word.word_vi}</h4>
-                                            <p className="text-[10px] font-bold text-sky-400">{word.word_en}</p>
+                                        <div className="p-2 text-center overflow-hidden">
+                                            <h4 className="font-black text-deepNavy leading-tight text-[11px] mb-0.5 truncate">{word.word_vi}</h4>
+
+                                            {/* Responsive Language Display */}
+                                            <div className="flex flex-col gap-0.5 min-h-[24px]">
+                                                {target_language === 'en' && <p className="text-[9px] font-bold text-sky-400 leading-none">{word.word_en}</p>}
+                                                {target_language === 'zh' && <p className="text-[9px] font-bold text-mintGreen leading-none">{word.word_zh}</p>}
+
+                                                {secondary_language && (
+                                                    <p className="text-[8px] font-black text-slate-300 leading-none">
+                                                        {secondary_language === 'en' ? word.word_en : word.word_zh}
+                                                    </p>
+                                                )}
+                                            </div>
+
                                             <div className="flex justify-center mt-1 gap-0.5">
                                                 {[1, 2, 3].map(s => (
                                                     <Star
                                                         key={s}
-                                                        className={`w-2 h-2 ${s <= word.stars ? 'text-sunshineYellow fill-sunshineYellow' : 'text-slate-200 fill-slate-200'}`}
+                                                        className={`w-2.5 h-2.5 ${s <= word.stars ? 'text-sunshineYellow fill-sunshineYellow' : 'text-slate-200 fill-slate-200'}`}
                                                     />
                                                 ))}
                                             </div>
