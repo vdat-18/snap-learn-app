@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, Gift } from 'lucide-react';
+import { X, CheckCircle2 } from 'lucide-react';
 import { useGameStore, type Quest } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
+import { triggerHaptic } from '../../utils/feedbackUtils';
 
 interface QuestScreenProps {
     isOpen: boolean;
@@ -24,13 +25,14 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                     className="fixed inset-0 z-[160] bg-snowWhite flex flex-col font-outfit"
                 >
                     {/* Header (icon-driven, minimal text) */}
-                    <header className="px-6 pt-12 pb-6 bg-white shadow-sm flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <button onClick={() => { onClose(); playPop(); }} className="p-2 -ml-2">
+                    <header className="px-6 pt-12 pb-6 flex items-center justify-between border-b border-slate-100">
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => { playPop(); onClose(); }} className="w-12 h-12 bg-white rounded-2xl shadow-level-2 flex items-center justify-center border-t-2 border-white/40">
                                 <X className="w-8 h-8 text-deepNavy" />
                             </button>
-                            <h1 className="text-3xl drop-shadow-sm">
-                                ⚔️
+                            <h1 className="text-2xl font-black text-deepNavy tracking-tight flex items-center gap-3">
+                                <img src="/icon-quest.png" alt="" className="w-10 h-10 object-contain mix-blend-multiply" />
+                                Nhiệm vụ
                             </h1>
                         </div>
                         <div className="bg-sunshineYellow/20 px-4 py-2 rounded-2xl border border-sunshineYellow/30">
@@ -42,11 +44,16 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                         {/* Categories */}
                         {['Today', 'Weekly', 'Challenge'].map((cat) => (
                             <section key={cat} className="space-y-4">
-                                <h2 className="text-2xl font-black text-slate-300 drop-shadow-sm">
-                                    {cat === 'Today' ? '🌅' : cat === 'Weekly' ? '📅' : '🏆'}
-                                </h2>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-3xl drop-shadow-lg p-3 bg-white rounded-2xl shadow-level-1">
+                                        {cat === 'Today' ? '🌅' : cat === 'Weekly' ? '📅' : '🏆'}
+                                    </span>
+                                    <h2 className="text-2xl font-black text-deepNavy">
+                                        {cat === 'Today' ? 'Hàng ngày' : cat === 'Weekly' ? 'Hàng tuần' : 'Thử thách'}
+                                    </h2>
+                                </div>
 
-                                <div className="space-y-4">
+                                <div className="space-y-5">
                                     {quests.filter(q => q.category === cat).map((quest) => (
                                         <QuestCard
                                             key={quest.id}
@@ -68,6 +75,7 @@ const QuestCard: React.FC<{ quest: Quest; onClaim: () => void }> = ({ quest, onC
     const isCompleted = quest.status === 'completed';
     const isClaimed = quest.status === 'claimed';
     const progressPercent = (quest.progress / quest.total) * 100;
+    const { playChime } = useSoundEffects();
 
     return (
         <motion.div
@@ -115,11 +123,13 @@ const QuestCard: React.FC<{ quest: Quest; onClaim: () => void }> = ({ quest, onC
                         whileTap={{ scale: 0.95 }}
                         onClick={(e) => {
                             e.stopPropagation();
+                            playChime();
+                            triggerHaptic(100);
                             onClaim();
                         }}
-                        className="w-full mt-2 bg-sunshineYellow text-deepNavy font-black py-3 rounded-2xl shadow-[0_5px_0_rgb(161,98,7)] active:shadow-none active:translate-y-[5px] transition-all flex items-center justify-center gap-2 border-t-2 border-white/30"
+                        className="w-full mt-2 bg-sunshineYellow text-deepNavy font-black py-4 rounded-[24px] shadow-[0_6px_0_rgb(161,98,7)] active:shadow-none active:translate-y-[6px] transition-all flex items-center justify-center gap-2 border-t-2 border-white/40"
                     >
-                        <Gift className="w-6 h-6" />
+                        <span className="text-2xl mr-1">🎁</span> Nhận thưởng!
                     </motion.button>
                 )}
             </div>

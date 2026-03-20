@@ -27,18 +27,62 @@ const MOTIVATIONAL_PHRASES = [
 /**
  * Speak text using Web Speech API (TTS)
  */
-export const mascotSpeak = (text?: string) => {
+export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = 'vi-VN') => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
-    // Reset previous speech
-    window.speechSynthesis.cancel();
+    const startSpeak = () => {
+        // Force engine to resume 
+        window.speechSynthesis.resume();
 
-    const phrase = text || MOTIVATIONAL_PHRASES[Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)];
+        // Reset previous speech
+        window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(phrase);
-    utterance.lang = 'vi-VN';
-    utterance.rate = 1.0;
-    utterance.pitch = 1.2; // Slightly higher pitch for child-friendly mascot voice
+        const phrase = text || MOTIVATIONAL_PHRASES[Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)];
 
-    window.speechSynthesis.speak(utterance);
+        const utterance = new SpeechSynthesisUtterance(phrase);
+        utterance.lang = lang;
+        utterance.rate = 1.0;
+
+        // --- ADVANCED VOICE HUNTING STRATEGY ---
+        const voices = window.speechSynthesis.getVoices();
+
+        // Priority 1: Google High-Quality AI voices (Best for VN)
+        // Priority 2: Natural/Native voices of the OS
+        // Priority 3: Fallback lang match
+        let selectedVoice = voices.find(v =>
+            v.lang.replace('_', '-').includes(lang) &&
+            (v.name.includes('Google') || v.name.includes('Natural'))
+        ) || voices.find(v => v.lang.replace('_', '-').includes(lang)) ||
+            voices.find(v => v.lang.startsWith(lang.split('-')[0]));
+
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+            // console.log(`[Mascot] Using Voice: ${selectedVoice.name}`);
+        }
+
+        // Pitch adjustment for child-friendly voice
+        // Note: Some high-quality Google voices ignore pitch, but we set it anyway
+        if (lang === 'vi-VN') utterance.pitch = 1.2;
+        else if (lang === 'en-US') utterance.pitch = 1.1;
+        else utterance.pitch = 1.0;
+
+        window.speechSynthesis.speak(utterance);
+
+        // Extra insurance for Desktop Chrome
+        setTimeout(() => {
+            if (window.speechSynthesis.paused) {
+                window.speechSynthesis.resume();
+            }
+        }, 100);
+    };
+
+    // Chrome workaround for voice loading
+    if (window.speechSynthesis.getVoices().length === 0) {
+        window.speechSynthesis.addEventListener('voiceschanged', () => {
+            startSpeak();
+        }, { once: true });
+        window.speechSynthesis.getVoices();
+    } else {
+        startSpeak();
+    }
 };

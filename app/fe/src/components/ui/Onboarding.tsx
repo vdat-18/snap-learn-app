@@ -3,20 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
+import { mascotSpeak } from '../../utils/feedbackUtils';
 
 interface OnboardingProps {
     onFinish: () => void;
 }
 
-// Helper: speak text using Web Speech API
-const speak = (text: string, lang = 'vi-VN') => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang;
-    u.rate = 0.9;
-    window.speechSynthesis.speak(u);
-};
+// Local speak helper removed to use central feedbackUtils
 
 const slides = [
     {
@@ -84,25 +77,25 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
     const [dragX, setDragX] = useState(0);
     const { playPop } = useSoundEffects();
 
-    // Auto-play TTS on slide change (except language select)
+    // Auto-play TTS on slide change (Mascot Narration)
     useEffect(() => {
         const activeSlide = slides[currentSlide];
-        if (activeSlide.type === 'standard') {
-            const timer = setTimeout(() => {
-                speak(activeSlide.description, 'vi-VN');
-            }, 400);
-            return () => clearTimeout(timer);
-        } else if (activeSlide.type === 'language-select') {
-            const timer = setTimeout(() => {
-                speak('Bé muốn học tiếng gì nhất?', 'vi-VN');
-            }, 400);
-            return () => clearTimeout(timer);
-        } else if (activeSlide.type === 'secondary-language-select') {
-            const timer = setTimeout(() => {
-                speak('Bé có muốn học thêm một ngôn ngữ nữa không?', 'vi-VN');
-            }, 400);
-            return () => clearTimeout(timer);
-        }
+        const timer = setTimeout(() => {
+            if (activeSlide.id === 'welcome') {
+                mascotSpeak("Chào mừng bé yêu... đến với Snap Learn! Tớ là Cú thông thái... sẽ cùng bé khám phá thế giới nhé!", 'vi-VN');
+            } else if (activeSlide.id === 'language') {
+                mascotSpeak("Bé muốn học tiếng gì nhất nào? Hãy chọn... một ngôn ngữ... mình yêu thích nhất nhé!", 'vi-VN');
+            } else if (activeSlide.id === 'secondary-language') {
+                mascotSpeak("Bé có muốn học thêm... một ngôn ngữ nữa không? Học song ngữ... sẽ rất là thú vị đấy!", 'vi-VN');
+            } else if (activeSlide.id === 'camera') {
+                mascotSpeak("Bé hãy mang camera đi xung quanh... chụp bất cứ thứ gì mình thấy... để biến chúng thành... thẻ bài ma thuật nhé!", 'vi-VN');
+            } else if (activeSlide.id === 'pronunciation') {
+                mascotSpeak("Hãy phát âm theo tớ... để thẻ bài có thể Tiến hóa... và mở khóa những bí mật thú vị nha!", 'vi-VN');
+            } else if (activeSlide.id === 'collection') {
+                mascotSpeak("Bộ sưu tập của bé... đang chờ đợi những thẻ bài hiếm nhất đấy! Cùng bắt đầu khám phá... ngay thôi nào!", 'vi-VN');
+            }
+        }, 500);
+        return () => clearTimeout(timer);
     }, [currentSlide]);
 
     const nextSlide = () => {
@@ -125,9 +118,9 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
     const handleLanguageSelect = (lang: 'en' | 'zh') => {
         setSelectedLanguage(lang);
         if (lang === 'en') {
-            speak('English', 'en-US');
+            mascotSpeak('English', 'en-US');
         } else {
-            speak('Zhōngwén', 'zh-CN');
+            mascotSpeak('Zhōngwén', 'zh-CN');
         }
         setTargetLanguage(lang);
         setTimeout(() => nextSlide(), 1000);
@@ -136,11 +129,11 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
     const handleSecondarySelect = (lang: 'en' | 'zh' | 'none') => {
         setSelectedSecondary(lang);
         if (lang === 'none') {
-            speak('Dạ không!', 'vi-VN');
+            mascotSpeak('Dạ không!', 'vi-VN');
             setSecondaryLanguage(null);
         } else {
-            if (lang === 'en') speak('English', 'en-US');
-            else speak('Zhōngwén', 'zh-CN');
+            if (lang === 'en') mascotSpeak('English', 'en-US');
+            else mascotSpeak('Zhōngwén', 'zh-CN');
             setSecondaryLanguage(lang);
         }
         setTimeout(() => nextSlide(), 1000);
@@ -220,13 +213,20 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                             <>
                                 {activeSlide.image && (
                                     <div className="relative mb-8">
-                                        <div className="w-64 h-64 md:w-80 md:h-80 rounded-[40px] bg-white border-4 border-white/40 flex items-center justify-center overflow-hidden shadow-level-3">
+                                        <motion.div
+                                            animate={{
+                                                y: [0, -10, 0],
+                                                rotate: [-1, 1, -1]
+                                            }}
+                                            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                                            className="w-72 h-72 md:w-88 md:h-88 flex items-center justify-center overflow-hidden rounded-[40px]"
+                                        >
                                             <img
                                                 src={activeSlide.image}
                                                 alt="Mascot"
-                                                className="w-full h-full object-contain p-0 transition-transform duration-500 hover:scale-110"
+                                                className="w-full h-full object-contain mix-blend-multiply scale-105"
                                             />
-                                        </div>
+                                        </motion.div>
                                     </div>
                                 )}
 

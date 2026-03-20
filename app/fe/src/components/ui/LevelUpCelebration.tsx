@@ -1,11 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
+import { useSoundEffects } from '../../hooks/useSoundEffects';
+import { triggerHaptic, mascotSpeak } from '../../utils/feedbackUtils';
 
 const LevelUpCelebration: React.FC = () => {
     const { levelUpMessage, clearLevelUpMessage } = useGameStore();
+    const { playChime, playPop } = useSoundEffects();
+
+    useEffect(() => {
+        if (levelUpMessage) {
+            playChime();
+            triggerHaptic(200);
+            mascotSpeak(`Chúc mừng bé đã lên cấp ${levelUpMessage.newLevel}!`, "vi-VN");
+        }
+    }, [levelUpMessage, playChime]);
 
     const handleClose = () => {
+        playPop();
         clearLevelUpMessage();
     };
 
@@ -77,9 +89,9 @@ const LevelUpCelebration: React.FC = () => {
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="text-7xl font-black text-sunshineYellow mb-4 uppercase italic"
+                            className="text-8xl font-black text-sunshineYellow mb-4 uppercase italic drop-shadow-[0_10px_0_rgb(161,98,7)]"
                         >
-                            LEVEL {levelUpMessage.newLevel}!
+                            CẤP {levelUpMessage.newLevel}!
                         </motion.h1>
 
                         {/* Level title in Vietnamese */}
@@ -109,7 +121,7 @@ const LevelUpCelebration: React.FC = () => {
                             transition={{ delay: 0.5 }}
                             className="bg-white/10 backdrop-blur-sm rounded-3xl px-8 py-4 mb-8 border-2 border-white/20"
                         >
-                            <p className="text-white text-sm font-bold uppercase tracking-widest mb-1">XP Gained</p>
+                            <p className="text-white text-sm font-bold uppercase tracking-widest mb-1">XP Nhận được</p>
                             <p className="text-sunshineYellow text-4xl font-black">+{levelUpMessage.xpGained} XP</p>
                         </motion.div>
 
@@ -118,9 +130,9 @@ const LevelUpCelebration: React.FC = () => {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleClose}
-                            className="bg-white text-deepNavy font-black px-12 py-5 rounded-2xl text-2xl shadow-level-3 border-t-4 border-white/30 active:shadow-none active:translate-y-1 transition-all"
+                            className="bg-white text-deepNavy font-black px-12 py-5 rounded-3xl text-3xl shadow-level-3 border-t-4 border-slate-100 active:shadow-none active:translate-y-1 transition-all"
                         >
-                            AWESOME! 🚀
+                            TUYỆT VỜI! 🚀
                         </motion.button>
                     </motion.div>
                 </motion.div>

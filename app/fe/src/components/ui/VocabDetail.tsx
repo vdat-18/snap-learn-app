@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mic, Sparkles, Volume2, Info, BookOpen } from 'lucide-react';
-import { useGameStore } from '../../store/gameStore';
-import type { CapturedWord } from '../../store/gameStore';
+import { X, Mic, Volume2, BookOpen, Sparkles } from 'lucide-react';
+import { useGameStore, type CapturedWord } from '../../store/gameStore';
+import { useSoundEffects } from '../../hooks/useSoundEffects';
+import { triggerHaptic, mascotSpeak } from '../../utils/feedbackUtils';
 
 interface VocabDetailProps {
     word: CapturedWord | null;
@@ -19,6 +20,7 @@ const mockFunFacts: Record<string, string> = {
 
 const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
     const { practiceWord, addXP } = useGameStore();
+    const { playPop, playChime } = useSoundEffects();
     const [isPracticing, setIsPracticing] = useState(false);
     const [justEvolved, setJustEvolved] = useState(false);
 
@@ -29,16 +31,21 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
         // Simulate speech recognition success for POC
         setTimeout(() => {
             const wasEvolved = word.isEvolved;
-            practiceWord(word.id, 3);
+            practiceWord(word.id, 1); // Increment count
 
             // Check if it just evolved
-            if (!wasEvolved && word.practiceCount >= 4) { // It's about to be 5
+            if (!wasEvolved && word.practiceCount >= 4) {
                 setJustEvolved(true);
+                playChime();
+                triggerHaptic(200);
+            } else {
+                playPop();
+                triggerHaptic(50);
             }
 
             setIsPracticing(false);
             addXP(10);
-        }, 1500);
+        }, 1200);
     };
 
     const progressPercent = Math.min((word.practiceCount / 5) * 100, 100);
@@ -91,51 +98,24 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
 
                         {/* Words Info */}
                         <div className="text-center mb-8">
-                            <h2 className="text-4xl font-black text-deepNavy mb-2">{word.word_vi}</h2>
-
-                            {/* Vietnamese Word with TTS */}
-                            <div className="flex items-center justify-center gap-3 mb-4">
-                                <span className="text-lg font-bold text-lang-vi">{word.word_vi}</span>
-                                <button
-                                    onClick={() => {
-                                        const utterance = new SpeechSynthesisUtterance(word.word_vi);
-                                        utterance.lang = 'vi-VN';
-                                        window.speechSynthesis.speak(utterance);
-                                    }}
-                                    className="p-2 rounded-full bg-lang-vi/10 text-lang-vi active:scale-90 transition-all"
-                                >
-                                    <Volume2 className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            {/* English Word with TTS */}
-                            <div className="flex items-center justify-center gap-3 mb-2">
-                                <span className="text-2xl font-bold text-skyBlue">{word.word_en}</span>
-                                <button
-                                    onClick={() => {
-                                        const utterance = new SpeechSynthesisUtterance(word.word_en);
-                                        utterance.lang = 'en-US';
-                                        window.speechSynthesis.speak(utterance);
-                                    }}
-                                    className="p-2 rounded-full bg-skyBlue/10 text-skyBlue active:scale-90 transition-all"
-                                >
-                                    <Volume2 className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            {/* Chinese Word with TTS */}
-                            <div className="flex items-center justify-center gap-3">
-                                <span className="text-xl font-bold text-lang-zh">{word.word_zh}</span>
-                                <button
-                                    onClick={() => {
-                                        const utterance = new SpeechSynthesisUtterance(word.word_zh);
-                                        utterance.lang = 'zh-CN';
-                                        window.speechSynthesis.speak(utterance);
-                                    }}
-                                    className="p-2 rounded-full bg-lang-zh/10 text-lang-zh active:scale-90 transition-all"
-                                >
-                                    <Volume2 className="w-5 h-5" />
-                                </button>
+                            {/* Words with TTS */}
+                            <div className="flex flex-col gap-4">
+                                <div className="flex items-center justify-center gap-3">
+                                    <span className="text-4xl font-black text-deepNavy">{word.word_vi}</span>
+                                    {/* Vietnamese voice button removed as requested by user to focus on learning EN/ZH */}
+                                </div>
+                                <div className="flex items-center justify-center gap-3">
+                                    <span className="text-3xl font-black text-skyBlue">{word.word_en}</span>
+                                    <button onClick={() => mascotSpeak(word.word_en || '', 'en-US')} className="p-3 rounded-full bg-skyBlue/10 text-skyBlue active:scale-95 transition-all">
+                                        <Volume2 className="w-6 h-6" />
+                                    </button>
+                                </div>
+                                <div className="flex items-center justify-center gap-3">
+                                    <span className="text-3xl font-black text-lang-zh">{word.word_zh}</span>
+                                    <button onClick={() => mascotSpeak(word.word_zh || '', 'zh-CN')} className="p-3 rounded-full bg-lang-zh/10 text-lang-zh active:scale-95 transition-all">
+                                        <Volume2 className="w-6 h-6" />
+                                    </button>
+                                </div>
                             </div>
                             <p className="text-sm font-bold text-slate-500 mt-1">{word.word_vi === 'Con mèo' ? 'māo' : '...'}</p>
                         </div>

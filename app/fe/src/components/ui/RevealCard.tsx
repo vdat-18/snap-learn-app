@@ -405,15 +405,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                     </>
                                 )}
                             </div>
-                            {/* Replay Audio Button */}
-                            <motion.button
-                                whileTap={{ scale: 0.85 }}
-                                onClick={handleReplayAudio}
-                                className="w-10 h-10 rounded-full bg-skyBlue/20 hover:bg-skyBlue/40 flex items-center justify-center text-skyBlue transition-all mt-2"
-                                title="Nghe lại"
-                            >
-                                🔊
-                            </motion.button>
                         </div>
 
                         {/* Practice Area (PTT) */}

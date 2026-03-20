@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Crown, Timer } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
+import { useSoundEffects } from '../../hooks/useSoundEffects';
+import { MOCK_LEADERBOARD } from '../../store/mockData';
 
 interface LeaderboardScreenProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
-import { MOCK_LEADERBOARD } from '../../store/mockData';
-
 const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }) => {
     const { xp, level } = useGameStore();
+    const { playPop } = useSoundEffects();
     const [activeTab, setActiveTab] = useState('All');
 
     const currentPlayers = MOCK_LEADERBOARD[activeTab] || [];
@@ -29,26 +30,28 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                     className="fixed inset-0 z-[150] bg-snowWhite flex flex-col font-outfit"
                 >
                     {/* Header */}
-                    <header className="px-6 pt-12 pb-6 bg-white shadow-sm">
-                        <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-4xl font-black text-deepNavy">🏆</h1>
-                            </div>
-                            <button onClick={onClose} className="p-2 -mr-2">
+                    <header className="px-6 pt-12 pb-6 flex items-center justify-between border-b border-slate-100">
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => { playPop(); onClose(); }} className="w-12 h-12 bg-white rounded-2xl shadow-level-2 flex items-center justify-center border-t-2 border-white/40">
                                 <X className="w-8 h-8 text-deepNavy" />
                             </button>
+                            <h1 className="text-2xl font-black text-deepNavy tracking-tight flex items-center gap-3">
+                                <img src="/icon-rank.png" alt="" className="w-10 h-10 object-contain mix-blend-multiply" />
+                                Xếp hạng
+                            </h1>
                         </div>
+                    </header>
 
+                    <div className="flex-1 overflow-y-auto px-6 pt-6 pb-24">
                         {/* Tabs */}
-                        <div className="flex bg-slate-100 p-1.5 rounded-2xl relative">
+                        <div className="flex bg-slate-100 p-1.5 rounded-2xl relative mb-8">
                             {['Class', 'Friends', 'All'].map((tab) => (
                                 <button
                                     key={tab}
-                                    onClick={() => setActiveTab(tab)}
-                                    className={`flex-1 py-2.5 text-sm font-black rounded-xl transition-all relative z-10 ${activeTab === tab ? 'text-deepNavy' : 'text-slate-400'
-                                        }`}
+                                    onClick={() => { playPop(); setActiveTab(tab); }}
+                                    className={`flex-1 py-2.5 text-sm font-black rounded-xl transition-all relative z-10 ${activeTab === tab ? 'text-deepNavy' : 'text-slate-400'}`}
                                 >
-                                    {tab}
+                                    {tab === 'Class' ? 'Lớp học' : tab === 'Friends' ? 'Bạn bè' : 'Tất cả'}
                                     {activeTab === tab && (
                                         <motion.div
                                             layoutId="activeTab"
@@ -59,13 +62,11 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                 </button>
                             ))}
                         </div>
-                    </header>
 
-                    <div className="flex-1 overflow-y-auto px-6 pt-6 pb-24">
                         {/* Countdown Timer */}
                         <div className="flex items-center justify-center gap-2 mb-8 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 py-2 rounded-full border border-slate-100">
                             <Timer className="w-3 h-3" />
-                            Season resets in: 12 days 14 hours
+                            Mùa giải kết thúc sau: 12 ngày 14 giờ
                         </div>
 
                         {/* Podium Section */}
@@ -76,12 +77,12 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                 className="flex-1 flex flex-col items-center"
                             >
                                 <div className="text-4xl mb-2 relative">
-                                    <span className="relative z-10">{top3[1].avatar}</span>
+                                    <span className="relative z-10">{top3[1]?.avatar || '👤'}</span>
                                     <div className="absolute -top-1 -right-1 text-xl">🥈</div>
                                 </div>
                                 <div className="w-full bg-slate-100 rounded-t-2xl shadow-sm p-3 text-center border-t-4 border-slate-300 h-28 flex flex-col justify-end">
-                                    <span className="block font-black text-xs text-deepNavy truncate">{top3[1].name}</span>
-                                    <span className="block font-bold text-[10px] text-skyBlue">{top3[1].points} XP</span>
+                                    <span className="block font-black text-xs text-deepNavy truncate">{top3[1]?.name || '---'}</span>
+                                    <span className="block font-bold text-[10px] text-skyBlue">{top3[1]?.points || 0} XP</span>
                                 </div>
                             </motion.div>
 
@@ -92,11 +93,11 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                             >
                                 <div className="relative mb-3">
                                     <Crown className="w-10 h-10 text-sunshineYellow absolute -top-8 left-1/2 -translate-x-1/2 fill-sunshineYellow rotate-12 drop-shadow-sm" />
-                                    <div className="text-6xl relative z-10">{top3[0].avatar}</div>
+                                    <div className="text-6xl relative z-10">{top3[0]?.avatar || '👤'}</div>
                                 </div>
                                 <div className="w-full bg-sunshineYellow rounded-t-3xl shadow-level-2 p-3 text-center border-t-8 border-yellow-500 h-44 flex flex-col justify-end">
-                                    <span className="block font-black text-sm text-deepNavy truncate">{top3[0].name}</span>
-                                    <span className="block font-bold text-xs text-slate-700">{top3[0].points} XP</span>
+                                    <span className="block font-black text-sm text-deepNavy truncate">{top3[0]?.name || '---'}</span>
+                                    <span className="block font-bold text-xs text-slate-700">{top3[0]?.points || 0} XP</span>
                                 </div>
                             </motion.div>
 
@@ -106,12 +107,12 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                 className="flex-1 flex flex-col items-center"
                             >
                                 <div className="text-4xl mb-2 relative">
-                                    <span className="relative z-10">{top3[2].avatar}</span>
+                                    <span className="relative z-10">{top3[2]?.avatar || '👤'}</span>
                                     <div className="absolute -top-1 -right-1 text-xl">🥉</div>
                                 </div>
                                 <div className="w-full bg-amber-50 rounded-t-2xl shadow-sm p-3 text-center border-t-4 border-amber-400 h-20 flex flex-col justify-end">
-                                    <span className="block font-black text-xs text-deepNavy truncate">{top3[2].name}</span>
-                                    <span className="block font-bold text-[10px] text-amber-600">{top3[2].points} XP</span>
+                                    <span className="block font-black text-xs text-deepNavy truncate">{top3[2]?.name || '---'}</span>
+                                    <span className="block font-bold text-[10px] text-amber-600">{top3[2]?.points || 0} XP</span>
                                 </div>
                             </motion.div>
                         </div>
@@ -127,7 +128,9 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                     className="bg-white p-4 rounded-[20px] shadow-sm flex items-center justify-between border-b-2 border-slate-50"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <span className="text-2xl">{player.rank === 4 ? '4️⃣' : player.rank === 5 ? '5️⃣' : player.rank === 6 ? '6️⃣' : player.rank === 7 ? '7️⃣' : '8️⃣'}</span>
+                                        <span className="text-2xl">
+                                            {player.rank === 4 ? '4️⃣' : player.rank === 5 ? '5️⃣' : player.rank === 6 ? '6️⃣' : player.rank === 7 ? '7️⃣' : '8️⃣'}
+                                        </span>
                                         <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-2xl shadow-sm border-2 border-white">
                                             {player.avatar}
                                         </div>

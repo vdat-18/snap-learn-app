@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
-import { Rocket } from 'lucide-react';
+import { mascotSpeak } from '../../utils/feedbackUtils';
+import { Rocket, Volume2 } from 'lucide-react';
 
 // Animal avatars for child selection — visual, not text
 const avatars = [
@@ -14,15 +15,7 @@ const avatars = [
     { emoji: '🐨', sound: 'Koala thông thái!' },
 ];
 
-// Helper: speak text using Web Speech API
-const speak = (text: string, lang = 'vi-VN') => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang;
-    u.rate = 0.9;
-    window.speechSynthesis.speak(u);
-};
+// Local speak helper removed to use central feedbackUtils
 
 const LoginScreen: React.FC = () => {
     const { setUserName, setUserAvatar } = useGameStore();
@@ -35,27 +28,27 @@ const LoginScreen: React.FC = () => {
     // Auto-play TTS greeting on mount (audio-first principle)
     useEffect(() => {
         const timer = setTimeout(() => {
-            speak('Xin chào! Tên gọi ở nhà của bé là gì?');
-        }, 600);
+            mascotSpeak('Xin chào bé yêu! Tên gọi ở nhà của bé là gì? Hãy chọn một linh vật nhé!');
+        }, 800);
         return () => clearTimeout(timer);
     }, []);
 
     const handleAvatarSelect = (avatar: typeof avatars[0]) => {
         playPop();
         setSelectedAvatar(avatar);
-        speak(avatar.sound);
+        mascotSpeak(avatar.sound);
     };
 
     const handleStartClick = () => {
         if (!name.trim()) {
             setNameError(true);
-            speak('Bé ơi, điền tên vào nhé!');
+            mascotSpeak('Bé ơi, đừng quên điền tên của mình vào nhé!');
             return;
         }
         setNameError(false);
         setIsJoining(true);
         playPop();
-        speak(`Xin chào ${name}! Bắt đầu khám phá nào!`);
+        mascotSpeak(`Xin chào bé ${name}! Chúng mình cùng bắt đầu khám phá nào!`);
         setTimeout(() => {
             setUserName(name.trim());
             setUserAvatar(selectedAvatar.emoji);
@@ -111,9 +104,13 @@ const LoginScreen: React.FC = () => {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', damping: 12, stiffness: 200, delay: 0.2 }}
-                    className="relative mb-6"
+                    className="relative mb-6 group cursor-pointer"
+                    onClick={() => {
+                        playPop();
+                        mascotSpeak('Xin chào bé yêu! Tên gọi ở nhà của bé là gì? Hãy chọn một linh vật nhé!');
+                    }}
                 >
-                    <div className="w-36 h-36 bg-white rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.2)] flex items-center justify-center border-8 border-white/60">
+                    <div className="w-36 h-36 bg-white rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.2)] flex items-center justify-center border-8 border-white/60 relative">
                         <AnimatePresence mode="wait">
                             <motion.span
                                 key={selectedAvatar.emoji}
@@ -126,6 +123,9 @@ const LoginScreen: React.FC = () => {
                                 {selectedAvatar.emoji}
                             </motion.span>
                         </AnimatePresence>
+                        <div className="absolute -top-1 -right-1 bg-skyBlue p-2 rounded-full border-2 border-white shadow-sm">
+                            <Volume2 className="w-4 h-4 text-white" />
+                        </div>
                     </div>
                     {/* "Tap to change" hint */}
                     <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-deepNavy/70 backdrop-blur px-3 py-1 rounded-full">
@@ -146,8 +146,8 @@ const LoginScreen: React.FC = () => {
                             whileTap={{ scale: 0.85 }}
                             onClick={() => handleAvatarSelect(a)}
                             className={`h-16 rounded-[20px] flex items-center justify-center text-3xl transition-all duration-200 ${selectedAvatar.emoji === a.emoji
-                                    ? 'bg-white shadow-[0_6px_0_rgba(0,0,0,0.15)] scale-105 ring-4 ring-white/60'
-                                    : 'bg-white/30 backdrop-blur-sm hover:bg-white/50 active:bg-white/70'
+                                ? 'bg-white shadow-[0_6px_0_rgba(0,0,0,0.15)] scale-105 ring-4 ring-white/60'
+                                : 'bg-white/30 backdrop-blur-sm hover:bg-white/50 active:bg-white/70'
                                 }`}
                         >
                             {a.emoji}
@@ -171,8 +171,8 @@ const LoginScreen: React.FC = () => {
                             onKeyDown={(e) => e.key === 'Enter' && handleStartClick()}
                             maxLength={20}
                             className={`w-full h-16 bg-white rounded-2xl px-5 text-xl font-black text-deepNavy placeholder:text-slate-300 placeholder:font-medium shadow-[0_6px_0_rgba(0,0,0,0.1)] border-[3px] transition-all focus:outline-none ${nameError
-                                    ? 'border-coralRed ring-4 ring-coralRed/20 animate-bounce-scale'
-                                    : 'border-white/0 focus:border-skyBlue focus:ring-4 focus:ring-skyBlue/20'
+                                ? 'border-coralRed ring-4 ring-coralRed/20 animate-bounce-scale'
+                                : 'border-white/0 focus:border-skyBlue focus:ring-4 focus:ring-skyBlue/20'
                                 }`}
                         />
                     </div>
@@ -235,7 +235,7 @@ const LoginScreen: React.FC = () => {
                     transition={{ delay: 1 }}
                     onClick={() => {
                         playPop();
-                        speak('Xin chào! Tên gọi ở nhà của bé là gì? Hãy chọn một linh vật nhé!');
+                        mascotSpeak('Xin chào bé yêu! Tên gọi ở nhà của bé là gì? Hãy chọn một linh vật nhé!');
                     }}
                     className="mt-6 flex items-center gap-2 text-white/70 font-bold text-sm active:text-white transition-colors"
                 >

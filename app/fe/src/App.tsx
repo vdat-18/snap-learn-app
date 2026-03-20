@@ -11,7 +11,7 @@ import ErrorOverlay from './components/ui/ErrorOverlay';
 import AIProcessingLoading from './components/ui/AIProcessingLoading';
 import { useGameStore } from './store/gameStore';
 import { useSoundEffects } from './hooks/useSoundEffects';
-import { triggerHaptic } from './utils/feedbackUtils';
+import { triggerHaptic, mascotSpeak } from './utils/feedbackUtils';
 import { Scan, WifiOff, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -60,16 +60,30 @@ const App: React.FC = () => {
 
   // Initialization
   useEffect(() => {
-    // Handle splash
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 2500);
-
     // Initial check for daily usage
     checkAndResetDailyUsage();
-
-    return () => clearTimeout(timer);
   }, [checkAndResetDailyUsage]);
+
+  // Screen Voice Guidance Narration with Child-Friendly "Buddy" Scripts
+  useEffect(() => {
+    if (!userName || !hasSeenOnboarding || showSplash) return;
+
+    const timer = setTimeout(() => {
+      if (isBookOpen) {
+        mascotSpeak("Tất cả những người bạn thẻ bài... mà chúng mình đã gặp... đều ở trong cuốn album này này!", 'vi-VN');
+      } else if (isQuestOpen) {
+        mascotSpeak("Có rất nhiều thử thách thú vị... đang chờ bé đấy! Chúng mình cùng vượt qua... để nhận quà thật to nhé!", 'vi-VN');
+      } else if (isRankOpen) {
+        mascotSpeak("Gặp gỡ những nhà thám hiểm... tài ba giống bé này! Chúng mình cùng cố gắng... để đứng vị trí cao nhất nhé!", 'vi-VN');
+      } else if (isProfileOpen) {
+        mascotSpeak("Đây là vương quốc nhỏ của bé... nơi lưu giữ... những chiếc huy hiệu... thật đáng tự hào đấy!", 'vi-VN');
+      } else {
+        // Camera / Main Screen
+        mascotSpeak("Nơi này có nhiều bí mật quá... bé hãy dùng máy ảnh... tìm xem những người bạn từ vựng... đang trốn ở đâu nhé!", 'vi-VN');
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [userName, hasSeenOnboarding, showSplash, isBookOpen, isQuestOpen, isRankOpen, isProfileOpen]);
 
   // Usage timer
   useEffect(() => {
@@ -176,22 +190,58 @@ const App: React.FC = () => {
 
   if (showSplash) {
     return (
-      <div className="fixed inset-0 bg-sky-400 flex flex-col items-center justify-center p-8 text-white">
+      <div className="fixed inset-0 bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 flex flex-col items-center justify-center p-8 text-white overflow-hidden">
+        {/* Background Decorative Emojis */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+          {['⭐', '✨', '🍎', '🐶', '📚'].map((emoji, i) => (
+            <motion.div
+              key={i}
+              className="absolute text-5xl"
+              initial={{ y: '110vh', x: `${15 + i * 20}%` }}
+              animate={{ y: '-10vh' }}
+              transition={{ duration: 15 + i * 5, repeat: Infinity, ease: 'linear', delay: i * 2 }}
+            >
+              {emoji}
+            </motion.div>
+          ))}
+        </div>
+
         <motion.div
-          animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="w-32 h-32 mb-8"
+          animate={{
+            scale: [1, 1.05, 1],
+            rotate: [0, 3, -3, 0],
+            y: [0, -10, 0]
+          }}
+          transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
+          className="w-64 h-64 mb-10 relative z-10 flex items-center justify-center rounded-full overflow-hidden"
         >
-          <img src="/owl-mascot.png" alt="SnapLearn Mascot" className="w-full h-full object-contain" />
-        </motion.div>
-        <h1 className="text-4xl font-black italic tracking-tighter mb-2">SnapLearn</h1>
-        <div className="w-48 h-2 bg-white/20 rounded-full overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: '100%' }}
-            transition={{ duration: 2 }}
-            className="h-full bg-sunshineYellow"
+          <img
+            src="/owl-mascot.png"
+            alt="SnapLearn Mascot"
+            className="w-full h-full object-contain mix-blend-multiply scale-110"
           />
+        </motion.div>
+
+        <div className="relative z-10 text-center flex flex-col items-center">
+          <h1 className="text-6xl font-black italic tracking-tighter mb-8 drop-shadow-xl">
+            SnapLearn
+            <div className="h-2 w-16 bg-sunshineYellow rounded-full mt-1 mx-auto" />
+          </h1>
+
+          {/* Interaction Button to Unlock Audio (Browser policy) */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              playPop();
+              mascotSpeak("Chào mừng bé yêu... đến với thế giới Snap Learn! Chúng mình... cùng bắt đầu... hành trình khám phá nhé!", 'vi-VN');
+              setShowSplash(false);
+            }}
+            className="bg-sunshineYellow text-deepNavy px-10 py-5 rounded-[32px] font-black text-2xl shadow-[0_8px_0_rgb(161,98,7)] flex items-center gap-3 active:shadow-none active:translate-y-[8px] transition-all border-t-2 border-white/40"
+          >
+            BẮT ĐẦU NGAY 🚀
+          </motion.button>
+          <p className="mt-6 text-white/40 font-black uppercase tracking-[3px] text-[10px]">Chạm để đánh thức Cú thông thái</p>
         </div>
       </div>
     );
@@ -321,44 +371,89 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <nav className="fixed bottom-8 left-6 right-6 z-50">
-          <div className="bg-white/70 backdrop-blur-3xl h-24 rounded-[48px] border border-white/40 shadow-level-3 flex items-center justify-around px-4 text-deepNavy">
-            <NavItem
-              image="/icon-book.png"
-              label="Book"
-              bounce={bookBounce}
-              onClick={() => {
-                setIsBookOpen(true);
-                playPop();
-                setBookBounce(false);
-              }}
-            />
-            <NavItem
-              image="/icon-quest.png"
-              label="Quest"
-              onClick={() => {
-                setIsQuestOpen(true);
-                playPop();
-              }}
-            />
-            <NavItem
-              image="/icon-rank.png"
-              label="Rank"
-              onClick={() => {
-                setIsRankOpen(true);
-                playPop();
-              }}
-            />
-            <NavItem
-              image="/icon-me.png"
-              label="Me"
-              onClick={() => {
-                setIsProfileOpen(true);
-                playPop();
-              }}
-            />
-          </div>
-        </nav>
+        {/* Mobile Nav Bar - ONLY visible on sub-pages (Book, Quest, Rank, Me) */}
+        {!showSplash && hasSeenOnboarding && userName && (isBookOpen || isQuestOpen || isRankOpen || isProfileOpen) && (
+          <nav className="fixed bottom-0 left-0 right-0 p-4 pb-8 flex justify-center z-[200] pointer-events-none">
+            <div className="bg-white/90 backdrop-blur-xl rounded-[32px] shadow-level-3 border-2 border-white px-2 py-3 flex items-center justify-around pointer-events-auto w-[92%] max-w-md mx-auto">
+              <NavItem
+                image="/icon-book.png"
+                label="Book"
+                bounce={bookBounce}
+                onClick={() => {
+                  // Global Switch: Open Book, Close Others
+                  setIsBookOpen(true);
+                  setIsQuestOpen(false);
+                  setIsRankOpen(false);
+                  setIsProfileOpen(false);
+                  setIsRevealOpen(false);
+                  playPop();
+                  setBookBounce(false);
+                }}
+              />
+              <NavItem
+                image="/icon-quest.png"
+                label="Quest"
+                onClick={() => {
+                  // Global Switch: Open Quest, Close Others
+                  setIsQuestOpen(true);
+                  setIsBookOpen(false);
+                  setIsRankOpen(false);
+                  setIsProfileOpen(false);
+                  setIsRevealOpen(false);
+                  playPop();
+                }}
+              />
+              {/* Center Snap Button (Uniform Size) */}
+              <NavItem
+                image="/icon-camera.png"
+                label="Snap"
+                onClick={() => {
+                  const isSomethingOpen = isBookOpen || isQuestOpen || isRankOpen || isProfileOpen || isRevealOpen;
+
+                  if (isSomethingOpen) {
+                    // Global Switch: Back to Camera
+                    setIsBookOpen(false);
+                    setIsQuestOpen(false);
+                    setIsRankOpen(false);
+                    setIsProfileOpen(false);
+                    setIsRevealOpen(false);
+                    playPop();
+                    mascotSpeak("Nơi này có nhiều bí mật quá... bé hãy dùng máy ảnh... tìm xem những người bạn từ vựng... đang trốn ở đâu nhé!", 'vi-VN');
+                  } else {
+                    // Action: Capture!
+                    handleCaptureClick();
+                  }
+                }}
+              />
+              <NavItem
+                image="/icon-rank.png"
+                label="Rank"
+                onClick={() => {
+                  // Global Switch: Open Rank, Close Others
+                  setIsRankOpen(true);
+                  setIsBookOpen(false);
+                  setIsQuestOpen(false);
+                  setIsProfileOpen(false);
+                  setIsRevealOpen(false);
+                  playPop();
+                }}
+              />
+              <NavItem
+                image="/icon-me.png"
+                label="Me"
+                onClick={() => {
+                  // Global Switch: Open Profile, Close Others
+                  setIsProfileOpen(true);
+                  setIsBookOpen(false);
+                  setIsQuestOpen(false);
+                  setIsRankOpen(false);
+                  setIsRevealOpen(false);
+                  playPop();
+                }}
+              />
+            </div>
+          </nav>
+        )}
       </AnimatePresence>
 
       <CollectionBook isOpen={isBookOpen} onClose={() => setIsBookOpen(false)} />
@@ -378,6 +473,10 @@ const App: React.FC = () => {
           category={capturedResult.category}
           pinyin=""
           phonetic_en=""
+          onCardFlyToCollection={() => {
+            setIsBookOpen(true);
+            playPop();
+          }}
         />
       )}
 
@@ -407,12 +506,12 @@ const NavItem: React.FC<{ image: string; label: string; bounce?: boolean; onClic
     whileTap={{ scale: 0.9 }}
     animate={bounce ? { scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] } : {}}
     onClick={onClick}
-    className="flex flex-col items-center justify-center gap-1.5 pointer-events-auto"
+    className="flex flex-col items-center justify-center gap-1.5 pointer-events-auto min-w-[64px]"
   >
-    <div className="w-14 h-14 bg-sunshineYellow rounded-[18px] shadow-[0_5px_0_rgb(161,98,7)] flex items-center justify-center border-t-2 border-white/40 overflow-hidden">
-      <img src={image} alt={label} className="w-10 h-10 object-contain mix-blend-multiply" />
+    <div className="w-12 h-12 bg-sunshineYellow rounded-[14px] shadow-[0_4px_0_rgb(161,98,7)] flex items-center justify-center border-t-2 border-white/40 overflow-hidden">
+      <img src={image} alt={label} className="w-8 h-8 object-contain mix-blend-multiply" />
     </div>
-    <span className="text-[10px] font-black text-sunshineYellow uppercase tracking-[2px] drop-shadow-sm">
+    <span className="text-[9px] font-black text-sunshineYellow uppercase tracking-[1px] drop-shadow-sm">
       {label}
     </span>
   </motion.button>
