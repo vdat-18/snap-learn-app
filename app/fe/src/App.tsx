@@ -6,6 +6,9 @@ import QuestScreen from './components/ui/QuestScreen';
 import ProfileScreen from './components/ui/ProfileScreen';
 import LeaderboardScreen from './components/ui/LeaderboardScreen';
 import LoginScreen from './components/ui/LoginScreen';
+import LevelUpCelebration from './components/ui/LevelUpCelebration';
+import DuplicateCaptureModal from './components/ui/DuplicateCaptureModal';
+import MissionOverlay from './components/ui/MissionOverlay';
 import { useGameStore } from './store/gameStore';
 import { Settings, Book, BarChart3, User, Scan, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -113,13 +116,17 @@ const App: React.FC = () => {
       {/* 3. ONBOARDING (After login if not seen) */}
       {!showSplash && userName && !hasSeenOnboarding && <Onboarding onFinish={setOnboardingSeen} />}
 
-       {/* 4. MAIN APP CONTENT (Only show when ready) */}
-       {(!showSplash && userName && hasSeenOnboarding) && (
-         <>
-           <CollectionBook isOpen={isBookOpen} onClose={() => setIsBookOpen(false)} />
-           <QuestScreen isOpen={isQuestOpen} onClose={() => setIsQuestOpen(false)} />
-           <ProfileScreen isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
-           <LeaderboardScreen isOpen={isRankOpen} onClose={() => setIsRankOpen(false)} />
+        {/* 4. MAIN APP CONTENT (Only show when ready) */}
+        {(!showSplash && userName && hasSeenOnboarding) && (
+          <>
+            <CollectionBook isOpen={isBookOpen} onClose={() => setIsBookOpen(false)} />
+            <QuestScreen isOpen={isQuestOpen} onClose={() => setIsQuestOpen(false)} />
+            <ProfileScreen isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
+            <LeaderboardScreen isOpen={isRankOpen} onClose={() => setIsRankOpen(false)} />
+            
+            {/* Global Overlays */}
+            <LevelUpCelebration />
+            <DuplicateCaptureModal />
 
            {/* Camera Permission Denied Overlay */}
            {cameraError && (
@@ -233,22 +240,7 @@ const App: React.FC = () => {
             </div>
 
             {/* Mission Overlay */}
-            <div className="absolute top-32 left-6 z-40 max-w-[220px]">
-              <motion.div
-                initial={{ x: -100, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                className="bg-white/40 backdrop-blur-2xl p-4 rounded-[32px] border border-white/50 shadow-level-3"
-              >
-                <p className="text-white/60 font-black text-[10px] uppercase tracking-widest mb-1">Hi, {userName || 'Small Explorer'}! 👋</p>
-                <p className="text-white font-black text-base mb-2 drop-shadow-md tracking-tight leading-tight">Tìm 3 vật màu đỏ 🔴</p>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-3.5 bg-white/40 rounded-full overflow-hidden p-0.5">
-                    <div className="h-full bg-skyBlue w-1/3 rounded-full shadow-[0_0_12px_rgba(77,168,255,0.9)] animate-pulse"></div>
-                  </div>
-                  <span className="text-white font-black text-xs">1/3</span>
-                </div>
-              </motion.div>
-            </div>
+            <MissionOverlay userName={userName || 'Small Explorer'} />
 
             {/* Dashed Scanning Box (Central focus) */}
             <div className="relative group z-10">

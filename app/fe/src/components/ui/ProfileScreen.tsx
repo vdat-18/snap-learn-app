@@ -9,7 +9,7 @@ interface ProfileScreenProps {
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
-    const { level, streak, collections } = useGameStore();
+    const { level, streak, collections, userName, userAvatar, xp } = useGameStore();
     const [showParentGate, setShowParentGate] = useState(false);
     const [gateAnswer, setGateAnswer] = useState('');
     const pressTimer = useRef<any>(null);
@@ -30,12 +30,26 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
         { id: '1', name: 'Explorer', icon: '🏅', description: 'Captured your first word', earned: collections.length > 0 },
         { id: '2', name: 'Animal Friend', icon: '🐾', description: 'Collected 5 animals', earned: collections.filter(w => w.category === 'Animals').length >= 5 },
         { id: '3', name: 'On Fire', icon: '🔥', description: '3-day streak', earned: streak >= 3 },
-        { id: '4', name: 'Scholar', icon: '🎓', description: 'Practiced 10 times', earned: false },
-        { id: '5', name: 'Photographer', icon: '📸', description: 'Took 100 photos', earned: false },
+        { id: '4', name: 'Scholar', icon: '🎓', description: 'Practiced 10 times', earned: collections.filter(w => w.practiceCount >= 10).length > 0 },
+        { id: '5', name: 'Photographer', icon: '📸', description: 'Took 100 photos', earned: collections.length >= 100 },
         { id: '6', name: 'World Traveler', icon: '🌍', description: '5 different categories', earned: new Set(collections.map(w => w.category)).size >= 5 },
     ];
 
     const rareCount = collections.filter(w => ['Rare', 'Epic', 'Legendary'].includes(w.rarity)).length;
+    
+    // Calculate favorite category
+    const categoryCount: Record<string, number> = {};
+    collections.forEach(w => {
+        categoryCount[w.category] = (categoryCount[w.category] || 0) + 1;
+    });
+    const favoriteCategory = Object.entries(categoryCount).sort((a, b) => b[1] - a[1])[0];
+    const categoryEmojis: Record<string, string> = {
+        'Animals': '🐾',
+        'Food': '🍎',
+        'Home': '🏠',
+        'School': '📚',
+        'Nature': '🌿',
+    };
 
     return (
         <AnimatePresence>
@@ -73,16 +87,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                         <div className="flex flex-col items-center mb-10 text-center">
                             <div className="relative mb-4">
                                 <div className="w-32 h-32 rounded-full border-8 border-white shadow-level-3 overflow-hidden bg-white">
-                                    <img src="/avatar-owl.png" alt="Avatar" className="w-full h-full object-cover" />
+                                    <img src={userAvatar || '/avatar-owl.png'} alt="Avatar" className="w-full h-full object-cover" />
                                 </div>
                                 <div className="absolute -bottom-2 -right-2 bg-skyBlue p-2 rounded-2xl border-4 border-white shadow-level-1">
                                     <span className="text-white font-black text-xs">Lvl {level}</span>
                                 </div>
                             </div>
 
-                            <h2 className="text-3xl font-black text-deepNavy mb-1 uppercase tracking-tight">Dat Nguyen</h2>
+                            <h2 className="text-3xl font-black text-deepNavy mb-1 uppercase tracking-tight">{userName || 'Explorer'}</h2>
                             <div className="px-4 py-1.5 bg-sunshineYellow/20 rounded-full border border-sunshineYellow/30">
-                                <span className="text-sunshineYellow font-black text-[11px] uppercase tracking-widest">Word Collector</span>
+                                <span className="text-sunshineYellow font-black text-[11px] uppercase tracking-widest">{xp} XP Earned</span>
                             </div>
                         </div>
 
@@ -132,10 +146,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                             <div className="relative z-10">
                                 <h3 className="text-sm font-black uppercase tracking-[2px] opacity-70 mb-2">Favorite Topic</h3>
                                 <div className="flex items-center gap-4">
-                                    <div className="text-5xl">🐾</div>
+                                    <div className="text-5xl">{favoriteCategory ? categoryEmojis[favoriteCategory[0]] || '📚' : '🎯'}</div>
                                     <div>
-                                        <h4 className="text-2xl font-black uppercase">Động vật</h4>
-                                        <p className="text-white/80 font-bold text-sm">8 words collected</p>
+                                        <h4 className="text-2xl font-black uppercase">{favoriteCategory ? favoriteCategory[0] : 'None Yet'}</h4>
+                                        <p className="text-white/80 font-bold text-sm">{favoriteCategory ? `${favoriteCategory[1]} words collected` : 'Start collecting!'}</p>
                                     </div>
                                 </div>
                             </div>
