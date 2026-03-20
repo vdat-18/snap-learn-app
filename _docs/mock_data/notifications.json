@@ -1,0 +1,103 @@
+[
+  {
+    "id": "notif_001",
+    "trigger": "first_word_of_day",
+    "template_vi": "{child_name} vừa bắt đầu khám phá! Từ mới: {emoji} {word_vi} → {word_target}",
+    "template_en": "{child_name} just started exploring! They found: {emoji} {word_vi} → {word_target}",
+    "channel": "push",
+    "example": {
+      "child_name": "Minh",
+      "emoji": "🐱",
+      "word_vi": "con mèo",
+      "word_target": "cat",
+      "rendered_vi": "Minh vừa bắt đầu khám phá! Từ mới: 🐱 con mèo → cat",
+      "rendered_en": "Minh just started exploring! They found: 🐱 con mèo → cat"
+    }
+  },
+  {
+    "id": "notif_002",
+    "trigger": "badge_earned",
+    "template_vi": "{child_name} vừa nhận huy hiệu mới: {badge_emoji} {badge_name_vi}! Vào xem thành tích nào!",
+    "template_en": "{child_name} just earned a new badge: {badge_emoji} {badge_name_en}! Check out their achievement!",
+    "channel": "push",
+    "example": {
+      "child_name": "Linh",
+      "badge_emoji": "⭐",
+      "badge_name_vi": "Ngôi sao từ vựng",
+      "badge_name_en": "Vocabulary Star",
+      "rendered_vi": "Linh vừa nhận huy hiệu mới: ⭐ Ngôi sao từ vựng! Vào xem thành tích nào!",
+      "rendered_en": "Linh just earned a new badge: ⭐ Vocabulary Star! Check out their achievement!"
+    }
+  },
+  {
+    "id": "notif_003",
+    "trigger": "streak_milestone",
+    "template_vi": "{child_name} đã học liên tục {streak_days} ngày rồi! {streak_emoji} Cùng giữ vững nhé!",
+    "template_en": "{child_name} has been learning for {streak_days} days in a row! {streak_emoji} Keep the streak going!",
+    "channel": "push",
+    "example": {
+      "child_name": "An",
+      "streak_days": 7,
+      "streak_emoji": "🔥",
+      "rendered_vi": "An đã học liên tục 7 ngày rồi! 🔥 Cùng giữ vững nhé!",
+      "rendered_en": "An has been learning for 7 days in a row! 🔥 Keep the streak going!"
+    }
+  },
+  {
+    "id": "notif_004",
+    "trigger": "daily_time_limit_reached",
+    "template_vi": "{child_name} đã học đủ {minutes} phút hôm nay! 🎉 Nghỉ ngơi thôi nào!",
+    "template_en": "{child_name} has completed {minutes} minutes of learning today! 🎉 Time for a break!",
+    "channel": "push",
+    "example": {
+      "child_name": "Minh",
+      "minutes": 20,
+      "rendered_vi": "Minh đã học đủ 20 phút hôm nay! 🎉 Nghỉ ngơi thôi nào!",
+      "rendered_en": "Minh has completed 20 minutes of learning today! 🎉 Time for a break!"
+    }
+  },
+  {
+    "id": "notif_005",
+    "trigger": "weekly_summary",
+    "template_vi": "Tuần này {child_name} đã học {words_learned} từ mới, luyện phát âm {pronunciation_attempts} lần! {summary_emoji} Xem báo cáo chi tiết.",
+    "template_en": "This week {child_name} learned {words_learned} new words and practiced pronunciation {pronunciation_attempts} times! {summary_emoji} View the full report.",
+    "channel": "push_and_inapp",
+    "example": {
+      "child_name": "Linh",
+      "words_learned": 12,
+      "pronunciation_attempts": 35,
+      "summary_emoji": "📊",
+      "rendered_vi": "Tuần này Linh đã học 12 từ mới, luyện phát âm 35 lần! 📊 Xem báo cáo chi tiết.",
+      "rendered_en": "This week Linh learned 12 new words and practiced pronunciation 35 times! 📊 View the full report."
+    }
+  },
+  {
+    "id": "notif_006",
+    "trigger": "inactivity",
+    "template_vi": "{child_name} đã {days_inactive} ngày chưa ghé thăm! {avatar_emoji} {avatar_name_vi} đang nhớ bạn ấy lắm!",
+    "template_en": "{child_name} hasn't visited in {days_inactive} days! {avatar_emoji} {avatar_name_en} misses them!",
+    "channel": "push",
+    "example": {
+      "child_name": "An",
+      "days_inactive": 3,
+      "avatar_emoji": "🐻",
+      "avatar_name_vi": "Gấu",
+      "avatar_name_en": "Bear",
+      "rendered_vi": "An đã 3 ngày chưa ghé thăm! 🐻 Gấu đang nhớ bạn ấy lắm!",
+      "rendered_en": "An hasn't visited in 3 days! 🐻 Bear misses them!"
+    }
+  },
+  {
+    "id": "notif_007",
+    "trigger": "translation_flagged_for_review",
+    "template_vi": "Bản dịch \"{word_vi}\" → \"{word_target}\" đã được gắn cờ để xem lại. Nhấn để xác nhận hoặc chỉnh sửa.",
+    "template_en": "Translation \"{word_vi}\" → \"{word_target}\" has been flagged for review. Tap to confirm or edit.",
+    "channel": "inapp",
+    "example": {
+      "word_vi": "quả bóng",
+      "word_target": "ball",
+      "rendered_vi": "Bản dịch \"quả bóng\" → \"ball\" đã được gắn cờ để xem lại. Nhấn để xác nhận hoặc chỉnh sửa.",
+      "rendered_en": "Translation \"quả bóng\" → \"ball\" has been flagged for review. Tap to confirm or edit."
+    }
+  }
+]

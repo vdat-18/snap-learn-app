@@ -209,4 +209,5 @@ __marimo__/
 # agents directory
 .qoder
 .claude
+.opencode
 .pi 
