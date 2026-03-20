@@ -1,0 +1,272 @@
+{
+  "period": "monthly",
+  "reset_date": "2026-04-01T00:00:00Z",
+  "total_global_users": 1247,
+  "scopes": {
+    "class": [
+      {
+        "user_id": "user_002",
+        "name": "An",
+        "avatar_id": "owl",
+        "total_points": 4800,
+        "rank": 1,
+        "category_points": {
+          "animals": 1200,
+          "food": 960,
+          "nature": 840,
+          "school": 720,
+          "home": 600,
+          "vehicles": 480
+        }
+      },
+      {
+        "user_id": "user_005",
+        "name": "Linh",
+        "avatar_id": "rabbit",
+        "total_points": 3200,
+        "rank": 2,
+        "category_points": {
+          "animals": 480,
+          "food": 960,
+          "nature": 640,
+          "school": 480,
+          "home": 320,
+          "vehicles": 320
+        }
+      },
+      {
+        "user_id": "user_003",
+        "name": "Mai",
+        "avatar_id": "cat",
+        "total_points": 2150,
+        "rank": 3,
+        "category_points": {
+          "animals": 320,
+          "food": 650,
+          "nature": 430,
+          "school": 350,
+          "home": 250,
+          "vehicles": 150
+        }
+      },
+      {
+        "user_id": "user_009",
+        "name": "Phương",
+        "avatar_id": "cat",
+        "total_points": 1900,
+        "rank": 4
+      },
+      {
+        "user_id": "user_013",
+        "name": "Hạnh",
+        "avatar_id": "bear",
+        "total_points": 1420,
+        "rank": 5
+      },
+      {
+        "user_id": "user_001",
+        "name": "Minh",
+        "avatar_id": "bear",
+        "total_points": 842,
+        "rank": 6
+      },
+      {
+        "user_id": "user_004",
+        "name": "Bảo",
+        "avatar_id": "fox",
+        "total_points": 780,
+        "rank": 7
+      },
+      {
+        "user_id": "user_007",
+        "name": "Thảo",
+        "avatar_id": "panda",
+        "total_points": 650,
+        "rank": 8
+      },
+      {
+        "user_id": "user_011",
+        "name": "Tú",
+        "avatar_id": "rabbit",
+        "total_points": 540,
+        "rank": 9
+      },
+      {
+        "user_id": "user_008",
+        "name": "Dũng",
+        "avatar_id": "fox",
+        "total_points": 410,
+        "rank": 10
+      },
+      {
+        "user_id": "user_010",
+        "name": "Khoa",
+        "avatar_id": "owl",
+        "total_points": 350,
+        "rank": 11
+      },
+      {
+        "user_id": "user_006",
+        "name": "Hùng",
+        "avatar_id": "bear",
+        "total_points": 220,
+        "rank": 12
+      },
+      {
+        "user_id": "user_012",
+        "name": "Ngọc",
+        "avatar_id": "panda",
+        "total_points": 50,
+        "rank": 13
+      }
+    ],
+    "friends": [
+      {
+        "user_id": "user_005",
+        "name": "Linh",
+        "avatar_id": "rabbit",
+        "total_points": 3200,
+        "rank": 1
+      },
+      {
+        "user_id": "user_003",
+        "name": "Mai",
+        "avatar_id": "cat",
+        "total_points": 2150,
+        "rank": 2
+      },
+      {
+        "user_id": "user_009",
+        "name": "Phương",
+        "avatar_id": "cat",
+        "total_points": 1900,
+        "rank": 3
+      },
+      {
+        "user_id": "user_001",
+        "name": "Minh",
+        "avatar_id": "bear",
+        "total_points": 842,
+        "rank": 4
+      },
+      {
+        "user_id": "user_007",
+        "name": "Thảo",
+        "avatar_id": "panda",
+        "total_points": 650,
+        "rank": 5
+      },
+      {
+        "user_id": "user_011",
+        "name": "Tú",
+        "avatar_id": "rabbit",
+        "total_points": 540,
+        "rank": 6
+      }
+    ],
+    "global": [
+      {
+        "user_id": "user_019",
+        "name": "ThầnĐồng",
+        "avatar_id": "owl",
+        "total_points": 55000,
+        "rank": 1,
+        "category_points": {
+          "animals": 12000,
+          "food": 10500,
+          "nature": 11000,
+          "school": 8500,
+          "home": 7000,
+          "vehicles": 6000
+        }
+      },
+      {
+        "user_id": "global_002",
+        "name": "NhàThámHiểm",
+        "avatar_id": "fox",
+        "total_points": 42000,
+        "rank": 2,
+        "category_points": {
+          "animals": 9500,
+          "food": 8000,
+          "nature": 8500,
+          "school": 6500,
+          "home": 5500,
+          "vehicles": 4000
+        }
+      },
+      {
+        "user_id": "global_003",
+        "name": "VuaFromVung",
+        "avatar_id": "cat",
+        "total_points": 35000,
+        "rank": 3,
+        "category_points": {
+          "animals": 7500,
+          "food": 7000,
+          "nature": 6500,
+          "school": 5500,
+          "home": 4500,
+          "vehicles": 4000
+        }
+      },
+      {
+        "user_id": "global_004",
+        "name": "HọcSinhGiỏi",
+        "avatar_id": "rabbit",
+        "total_points": 28000,
+        "rank": 4
+      },
+      {
+        "user_id": "global_005",
+        "name": "ChiếnBinhTừ",
+        "avatar_id": "panda",
+        "total_points": 22500,
+        "rank": 5
+      },
+      {
+        "user_id": "user_020",
+        "name": "SiêuSao",
+        "avatar_id": "fox",
+        "total_points": 18500,
+        "rank": 6
+      },
+      {
+        "user_id": "global_007",
+        "name": "BậcThầyNgữ",
+        "avatar_id": "bear",
+        "total_points": 16200,
+        "rank": 7
+      },
+      {
+        "user_id": "global_008",
+        "name": "NgôiSaoNhỏ",
+        "avatar_id": "owl",
+        "total_points": 14800,
+        "rank": 8
+      },
+      {
+        "user_id": "global_009",
+        "name": "TríTuệNhí",
+        "avatar_id": "cat",
+        "total_points": 13100,
+        "rank": 9
+      },
+      {
+        "user_id": "global_010",
+        "name": "ThợSănChữ",
+        "avatar_id": "rabbit",
+        "total_points": 11500,
+        "rank": 10
+      },
+      {
+        "user_id": "user_001",
+        "name": "Minh",
+        "avatar_id": "bear",
+        "total_points": 842,
+        "rank": 142,
+        "note": "Hero user position out of 1247 global users"
+      }
+    ]
+  }
+}

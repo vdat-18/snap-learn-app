@@ -1,0 +1,42 @@
+[
+  {
+    "level": 1,
+    "title_vi": "Nhà thám hiểm mới",
+    "title_en": "Beginner Explorer",
+    "xp_required": 0,
+    "unlocks": ["camera", "daily_quests"],
+    "icon": "🌱"
+  },
+  {
+    "level": 5,
+    "title_vi": "Nhà sưu tầm từ",
+    "title_en": "Word Collector",
+    "xp_required": 500,
+    "unlocks": ["collection_book"],
+    "icon": "📖"
+  },
+  {
+    "level": 10,
+    "title_vi": "Thợ săn từ vựng",
+    "title_en": "Vocab Hunter",
+    "xp_required": 1500,
+    "unlocks": ["weekly_quests", "friends_leaderboard"],
+    "icon": "🎯"
+  },
+  {
+    "level": 20,
+    "title_vi": "Hướng đạo ngôn ngữ",
+    "title_en": "Language Scout",
+    "xp_required": 5000,
+    "unlocks": ["epic_bonus", "class_leaderboard"],
+    "icon": "🏅"
+  },
+  {
+    "level": 50,
+    "title_vi": "Nhà vô địch đa ngữ",
+    "title_en": "Polyglot Champion",
+    "xp_required": 20000,
+    "unlocks": ["rare_radar"],
+    "icon": "👑"
+  }
+]
