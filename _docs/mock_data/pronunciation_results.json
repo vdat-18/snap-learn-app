@@ -1,0 +1,452 @@
+[
+  {
+    "vocab_id": "vocab_001",
+    "expected_word_en": "cat",
+    "expected_word_zh": null,
+    "expected_pinyin": null,
+    "language": "en",
+    "scenarios": [
+      {
+        "id": "pron_001_en_exact",
+        "asr_result": "cat",
+        "asr_confidence": 0.95,
+        "match_type": "exact",
+        "stars": 3,
+        "feedback_vi": "Tuyệt vời! Phát âm xuất sắc! 🌟",
+        "feedback_en": "Amazing! Perfect pronunciation! 🌟"
+      },
+      {
+        "id": "pron_001_en_partial",
+        "asr_result": "cat",
+        "asr_confidence": 0.62,
+        "match_type": "partial",
+        "stars": 2,
+        "feedback_vi": "Khá tốt! Nghe lại và thử lần nữa nhé!",
+        "feedback_en": "Pretty good! Listen again and try once more!"
+      },
+      {
+        "id": "pron_001_en_wrong",
+        "asr_result": "cut",
+        "asr_confidence": 0.80,
+        "match_type": "no_match",
+        "stars": 1,
+        "feedback_vi": "Cùng luyện thêm nào! Nghe mẫu rồi thử lại!",
+        "feedback_en": "Let's practice more! Listen to the example and try again!"
+      },
+      {
+        "id": "pron_001_en_fail",
+        "asr_result": null,
+        "asr_confidence": 0.0,
+        "match_type": "asr_failure",
+        "stars": 0,
+        "feedback_vi": "Mình không nghe rõ. Nói to hơn một chút nhé!",
+        "feedback_en": "I couldn't hear you. Speak a little louder!"
+      }
+    ]
+  },
+  {
+    "vocab_id": "vocab_002",
+    "expected_word_en": "dog",
+    "expected_word_zh": null,
+    "expected_pinyin": null,
+    "language": "en",
+    "scenarios": [
+      {
+        "id": "pron_002_en_exact",
+        "asr_result": "dog",
+        "asr_confidence": 0.93,
+        "match_type": "exact",
+        "stars": 3,
+        "feedback_vi": "Tuyệt vời! Phát âm xuất sắc! 🌟",
+        "feedback_en": "Amazing! Perfect pronunciation! 🌟"
+      },
+      {
+        "id": "pron_002_en_partial",
+        "asr_result": "dog",
+        "asr_confidence": 0.58,
+        "match_type": "partial",
+        "stars": 2,
+        "feedback_vi": "Gần đúng rồi! Thử phát âm rõ hơn nhé!",
+        "feedback_en": "Almost there! Try to pronounce it more clearly!"
+      },
+      {
+        "id": "pron_002_en_wrong",
+        "asr_result": "duck",
+        "asr_confidence": 0.75,
+        "match_type": "no_match",
+        "stars": 1,
+        "feedback_vi": "Cùng luyện thêm nào! Nghe mẫu rồi thử lại!",
+        "feedback_en": "Let's practice more! Listen to the example and try again!"
+      },
+      {
+        "id": "pron_002_en_fail",
+        "asr_result": null,
+        "asr_confidence": 0.0,
+        "match_type": "asr_failure",
+        "stars": 0,
+        "feedback_vi": "Mình không nghe rõ. Nói to hơn một chút nhé!",
+        "feedback_en": "I couldn't hear you. Speak a little louder!"
+      }
+    ]
+  },
+  {
+    "vocab_id": "vocab_044",
+    "expected_word_en": "banana",
+    "expected_word_zh": null,
+    "expected_pinyin": null,
+    "language": "en",
+    "scenarios": [
+      {
+        "id": "pron_044_en_exact",
+        "asr_result": "banana",
+        "asr_confidence": 0.91,
+        "match_type": "exact",
+        "stars": 3,
+        "feedback_vi": "Xuất sắc! Bạn nói rất chuẩn! 🌟",
+        "feedback_en": "Excellent! You said it perfectly! 🌟"
+      },
+      {
+        "id": "pron_044_en_partial",
+        "asr_result": "banana",
+        "asr_confidence": 0.55,
+        "match_type": "partial",
+        "stars": 2,
+        "feedback_vi": "Khá tốt! Chú ý âm 'na' ở cuối nhé!",
+        "feedback_en": "Pretty good! Pay attention to the 'na' at the end!"
+      },
+      {
+        "id": "pron_044_en_wrong",
+        "asr_result": "bonanza",
+        "asr_confidence": 0.72,
+        "match_type": "no_match",
+        "stars": 1,
+        "feedback_vi": "Chưa đúng rồi! Nghe mẫu và thử lại nhé!",
+        "feedback_en": "Not quite right! Listen to the example and try again!"
+      },
+      {
+        "id": "pron_044_en_fail",
+        "asr_result": null,
+        "asr_confidence": 0.0,
+        "match_type": "asr_failure",
+        "stars": 0,
+        "feedback_vi": "Mình không nghe rõ. Nói to hơn một chút nhé!",
+        "feedback_en": "I couldn't hear you. Speak a little louder!"
+      }
+    ]
+  },
+  {
+    "vocab_id": "vocab_111",
+    "expected_word_en": "book",
+    "expected_word_zh": null,
+    "expected_pinyin": null,
+    "language": "en",
+    "scenarios": [
+      {
+        "id": "pron_111_en_exact",
+        "asr_result": "book",
+        "asr_confidence": 0.97,
+        "match_type": "exact",
+        "stars": 3,
+        "feedback_vi": "Tuyệt vời! Phát âm chuẩn luôn! 🌟",
+        "feedback_en": "Wonderful! Spot-on pronunciation! 🌟"
+      },
+      {
+        "id": "pron_111_en_partial",
+        "asr_result": "book",
+        "asr_confidence": 0.60,
+        "match_type": "partial",
+        "stars": 2,
+        "feedback_vi": "Gần đúng rồi! Chú ý âm 'oo' nhé!",
+        "feedback_en": "Almost! Pay attention to the 'oo' sound!"
+      },
+      {
+        "id": "pron_111_en_wrong",
+        "asr_result": "back",
+        "asr_confidence": 0.78,
+        "match_type": "no_match",
+        "stars": 1,
+        "feedback_vi": "Cùng luyện thêm nào! Nghe mẫu rồi thử lại!",
+        "feedback_en": "Let's practice more! Listen to the example and try again!"
+      },
+      {
+        "id": "pron_111_en_fail",
+        "asr_result": null,
+        "asr_confidence": 0.0,
+        "match_type": "asr_failure",
+        "stars": 0,
+        "feedback_vi": "Mình không nghe rõ. Nói to hơn một chút nhé!",
+        "feedback_en": "I couldn't hear you. Speak a little louder!"
+      }
+    ]
+  },
+  {
+    "vocab_id": "vocab_176",
+    "expected_word_en": "car",
+    "expected_word_zh": null,
+    "expected_pinyin": null,
+    "language": "en",
+    "scenarios": [
+      {
+        "id": "pron_176_en_exact",
+        "asr_result": "car",
+        "asr_confidence": 0.94,
+        "match_type": "exact",
+        "stars": 3,
+        "feedback_vi": "Giỏi quá! Phát âm rất tốt! 🌟",
+        "feedback_en": "Great job! Very good pronunciation! 🌟"
+      },
+      {
+        "id": "pron_176_en_partial",
+        "asr_result": "car",
+        "asr_confidence": 0.57,
+        "match_type": "partial",
+        "stars": 2,
+        "feedback_vi": "Khá tốt! Chú ý âm 'r' ở cuối nhé!",
+        "feedback_en": "Pretty good! Watch the 'r' sound at the end!"
+      },
+      {
+        "id": "pron_176_en_wrong",
+        "asr_result": "core",
+        "asr_confidence": 0.81,
+        "match_type": "no_match",
+        "stars": 1,
+        "feedback_vi": "Chưa đúng rồi! Nghe mẫu và thử lại nhé!",
+        "feedback_en": "Not quite right! Listen to the example and try again!"
+      },
+      {
+        "id": "pron_176_en_fail",
+        "asr_result": null,
+        "asr_confidence": 0.0,
+        "match_type": "asr_failure",
+        "stars": 0,
+        "feedback_vi": "Mình không nghe rõ. Nói to hơn một chút nhé!",
+        "feedback_en": "I couldn't hear you. Speak a little louder!"
+      }
+    ]
+  },
+  {
+    "vocab_id": "vocab_001",
+    "expected_word_en": null,
+    "expected_word_zh": "猫",
+    "expected_pinyin": "māo",
+    "language": "zh",
+    "scenarios": [
+      {
+        "id": "pron_001_zh_exact",
+        "asr_result": "māo",
+        "asr_confidence": 0.92,
+        "match_type": "exact",
+        "stars": 3,
+        "feedback_vi": "Tuyệt vời! Phát âm và thanh điệu chuẩn luôn! 🌟",
+        "feedback_en": "Amazing! Perfect pronunciation and tone! 🌟"
+      },
+      {
+        "id": "pron_001_zh_partial",
+        "asr_result": "máo",
+        "asr_confidence": 0.65,
+        "match_type": "partial",
+        "stars": 2,
+        "feedback_vi": "Âm đúng rồi nhưng thanh điệu chưa chuẩn! Đây là thanh 1 (āā) nhé!",
+        "feedback_en": "Right syllable but wrong tone! This is tone 1 (flat) — try again!"
+      },
+      {
+        "id": "pron_001_zh_wrong",
+        "asr_result": "mào",
+        "asr_confidence": 0.70,
+        "match_type": "no_match",
+        "stars": 1,
+        "feedback_vi": "Chưa đúng rồi! Nghe mẫu và chú ý thanh điệu nhé!",
+        "feedback_en": "Not quite! Listen to the example and pay attention to the tone!"
+      },
+      {
+        "id": "pron_001_zh_fail",
+        "asr_result": null,
+        "asr_confidence": 0.0,
+        "match_type": "asr_failure",
+        "stars": 0,
+        "feedback_vi": "Mình không nghe rõ. Nói to hơn một chút nhé!",
+        "feedback_en": "I couldn't hear you. Speak a little louder!"
+      }
+    ]
+  },
+  {
+    "vocab_id": "vocab_002",
+    "expected_word_en": null,
+    "expected_word_zh": "狗",
+    "expected_pinyin": "gǒu",
+    "language": "zh",
+    "scenarios": [
+      {
+        "id": "pron_002_zh_exact",
+        "asr_result": "gǒu",
+        "asr_confidence": 0.90,
+        "match_type": "exact",
+        "stars": 3,
+        "feedback_vi": "Xuất sắc! Thanh điệu rất chuẩn! 🌟",
+        "feedback_en": "Excellent! Your tone is spot on! 🌟"
+      },
+      {
+        "id": "pron_002_zh_partial",
+        "asr_result": "gōu",
+        "asr_confidence": 0.61,
+        "match_type": "partial",
+        "stars": 2,
+        "feedback_vi": "Âm đúng rồi nhưng thanh điệu chưa chuẩn! Đây là thanh 3 (ǒ) nhé!",
+        "feedback_en": "Right syllable but wrong tone! This is tone 3 (dipping) — try again!"
+      },
+      {
+        "id": "pron_002_zh_wrong",
+        "asr_result": "gōu",
+        "asr_confidence": 0.73,
+        "match_type": "no_match",
+        "stars": 1,
+        "feedback_vi": "Chưa đúng rồi! Nghe mẫu và thử lại nhé!",
+        "feedback_en": "Not quite! Listen to the example and try again!"
+      },
+      {
+        "id": "pron_002_zh_fail",
+        "asr_result": null,
+        "asr_confidence": 0.0,
+        "match_type": "asr_failure",
+        "stars": 0,
+        "feedback_vi": "Mình không nghe rõ. Nói to hơn một chút nhé!",
+        "feedback_en": "I couldn't hear you. Speak a little louder!"
+      }
+    ]
+  },
+  {
+    "vocab_id": "vocab_076",
+    "expected_word_en": null,
+    "expected_word_zh": "树",
+    "expected_pinyin": "shù",
+    "language": "zh",
+    "scenarios": [
+      {
+        "id": "pron_076_zh_exact",
+        "asr_result": "shù",
+        "asr_confidence": 0.89,
+        "match_type": "exact",
+        "stars": 3,
+        "feedback_vi": "Tuyệt vời! Phát âm 'sh' rất chuẩn! 🌟",
+        "feedback_en": "Wonderful! Your 'sh' sound is perfect! 🌟"
+      },
+      {
+        "id": "pron_076_zh_partial",
+        "asr_result": "shū",
+        "asr_confidence": 0.59,
+        "match_type": "partial",
+        "stars": 2,
+        "feedback_vi": "Âm đúng rồi nhưng thanh điệu chưa chuẩn! Đây là thanh 4 (ù) nhé!",
+        "feedback_en": "Right syllable but wrong tone! This is tone 4 (falling) — try again!"
+      },
+      {
+        "id": "pron_076_zh_wrong",
+        "asr_result": "sù",
+        "asr_confidence": 0.68,
+        "match_type": "no_match",
+        "stars": 1,
+        "feedback_vi": "Chưa đúng rồi! Chú ý âm 'sh' khác âm 's' nhé!",
+        "feedback_en": "Not quite! Notice that 'sh' is different from 's'!"
+      },
+      {
+        "id": "pron_076_zh_fail",
+        "asr_result": null,
+        "asr_confidence": 0.0,
+        "match_type": "asr_failure",
+        "stars": 0,
+        "feedback_vi": "Mình không nghe rõ. Nói to hơn một chút nhé!",
+        "feedback_en": "I couldn't hear you. Speak a little louder!"
+      }
+    ]
+  },
+  {
+    "vocab_id": "vocab_141",
+    "expected_word_en": null,
+    "expected_word_zh": "门",
+    "expected_pinyin": "mén",
+    "language": "zh",
+    "scenarios": [
+      {
+        "id": "pron_141_zh_exact",
+        "asr_result": "mén",
+        "asr_confidence": 0.93,
+        "match_type": "exact",
+        "stars": 3,
+        "feedback_vi": "Giỏi quá! Phát âm rất chuẩn! 🌟",
+        "feedback_en": "Great job! Very accurate pronunciation! 🌟"
+      },
+      {
+        "id": "pron_141_zh_partial",
+        "asr_result": "mēn",
+        "asr_confidence": 0.63,
+        "match_type": "partial",
+        "stars": 2,
+        "feedback_vi": "Âm đúng rồi nhưng thanh điệu chưa chuẩn! Đây là thanh 2 (é) nhé!",
+        "feedback_en": "Right syllable but wrong tone! This is tone 2 (rising) — try again!"
+      },
+      {
+        "id": "pron_141_zh_wrong",
+        "asr_result": "mèn",
+        "asr_confidence": 0.71,
+        "match_type": "no_match",
+        "stars": 1,
+        "feedback_vi": "Chưa đúng rồi! Nghe mẫu và chú ý thanh điệu nhé!",
+        "feedback_en": "Not quite! Listen to the example and pay attention to the tone!"
+      },
+      {
+        "id": "pron_141_zh_fail",
+        "asr_result": null,
+        "asr_confidence": 0.0,
+        "match_type": "asr_failure",
+        "stars": 0,
+        "feedback_vi": "Mình không nghe rõ. Nói to hơn một chút nhé!",
+        "feedback_en": "I couldn't hear you. Speak a little louder!"
+      }
+    ]
+  },
+  {
+    "vocab_id": "vocab_003",
+    "expected_word_en": null,
+    "expected_word_zh": "鱼",
+    "expected_pinyin": "yú",
+    "language": "zh",
+    "scenarios": [
+      {
+        "id": "pron_003_zh_exact",
+        "asr_result": "yú",
+        "asr_confidence": 0.91,
+        "match_type": "exact",
+        "stars": 3,
+        "feedback_vi": "Xuất sắc! Thanh điệu chuẩn tuyệt đối! 🌟",
+        "feedback_en": "Excellent! Your tone is absolutely perfect! 🌟"
+      },
+      {
+        "id": "pron_003_zh_partial",
+        "asr_result": "yū",
+        "asr_confidence": 0.56,
+        "match_type": "partial",
+        "stars": 2,
+        "feedback_vi": "Âm đúng rồi nhưng thanh điệu chưa chuẩn! Đây là thanh 2 (ú) nhé!",
+        "feedback_en": "Right syllable but wrong tone! This is tone 2 (rising) — try again!"
+      },
+      {
+        "id": "pron_003_zh_wrong",
+        "asr_result": "lǜ",
+        "asr_confidence": 0.66,
+        "match_type": "no_match",
+        "stars": 1,
+        "feedback_vi": "Chưa đúng rồi! Nghe mẫu và thử lại nhé!",
+        "feedback_en": "Not quite! Listen to the example and try again!"
+      },
+      {
+        "id": "pron_003_zh_fail",
+        "asr_result": null,
+        "asr_confidence": 0.0,
+        "match_type": "asr_failure",
+        "stars": 0,
+        "feedback_vi": "Mình không nghe rõ. Nói to hơn một chút nhé!",
+        "feedback_en": "I couldn't hear you. Speak a little louder!"
+      }
+    ]
+  }
+]

@@ -1,0 +1,404 @@
+[
+  {
+    "id": "activity_001",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "cái ghế",
+      "word_en": "chair",
+      "word_zh": "椅子",
+      "rarity_tier": "common",
+      "photo_url": "/mock_data/photos/home_chair.jpg",
+      "pronunciation_stars": 3
+    },
+    "timestamp": "2026-03-20T08:45:00Z"
+  },
+  {
+    "id": "activity_002",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "cây bút",
+      "word_en": "pen",
+      "word_zh": "笔",
+      "rarity_tier": "common",
+      "photo_url": "/mock_data/photos/school_pen.jpg",
+      "pronunciation_stars": 2
+    },
+    "timestamp": "2026-03-20T04:12:00Z"
+  },
+  {
+    "id": "activity_003",
+    "user_id": "user_001",
+    "type": "pronunciation_practice",
+    "data": {
+      "word_vi": "cái ghế",
+      "word_en": "chair",
+      "word_zh": "椅子",
+      "previous_mastery": 1,
+      "new_mastery": 2,
+      "stars": 2
+    },
+    "timestamp": "2026-03-20T03:30:00Z"
+  },
+  {
+    "id": "activity_004",
+    "user_id": "user_001",
+    "type": "mission_completed",
+    "data": {
+      "mission_description_vi": "Chụp 5 vật bất kỳ!",
+      "mission_type": "daily",
+      "reward_xp": 30,
+      "reward_badge": null
+    },
+    "timestamp": "2026-03-20T02:50:00Z"
+  },
+  {
+    "id": "activity_005",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "con cá",
+      "word_en": "fish",
+      "word_zh": "鱼",
+      "rarity_tier": "common",
+      "photo_url": "/mock_data/photos/animals_fish.jpg",
+      "pronunciation_stars": 3
+    },
+    "timestamp": "2026-03-19T10:20:00Z"
+  },
+  {
+    "id": "activity_006",
+    "user_id": "user_001",
+    "type": "evolution",
+    "data": {
+      "word_vi": "con mèo",
+      "word_en": "cat",
+      "word_zh": "猫",
+      "fun_fact_vi": "Mèo có thể ngủ tới 16 giờ mỗi ngày và luôn rơi bằng chân nhờ phản xạ xoay người trên không!"
+    },
+    "timestamp": "2026-03-19T09:05:00Z"
+  },
+  {
+    "id": "activity_007",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "quả chuối",
+      "word_en": "banana",
+      "word_zh": "香蕉",
+      "rarity_tier": "common",
+      "photo_url": "/mock_data/photos/food_banana.jpg",
+      "pronunciation_stars": 2
+    },
+    "timestamp": "2026-03-19T07:40:00Z"
+  },
+  {
+    "id": "activity_008",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "xe đạp",
+      "word_en": "bicycle",
+      "word_zh": "自行车",
+      "rarity_tier": "uncommon",
+      "photo_url": "/mock_data/photos/vehicles_bicycle.jpg",
+      "pronunciation_stars": 1
+    },
+    "timestamp": "2026-03-19T04:15:00Z"
+  },
+  {
+    "id": "activity_009",
+    "user_id": "user_001",
+    "type": "pronunciation_practice",
+    "data": {
+      "word_vi": "quả chuối",
+      "word_en": "banana",
+      "word_zh": "香蕉",
+      "previous_mastery": 0,
+      "new_mastery": 1,
+      "stars": 1
+    },
+    "timestamp": "2026-03-19T03:00:00Z"
+  },
+  {
+    "id": "activity_010",
+    "user_id": "user_001",
+    "type": "mission_completed",
+    "data": {
+      "mission_description_vi": "Luyện nói 3 từ!",
+      "mission_type": "daily",
+      "reward_xp": 40,
+      "reward_badge": null
+    },
+    "timestamp": "2026-03-19T02:30:00Z"
+  },
+  {
+    "id": "activity_011",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "con chó",
+      "word_en": "dog",
+      "word_zh": "狗",
+      "rarity_tier": "common",
+      "photo_url": "/mock_data/photos/animals_dog.jpg",
+      "pronunciation_stars": 3
+    },
+    "timestamp": "2026-03-18T10:00:00Z"
+  },
+  {
+    "id": "activity_012",
+    "user_id": "user_001",
+    "type": "badge_earned",
+    "data": {
+      "badge_id": "explorer",
+      "badge_name_vi": "Nhà thám hiểm",
+      "badge_name_en": "Explorer",
+      "badge_icon": "🧭"
+    },
+    "timestamp": "2026-03-18T09:10:00Z"
+  },
+  {
+    "id": "activity_013",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "cái bàn",
+      "word_en": "table",
+      "word_zh": "桌子",
+      "rarity_tier": "common",
+      "photo_url": "/mock_data/photos/home_table.jpg",
+      "pronunciation_stars": 2
+    },
+    "timestamp": "2026-03-18T06:25:00Z"
+  },
+  {
+    "id": "activity_014",
+    "user_id": "user_001",
+    "type": "pronunciation_practice",
+    "data": {
+      "word_vi": "con chó",
+      "word_en": "dog",
+      "word_zh": "狗",
+      "previous_mastery": 1,
+      "new_mastery": 2,
+      "stars": 3
+    },
+    "timestamp": "2026-03-18T04:50:00Z"
+  },
+  {
+    "id": "activity_015",
+    "user_id": "user_001",
+    "type": "mission_completed",
+    "data": {
+      "mission_description_vi": "Tìm từ từ 3 nhóm khác nhau!",
+      "mission_type": "weekly",
+      "reward_xp": 150,
+      "reward_badge": null
+    },
+    "timestamp": "2026-03-18T03:15:00Z"
+  },
+  {
+    "id": "activity_016",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "bông hoa",
+      "word_en": "flower",
+      "word_zh": "花",
+      "rarity_tier": "uncommon",
+      "photo_url": "/mock_data/photos/nature_flower.jpg",
+      "pronunciation_stars": 2
+    },
+    "timestamp": "2026-03-17T10:30:00Z"
+  },
+  {
+    "id": "activity_017",
+    "user_id": "user_001",
+    "type": "level_up",
+    "data": {
+      "previous_level": 4,
+      "new_level": 5,
+      "new_title_vi": "Nhà sưu tập",
+      "new_title_en": "Word Collector"
+    },
+    "timestamp": "2026-03-17T09:00:00Z"
+  },
+  {
+    "id": "activity_018",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "mặt trời",
+      "word_en": "sun",
+      "word_zh": "太阳",
+      "rarity_tier": "rare",
+      "photo_url": "/mock_data/photos/nature_sun.jpg",
+      "pronunciation_stars": 1
+    },
+    "timestamp": "2026-03-17T07:20:00Z"
+  },
+  {
+    "id": "activity_019",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "cốc",
+      "word_en": "cup",
+      "word_zh": "杯子",
+      "rarity_tier": "common",
+      "photo_url": "/mock_data/photos/home_cup.jpg",
+      "pronunciation_stars": 3
+    },
+    "timestamp": "2026-03-17T03:45:00Z"
+  },
+  {
+    "id": "activity_020",
+    "user_id": "user_001",
+    "type": "pronunciation_practice",
+    "data": {
+      "word_vi": "bông hoa",
+      "word_en": "flower",
+      "word_zh": "花",
+      "previous_mastery": 0,
+      "new_mastery": 1,
+      "stars": 2
+    },
+    "timestamp": "2026-03-17T02:10:00Z"
+  },
+  {
+    "id": "activity_021",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "con gà",
+      "word_en": "chicken",
+      "word_zh": "鸡",
+      "rarity_tier": "common",
+      "photo_url": "/mock_data/photos/animals_chicken.jpg",
+      "pronunciation_stars": 2
+    },
+    "timestamp": "2026-03-16T09:50:00Z"
+  },
+  {
+    "id": "activity_022",
+    "user_id": "user_001",
+    "type": "badge_earned",
+    "data": {
+      "badge_id": "ten_words",
+      "badge_name_vi": "10 từ đầu tiên",
+      "badge_name_en": "First 10 Words",
+      "badge_icon": "🏅"
+    },
+    "timestamp": "2026-03-16T08:30:00Z"
+  },
+  {
+    "id": "activity_023",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "sách",
+      "word_en": "book",
+      "word_zh": "书",
+      "rarity_tier": "common",
+      "photo_url": "/mock_data/photos/school_book.jpg",
+      "pronunciation_stars": 3
+    },
+    "timestamp": "2026-03-16T05:15:00Z"
+  },
+  {
+    "id": "activity_024",
+    "user_id": "user_001",
+    "type": "pronunciation_practice",
+    "data": {
+      "word_vi": "con gà",
+      "word_en": "chicken",
+      "word_zh": "鸡",
+      "previous_mastery": 1,
+      "new_mastery": 2,
+      "stars": 2
+    },
+    "timestamp": "2026-03-16T03:40:00Z"
+  },
+  {
+    "id": "activity_025",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "quả táo",
+      "word_en": "apple",
+      "word_zh": "苹果",
+      "rarity_tier": "common",
+      "photo_url": "/mock_data/photos/food_apple.jpg",
+      "pronunciation_stars": 2
+    },
+    "timestamp": "2026-03-15T10:10:00Z"
+  },
+  {
+    "id": "activity_026",
+    "user_id": "user_001",
+    "type": "mission_completed",
+    "data": {
+      "mission_description_vi": "Chụp 3 vật màu xanh!",
+      "mission_type": "daily",
+      "reward_xp": 50,
+      "reward_badge": null
+    },
+    "timestamp": "2026-03-15T08:00:00Z"
+  },
+  {
+    "id": "activity_027",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "cái cửa",
+      "word_en": "door",
+      "word_zh": "门",
+      "rarity_tier": "common",
+      "photo_url": "/mock_data/photos/home_door.jpg",
+      "pronunciation_stars": 1
+    },
+    "timestamp": "2026-03-15T05:30:00Z"
+  },
+  {
+    "id": "activity_028",
+    "user_id": "user_001",
+    "type": "evolution",
+    "data": {
+      "word_vi": "con chó",
+      "word_en": "dog",
+      "word_zh": "狗",
+      "fun_fact_vi": "Chó có thể hiểu hơn 150 từ và có khứu giác mạnh gấp 10.000 lần con người!"
+    },
+    "timestamp": "2026-03-15T03:20:00Z"
+  },
+  {
+    "id": "activity_029",
+    "user_id": "user_001",
+    "type": "pronunciation_practice",
+    "data": {
+      "word_vi": "quả táo",
+      "word_en": "apple",
+      "word_zh": "苹果",
+      "previous_mastery": 0,
+      "new_mastery": 1,
+      "stars": 1
+    },
+    "timestamp": "2026-03-15T02:00:00Z"
+  },
+  {
+    "id": "activity_030",
+    "user_id": "user_001",
+    "type": "capture",
+    "data": {
+      "word_vi": "cây",
+      "word_en": "tree",
+      "word_zh": "树",
+      "rarity_tier": "uncommon",
+      "photo_url": "/mock_data/photos/nature_tree.jpg",
+      "pronunciation_stars": 0
+    },
+    "timestamp": "2026-03-14T06:00:00Z"
+  }
+]

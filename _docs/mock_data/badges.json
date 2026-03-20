@@ -1,0 +1,167 @@
+[
+  {
+    "id": "first_capture",
+    "name_vi": "Lần chụp đầu tiên",
+    "name_en": "First Capture",
+    "icon": "📸",
+    "description_vi": "Chụp từ vựng đầu tiên của bạn",
+    "description_en": "Capture your first vocabulary word",
+    "category": "capture_milestone",
+    "requirement": "Capture 1 word",
+    "rarity": "common"
+  },
+  {
+    "id": "ten_words",
+    "name_vi": "10 Từ vựng",
+    "name_en": "10 Words",
+    "icon": "📚",
+    "description_vi": "Chụp được 10 từ vựng",
+    "description_en": "Capture 10 vocabulary words",
+    "category": "capture_milestone",
+    "requirement": "Capture 10 words",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "fifty_words",
+    "name_vi": "50 Từ vựng",
+    "name_en": "50 Words",
+    "icon": "🏆",
+    "description_vi": "Chụp được 50 từ vựng",
+    "description_en": "Capture 50 vocabulary words",
+    "category": "capture_milestone",
+    "requirement": "Capture 50 words",
+    "rarity": "rare"
+  },
+  {
+    "id": "streak_7",
+    "name_vi": "Chuỗi 7 ngày",
+    "name_en": "7-Day Streak",
+    "icon": "🔥",
+    "description_vi": "Duy trì chuỗi học 7 ngày liên tiếp",
+    "description_en": "Maintain a 7-day learning streak",
+    "category": "streak_milestone",
+    "requirement": "7-day streak",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "streak_14",
+    "name_vi": "Chuỗi 14 ngày",
+    "name_en": "14-Day Streak",
+    "icon": "🔥🔥",
+    "description_vi": "Duy trì chuỗi học 14 ngày liên tiếp",
+    "description_en": "Maintain a 14-day learning streak",
+    "category": "streak_milestone",
+    "requirement": "14-day streak",
+    "rarity": "rare"
+  },
+  {
+    "id": "streak_30",
+    "name_vi": "Chuỗi 30 ngày",
+    "name_en": "30-Day Streak",
+    "icon": "🔥🔥🔥",
+    "description_vi": "Duy trì chuỗi học 30 ngày liên tiếp",
+    "description_en": "Maintain a 30-day learning streak",
+    "category": "streak_milestone",
+    "requirement": "30-day streak",
+    "rarity": "epic"
+  },
+  {
+    "id": "animal_lover",
+    "name_vi": "Người yêu động vật",
+    "name_en": "Animal Lover",
+    "icon": "🐾",
+    "description_vi": "Hoàn thành bộ sưu tập danh mục động vật",
+    "description_en": "Complete the animals category collection",
+    "category": "category_completion",
+    "requirement": "Collect all words in the animals category",
+    "rarity": "rare"
+  },
+  {
+    "id": "food_expert",
+    "name_vi": "Chuyên gia ẩm thực",
+    "name_en": "Food Expert",
+    "icon": "🍎",
+    "description_vi": "Hoàn thành bộ sưu tập danh mục thức ăn",
+    "description_en": "Complete the food category collection",
+    "category": "category_completion",
+    "requirement": "Collect all words in the food category",
+    "rarity": "rare"
+  },
+  {
+    "id": "nature_explorer",
+    "name_vi": "Nhà thám hiểm thiên nhiên",
+    "name_en": "Nature Explorer",
+    "icon": "🌿",
+    "description_vi": "Hoàn thành bộ sưu tập danh mục thiên nhiên",
+    "description_en": "Complete the nature category collection",
+    "category": "category_completion",
+    "requirement": "Collect all words in the nature category",
+    "rarity": "rare"
+  },
+  {
+    "id": "school_star",
+    "name_vi": "Ngôi sao trường học",
+    "name_en": "School Star",
+    "icon": "🏫",
+    "description_vi": "Hoàn thành bộ sưu tập danh mục trường học",
+    "description_en": "Complete the school category collection",
+    "category": "category_completion",
+    "requirement": "Collect all words in the school category",
+    "rarity": "rare"
+  },
+  {
+    "id": "home_hero",
+    "name_vi": "Anh hùng gia đình",
+    "name_en": "Home Hero",
+    "icon": "🏠",
+    "description_vi": "Hoàn thành bộ sưu tập danh mục nhà cửa",
+    "description_en": "Complete the home category collection",
+    "category": "category_completion",
+    "requirement": "Collect all words in the home category",
+    "rarity": "rare"
+  },
+  {
+    "id": "vehicle_master",
+    "name_vi": "Bậc thầy phương tiện",
+    "name_en": "Vehicle Master",
+    "icon": "🚗",
+    "description_vi": "Hoàn thành bộ sưu tập danh mục phương tiện",
+    "description_en": "Complete the vehicles category collection",
+    "category": "category_completion",
+    "requirement": "Collect all words in the vehicles category",
+    "rarity": "rare"
+  },
+  {
+    "id": "first_evolution",
+    "name_vi": "Tiến hóa đầu tiên",
+    "name_en": "First Evolution",
+    "icon": "✨",
+    "description_vi": "Đạt phát âm hoàn hảo lần đầu tiên",
+    "description_en": "Achieve perfect pronunciation for the first time",
+    "category": "pronunciation",
+    "requirement": "Get a perfect pronunciation score once",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "pronunciation_star",
+    "name_vi": "Ngôi sao phát âm",
+    "name_en": "Pronunciation Star",
+    "icon": "⭐",
+    "description_vi": "Đạt phát âm hoàn hảo 50 lần",
+    "description_en": "Achieve perfect pronunciation 50 times",
+    "category": "pronunciation",
+    "requirement": "Get perfect pronunciation 50 times",
+    "rarity": "epic"
+  },
+  {
+    "id": "explorer",
+    "name_vi": "Nhà thám hiểm",
+    "name_en": "Explorer",
+    "icon": "🧭",
+    "description_vi": "Chụp từ vựng ở 5 địa điểm khác nhau",
+    "description_en": "Capture vocabulary at 5 different locations",
+    "category": "exploration",
+    "requirement": "Capture words at 5 unique locations",
+    "rarity": "uncommon"
+  }
+]

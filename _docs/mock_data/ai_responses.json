@@ -1,0 +1,291 @@
+{
+  "generated_at": "2026-03-20T08:00:00Z",
+  "responses": [
+    {
+      "id": "ai_resp_001",
+      "scenario": "high_confidence_common",
+      "trigger_description": "Photo of a cat",
+      "response": {
+        "object_vi": "con mèo",
+        "object_en": "cat",
+        "phonetic_en": "/kæt/",
+        "object_zh": "猫",
+        "pinyin": "māo",
+        "category": "animals",
+        "fun_fact_vi": "Mèo có thể ngủ 16 giờ mỗi ngày!",
+        "difficulty_en": 1,
+        "difficulty_zh": 2,
+        "confidence": 0.95,
+        "rarity": "common"
+      }
+    },
+    {
+      "id": "ai_resp_002",
+      "scenario": "high_confidence_common",
+      "trigger_description": "Photo of a chair",
+      "response": {
+        "object_vi": "cái ghế",
+        "object_en": "chair",
+        "phonetic_en": "/tʃɛr/",
+        "object_zh": "椅子",
+        "pinyin": "yǐzi",
+        "category": "home",
+        "fun_fact_vi": "Chiếc ghế cổ nhất thế giới hơn 5000 năm tuổi!",
+        "difficulty_en": 1,
+        "difficulty_zh": 2,
+        "confidence": 0.92,
+        "rarity": "common"
+      }
+    },
+    {
+      "id": "ai_resp_003",
+      "scenario": "high_confidence_common",
+      "trigger_description": "Photo of a book",
+      "response": {
+        "object_vi": "quyển sách",
+        "object_en": "book",
+        "phonetic_en": "/bʊk/",
+        "object_zh": "书",
+        "pinyin": "shū",
+        "category": "school",
+        "fun_fact_vi": "Cuốn sách nhỏ nhất thế giới chỉ bằng hạt bụi!",
+        "difficulty_en": 1,
+        "difficulty_zh": 1,
+        "confidence": 0.97,
+        "rarity": "common"
+      }
+    },
+    {
+      "id": "ai_resp_004",
+      "scenario": "high_confidence_common",
+      "trigger_description": "Photo of a banana",
+      "response": {
+        "object_vi": "quả chuối",
+        "object_en": "banana",
+        "phonetic_en": "/bəˈnænə/",
+        "object_zh": "香蕉",
+        "pinyin": "xiāngjiāo",
+        "category": "food",
+        "fun_fact_vi": "Chuối chín nhanh hơn khi để cạnh táo!",
+        "difficulty_en": 2,
+        "difficulty_zh": 3,
+        "confidence": 0.93,
+        "rarity": "common"
+      }
+    },
+    {
+      "id": "ai_resp_005",
+      "scenario": "high_confidence_common",
+      "trigger_description": "Photo of a car",
+      "response": {
+        "object_vi": "xe ô tô",
+        "object_en": "car",
+        "phonetic_en": "/kɑːr/",
+        "object_zh": "汽车",
+        "pinyin": "qìchē",
+        "category": "vehicles",
+        "fun_fact_vi": "Chiếc xe đầu tiên trên thế giới chạy chậm hơn người đi bộ!",
+        "difficulty_en": 1,
+        "difficulty_zh": 3,
+        "confidence": 0.91,
+        "rarity": "common"
+      }
+    },
+    {
+      "id": "ai_resp_006",
+      "scenario": "high_confidence_uncommon",
+      "trigger_description": "Photo of a bicycle",
+      "response": {
+        "object_vi": "xe đạp",
+        "object_en": "bicycle",
+        "phonetic_en": "/ˈbaɪsɪkəl/",
+        "object_zh": "自行车",
+        "pinyin": "zìxíngchē",
+        "category": "vehicles",
+        "fun_fact_vi": "Có hơn 1 tỷ chiếc xe đạp trên thế giới!",
+        "difficulty_en": 3,
+        "difficulty_zh": 4,
+        "confidence": 0.89,
+        "rarity": "uncommon"
+      }
+    },
+    {
+      "id": "ai_resp_007",
+      "scenario": "high_confidence_uncommon",
+      "trigger_description": "Photo of a clock",
+      "response": {
+        "object_vi": "đồng hồ",
+        "object_en": "clock",
+        "phonetic_en": "/klɒk/",
+        "object_zh": "时钟",
+        "pinyin": "shízhōng",
+        "category": "home",
+        "fun_fact_vi": "Đồng hồ cổ nhất còn hoạt động đã hơn 600 năm tuổi!",
+        "difficulty_en": 2,
+        "difficulty_zh": 3,
+        "confidence": 0.88,
+        "rarity": "uncommon"
+      }
+    },
+    {
+      "id": "ai_resp_008",
+      "scenario": "high_confidence_rare",
+      "trigger_description": "Photo of a telescope",
+      "response": {
+        "object_vi": "kính thiên văn",
+        "object_en": "telescope",
+        "phonetic_en": "/ˈtɛlɪskoʊp/",
+        "object_zh": "望远镜",
+        "pinyin": "wàngyuǎnjìng",
+        "category": "school",
+        "fun_fact_vi": "Kính thiên văn giúp ta nhìn thấy các ngôi sao cách hàng triệu năm ánh sáng!",
+        "difficulty_en": 4,
+        "difficulty_zh": 5,
+        "confidence": 0.85,
+        "rarity": "rare"
+      }
+    },
+    {
+      "id": "ai_resp_009",
+      "scenario": "high_confidence_epic",
+      "trigger_description": "Photo of a stethoscope",
+      "response": {
+        "object_vi": "ống nghe",
+        "object_en": "stethoscope",
+        "phonetic_en": "/ˈstɛθəskoʊp/",
+        "object_zh": "听诊器",
+        "pinyin": "tīngzhěnqì",
+        "category": "school",
+        "fun_fact_vi": "Bác sĩ dùng ống nghe để nghe tim đập — tim bạn đập khoảng 100,000 lần mỗi ngày!",
+        "difficulty_en": 5,
+        "difficulty_zh": 5,
+        "confidence": 0.82,
+        "rarity": "epic"
+      }
+    },
+    {
+      "id": "ai_resp_010",
+      "scenario": "high_confidence_legendary",
+      "trigger_description": "Photo of a fossil",
+      "response": {
+        "object_vi": "hóa thạch",
+        "object_en": "fossil",
+        "phonetic_en": "/ˈfɒsəl/",
+        "object_zh": "化石",
+        "pinyin": "huàshí",
+        "category": "nature",
+        "fun_fact_vi": "Hóa thạch có thể hàng triệu năm tuổi — già hơn cả khủng long!",
+        "difficulty_en": 4,
+        "difficulty_zh": 4,
+        "confidence": 0.78,
+        "rarity": "legendary"
+      }
+    },
+    {
+      "id": "ai_resp_011",
+      "scenario": "low_confidence_blurry",
+      "trigger_description": "Blurry/unclear photo — object not identifiable",
+      "response": {
+        "object_vi": null,
+        "object_en": null,
+        "phonetic_en": null,
+        "object_zh": null,
+        "pinyin": null,
+        "category": null,
+        "fun_fact_vi": null,
+        "difficulty_en": null,
+        "difficulty_zh": null,
+        "confidence": 0.45,
+        "rarity": null,
+        "error_type": "blurry",
+        "error_message_vi": "🤔 Hmm, mình chưa nhìn rõ lắm. Lại gần hơn nha!",
+        "error_message_en": "Hmm, I can't see clearly. Get closer!"
+      }
+    },
+    {
+      "id": "ai_resp_012",
+      "scenario": "low_confidence_dark",
+      "trigger_description": "Photo too dark — insufficient lighting",
+      "response": {
+        "object_vi": null,
+        "object_en": null,
+        "phonetic_en": null,
+        "object_zh": null,
+        "pinyin": null,
+        "category": null,
+        "fun_fact_vi": null,
+        "difficulty_en": null,
+        "difficulty_zh": null,
+        "confidence": 0.35,
+        "rarity": null,
+        "error_type": "too_dark",
+        "error_message_vi": "🌙 Tối quá! Bật đèn hoặc ra chỗ sáng hơn nha!",
+        "error_message_en": "Too dark! Turn on a light or move somewhere brighter!"
+      }
+    },
+    {
+      "id": "ai_resp_013",
+      "scenario": "blocked_content",
+      "trigger_description": "Photo contains a weapon",
+      "response": {
+        "object_vi": null,
+        "object_en": null,
+        "phonetic_en": null,
+        "object_zh": null,
+        "pinyin": null,
+        "category": null,
+        "fun_fact_vi": null,
+        "difficulty_en": null,
+        "difficulty_zh": null,
+        "confidence": null,
+        "rarity": null,
+        "blocked": true,
+        "block_reason": "weapon",
+        "error_message_vi": "😊 Hãy chụp thứ khác vui hơn nha!",
+        "error_message_en": "Let's find something more fun to capture!"
+      }
+    },
+    {
+      "id": "ai_resp_014",
+      "scenario": "blocked_content",
+      "trigger_description": "Photo contains alcohol",
+      "response": {
+        "object_vi": null,
+        "object_en": null,
+        "phonetic_en": null,
+        "object_zh": null,
+        "pinyin": null,
+        "category": null,
+        "fun_fact_vi": null,
+        "difficulty_en": null,
+        "difficulty_zh": null,
+        "confidence": null,
+        "rarity": null,
+        "blocked": true,
+        "block_reason": "alcohol",
+        "error_message_vi": "😊 Hãy chụp thứ khác vui hơn nha!",
+        "error_message_en": "Let's find something more fun to capture!"
+      }
+    },
+    {
+      "id": "ai_resp_015",
+      "scenario": "novel_object_not_cached",
+      "trigger_description": "Photo of Vietnamese rice paper (bánh tráng)",
+      "response": {
+        "object_vi": "bánh tráng",
+        "object_en": "rice paper",
+        "phonetic_en": "/raɪs ˈpeɪpər/",
+        "object_zh": "米纸",
+        "pinyin": "mǐzhǐ",
+        "category": "food",
+        "fun_fact_vi": "Bánh tráng được làm từ bột gạo và phơi nắng — món đặc trưng của Việt Nam!",
+        "difficulty_en": 4,
+        "difficulty_zh": 3,
+        "confidence": 0.80,
+        "rarity": "rare",
+        "in_reference_cache": false,
+        "needs_verification": true
+      }
+    }
+  ]
+}

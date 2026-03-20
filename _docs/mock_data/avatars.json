@@ -1,0 +1,50 @@
+[
+  {
+    "id": "bear",
+    "name_vi": "Gấu",
+    "name_en": "Bear",
+    "emoji": "🐻",
+    "color": "#8B5E3C",
+    "sound_effect": "bear_growl.mp3"
+  },
+  {
+    "id": "cat",
+    "name_vi": "Mèo",
+    "name_en": "Cat",
+    "emoji": "🐱",
+    "color": "#FF9F43",
+    "sound_effect": "cat_meow.mp3"
+  },
+  {
+    "id": "owl",
+    "name_vi": "Cú",
+    "name_en": "Owl",
+    "emoji": "🦉",
+    "color": "#A78BFA",
+    "sound_effect": "owl_hoot.mp3"
+  },
+  {
+    "id": "rabbit",
+    "name_vi": "Thỏ",
+    "name_en": "Rabbit",
+    "emoji": "🐰",
+    "color": "#F472B6",
+    "sound_effect": "rabbit_squeak.mp3"
+  },
+  {
+    "id": "fox",
+    "name_vi": "Cáo",
+    "name_en": "Fox",
+    "emoji": "🦊",
+    "color": "#FB923C",
+    "sound_effect": "fox_bark.mp3"
+  },
+  {
+    "id": "panda",
+    "name_vi": "Gấu trúc",
+    "name_en": "Panda",
+    "emoji": "🐼",
+    "color": "#34D399",
+    "sound_effect": "panda_munch.mp3"
+  }
+]
