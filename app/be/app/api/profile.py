@@ -18,6 +18,7 @@ from app.models.child_profile import ChildProfile
 from app.models.mission import Mission
 from app.schemas.profile import BadgeResponse, ProfileResponse, ProfileStats
 from app.utils.constants import get_level_name
+from app.utils.vocab_image import lookup_vocab_image
 
 router = APIRouter(tags=["profile"])
 
@@ -103,7 +104,7 @@ async def get_profile(
         {
             "id": cv.id,
             "word_en": cv.word_en,
-            "photo_url": cv.photo_url
+            "photo_url": lookup_vocab_image(cv.word_en),
         }
         for cv in recent_captures_result.scalars().all()
     ]

@@ -173,7 +173,11 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
             className={`fixed inset-0 z-[180] flex flex-col font-sans ${
-                tier === 'epic' ? 'bg-gradient-to-b from-purple-50 via-white to-purple-50/60' : 'bg-white'
+                tier === 'epic'
+                    ? 'bg-gradient-to-b from-purple-50 via-white to-purple-50/60'
+                    : tier === 'uncommon'
+                        ? 'bg-gradient-to-b from-emerald-50/60 via-white to-emerald-50/30'
+                        : 'bg-white'
             }`}
         >
             <header className="px-6 pt-12 pb-4 flex items-center justify-between">
@@ -185,9 +189,11 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
                         ? 'bg-amber-100 border-amber-400 text-amber-600'
                         : tier === 'epic'
                             ? 'bg-purple-100 border-purple-400 text-purple-600 shadow-[0_0_12px_rgba(168,85,247,0.25)]'
-                            : 'bg-slate-100 border-slate-300 text-slate-500'
+                            : tier === 'uncommon'
+                                ? 'bg-emerald-50 border-emerald-400 text-emerald-600'
+                                : 'bg-slate-100 border-slate-300 text-slate-500'
                     }`}>
-                    {tier === 'epic' && '💎 '}{rarityLabels[tier] || 'Thường'} {vocab.evolved && '• TIẾN HÓA ✨'}
+                    {tier === 'epic' && '💎 '}{tier === 'uncommon' && '🌿 '}{rarityLabels[tier] || 'Thường'} {vocab.evolved && '• TIẾN HÓA ✨'}
                 </div>
                 <div className="w-12 h-12" />
             </header>
@@ -201,7 +207,9 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
                                     ? 'shadow-level-3 border-8 border-white ring-8 ring-sunshineYellow/20'
                                     : tier === 'epic'
                                         ? 'border-4 border-purple-300/60 shadow-[0_8px_24px_rgba(0,0,0,0.15),0_0_30px_rgba(168,85,247,0.25)] ring-4 ring-purple-200/30'
-                                        : 'shadow-level-3 border-8 border-white'
+                                        : tier === 'uncommon'
+                                            ? 'border-4 border-emerald-200/50 shadow-[0_8px_24px_rgba(0,0,0,0.1),0_0_16px_rgba(34,197,94,0.15)]'
+                                            : 'shadow-level-3 border-8 border-white'
                             }`}
                             animate={vocab.evolved ? { scale: [1, 1.02, 1] } : {}}
                             transition={{ repeat: Infinity, duration: 3 }}

@@ -29,7 +29,7 @@ interface RevealCardProps {
 
 const rarityGlowMap: Record<Rarity, string> = {
     Common: 'shadow-[0_0_20px_rgba(148,163,184,0.4)]',
-    Uncommon: 'shadow-[0_0_20px_rgba(34,197,94,0.4)]',
+    Uncommon: 'shadow-[0_0_25px_rgba(34,197,94,0.45)]',
     Rare: 'shadow-[0_0_20px_rgba(59,130,246,0.4)]',
     Epic: 'shadow-[0_0_40px_rgba(168,85,247,0.6),0_0_80px_rgba(168,85,247,0.3)]',
     Legendary: 'shadow-[0_0_20px_rgba(245,158,11,0.4)]',
@@ -270,6 +270,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
                 }, 400);
             } else if (rarity === 'Rare') {
                 mascotSpeak("Oa! Đồ hiếm nha!", 'vi-VN', true);
+            } else if (rarity === 'Uncommon') {
+                mascotSpeak("Ồ! Cái này đặc biệt đó nha!", 'vi-VN', true);
             } else {
                 mascotSpeak(); // Random phrase
             }
@@ -418,7 +420,11 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className={`absolute inset-0 backdrop-blur-sm ${rarity === 'Epic' ? 'bg-purple-950/60' : 'bg-black/40'}`}
+                        className={`absolute inset-0 backdrop-blur-sm ${
+                            rarity === 'Epic' ? 'bg-purple-950/60'
+                            : rarity === 'Uncommon' ? 'bg-emerald-950/45'
+                            : 'bg-black/40'
+                        }`}
                     />
 
                     {/* Epic ambient glow behind card */}
@@ -428,6 +434,16 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             animate={{ opacity: [0.4, 0.7, 0.4], scale: [0.9, 1.1, 0.9] }}
                             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                             className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] rounded-full bg-purple-500/20 blur-3xl pointer-events-none"
+                        />
+                    )}
+
+                    {/* Uncommon ambient glow behind card */}
+                    {rarity === 'Uncommon' && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: [0.2, 0.35, 0.2] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[110%] h-[60%] rounded-full bg-emerald-400/15 blur-3xl pointer-events-none"
                         />
                     )}
 
@@ -449,7 +465,9 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         className={`relative w-full max-w-md rounded-t-[32px] p-8 pb-12 max-h-[90vh] overflow-y-auto ${
                             rarity === 'Epic'
                                 ? 'bg-gradient-to-b from-purple-50 via-white to-purple-50/80 shadow-[0_-4px_40px_rgba(168,85,247,0.3)] border-t-2 border-purple-300/50'
-                                : 'bg-white shadow-level-3'
+                                : rarity === 'Uncommon'
+                                    ? 'bg-gradient-to-b from-emerald-50/80 via-white to-emerald-50/40 shadow-[0_-4px_30px_rgba(34,197,94,0.2)] border-t-2 border-emerald-200/40'
+                                    : 'bg-white shadow-level-3'
                         }`}
                     >
                         {/* Close Button */}
@@ -489,6 +507,15 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                     />
                                     <span className="relative">💎 {rarityLabels[rarity]}</span>
                                 </motion.span>
+                            ) : rarity === 'Uncommon' ? (
+                                <motion.span
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ type: 'spring', stiffness: 350, damping: 14, delay: 0.1 }}
+                                    className="relative z-10 px-5 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-[11px] font-black uppercase tracking-widest rounded-full shadow-[0_0_12px_rgba(34,197,94,0.35),0_3px_0_rgb(21,128,61)] border-t border-emerald-300/30"
+                                >
+                                    🌿 {rarityLabels[rarity]}
+                                </motion.span>
                             ) : (
                                 <span className={`px-4 py-1.5 ${rarityBadgeColor[rarity]} text-white text-[11px] font-bold uppercase tracking-widest rounded-full shadow-sm relative z-10`}>
                                     {rarityLabels[rarity]}
@@ -511,22 +538,29 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             ? 'border-4 border-sunshineYellow shadow-[0_0_30px_rgba(255,210,52,0.6)]'
                             : rarity === 'Epic'
                                 ? 'border-[3px] border-purple-400/80 shadow-[0_0_30px_rgba(168,85,247,0.4),inset_0_0_20px_rgba(168,85,247,0.1)]'
-                                : `border-4 border-white ${rarityGlowMap[rarity]}`
+                                : rarity === 'Uncommon'
+                                    ? 'border-[3px] border-emerald-300/60 shadow-[0_0_20px_rgba(34,197,94,0.3)]'
+                                    : `border-4 border-white ${rarityGlowMap[rarity]}`
                             }`}
                             style={{ perspective: '1200px' }}
                         >
-                            {/* Background beams for Rare+ */}
-                            {(rarity === 'Rare' || rarity === 'Epic' || rarity === 'Legendary') && (
+                            {/* Background beams for Uncommon+ */}
+                            {(rarity === 'Uncommon' || rarity === 'Rare' || rarity === 'Epic' || rarity === 'Legendary') && (
                                 <motion.div
                                     className="absolute inset-0 z-0 overflow-hidden"
                                     animate={{ rotate: 360 }}
-                                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                                    transition={{ duration: rarity === 'Uncommon' ? 30 : 20, repeat: Infinity, ease: 'linear' }}
                                 >
-                                    {[...Array(6)].map((_, i) => (
+                                    {[...Array(rarity === 'Uncommon' ? 4 : 6)].map((_, i) => (
                                         <div
                                             key={i}
-                                            className={`absolute top-1/2 left-1/2 w-[200%] h-12 -translate-x-1/2 -translate-y-1/2 opacity-30 blur-xl ${rarity === 'Legendary' ? 'bg-sunshineYellow' : rarity === 'Epic' ? 'bg-purple-400' : 'bg-skyBlue'}`}
-                                            style={{ rotate: `${i * 30}deg` }}
+                                            className={`absolute top-1/2 left-1/2 w-[200%] -translate-x-1/2 -translate-y-1/2 blur-xl ${
+                                                rarity === 'Legendary' ? 'bg-sunshineYellow h-12 opacity-30'
+                                                : rarity === 'Epic' ? 'bg-purple-400 h-12 opacity-30'
+                                                : rarity === 'Uncommon' ? 'bg-emerald-300 h-8 opacity-15'
+                                                : 'bg-skyBlue h-12 opacity-30'
+                                            }`}
+                                            style={{ rotate: `${i * (rarity === 'Uncommon' ? 45 : 30)}deg` }}
                                         />
                                     ))}
                                 </motion.div>
@@ -628,22 +662,30 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                 <div className={`rounded-2xl p-4 border ${
                                     rarity === 'Epic'
                                         ? 'bg-gradient-to-br from-purple-100/60 to-violet-50/40 border-purple-200/40'
-                                        : 'bg-gradient-to-br from-skyBlue/10 to-skyBlue/5 border-skyBlue/20'
+                                        : rarity === 'Uncommon'
+                                            ? 'bg-gradient-to-br from-emerald-50/60 to-green-50/30 border-emerald-200/30'
+                                            : 'bg-gradient-to-br from-skyBlue/10 to-skyBlue/5 border-skyBlue/20'
                                 }`}>
                                     {/* Speech bubble tail */}
                                     <div className={`absolute -top-2 left-8 w-4 h-4 rotate-45 ${
                                         rarity === 'Epic'
                                             ? 'bg-purple-100/60 border-l border-t border-purple-200/40'
-                                            : 'bg-skyBlue/10 border-l border-t border-skyBlue/20'
+                                            : rarity === 'Uncommon'
+                                                ? 'bg-emerald-50/60 border-l border-t border-emerald-200/30'
+                                                : 'bg-skyBlue/10 border-l border-t border-skyBlue/20'
                                     }`} />
                                     <div className="flex items-start gap-3">
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                            rarity === 'Epic' ? 'bg-purple-200/40' : 'bg-skyBlue/20'
+                                            rarity === 'Epic' ? 'bg-purple-200/40'
+                                            : rarity === 'Uncommon' ? 'bg-emerald-100/50'
+                                            : 'bg-skyBlue/20'
                                         }`}>
                                             <img src="/owl-mascot.png" alt="Mascot" className="w-8 h-8 object-contain" />
                                         </div>
                                         <p className={`text-sm font-medium leading-relaxed flex-1 ${
-                                            rarity === 'Epic' ? 'text-purple-900/80' : 'text-slate-700'
+                                            rarity === 'Epic' ? 'text-purple-900/80'
+                                            : rarity === 'Uncommon' ? 'text-emerald-900/70'
+                                            : 'text-slate-700'
                                         }`}>
                                             {description_vi}
                                         </p>
