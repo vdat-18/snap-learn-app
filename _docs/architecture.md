@@ -28,9 +28,11 @@ SnapLearn follows a **client-server architecture** with a Next.js PWA frontend c
 │  │ Service  │ │ Service  │ │ Engine   │ │ Service            │  │
 │  │          │ │          │ │          │ │                    │  │
 │  │ • Vision │ │ • ASR    │ │ • XP     │ │ • Email/Password  │  │
-│  │ • Rarity │ │ • TTS    │ │ • Levels │ │ • JWT Tokens      │  │
-│  │ • Dedup  │ │ • Match  │ │ • Missions│ │ • Parent/Child    │  │
-│  │ • Safety │ │          │ │ • Leader │ │ • Parent Gate     │  │
+│  │  (BAML)  │ │ • TTS    │ │ • Levels │ │ • JWT Tokens      │  │
+│  │ • Safety │ │ • Match  │ │ • Missions│ │ • Parent/Child    │  │
+│  │  (BAML)  │ │ • Feedback│ │ • Leader │ │ • Parent Gate     │  │
+│  │ • Rarity │ │  (BAML)  │ │          │ │                    │  │
+│  │  (BAML)  │ │          │ │          │ │                    │  │
 │  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬──────────────┘  │
 │       │            │            │             │                 │
 └───────┼────────────┼────────────┼─────────────┼─────────────────┘
@@ -73,8 +75,9 @@ SnapLearn follows a **client-server architecture** with a Next.js PWA frontend c
 | **Server** | Uvicorn + Gunicorn | Production-grade ASGI server with worker management |
 | **ORM** | SQLAlchemy 2.0 + Alembic | Async ORM with migration management |
 | **Validation** | Pydantic v2 | Request/response schema validation, JSON serialization |
+| **LLM orchestration** | BAML (v0.76.2) | Type-safe LLM functions, declarative fallback chains, Pydantic model generation. See [ai.md § 2](./ai.md) |
 | **Auth** | python-jose (JWT) + passlib (bcrypt) | Lightweight JWT-based auth, password hashing |
-| **Testing** | pytest + httpx | Async test client, fixture-based testing |
+| **Testing** | pytest + httpx + baml-cli test | Async test client, fixture-based testing, BAML prompt validation |
 
 ### 2.3 Data layer
 
@@ -96,17 +99,21 @@ SnapLearn follows a **client-server architecture** with a Next.js PWA frontend c
 
 ### 2.5 External AI services
 
-All AI calls go through **OpenAI** or **OpenRouter** (which provides access to multiple models via a single API).
+All LLM-based inference is orchestrated through **BAML**, which provides type-safe function definitions, declarative fallback chains, and auto-generated Pydantic v2 models. Non-LLM APIs (Whisper ASR, TTS) are called directly in Python.
 
-| Service | Provider | Model | Purpose |
-|---|---|---|---|
-| **Vision (object recognition)** | OpenAI | GPT-4o | Primary: photo → structured JSON (word, translation, category, rarity) |
-| **Vision fallback** | OpenRouter | google/gemini-flash-2.5 or anthropic/claude-sonnet | Fallback if OpenAI is down or over budget |
-| **ASR (speech-to-text)** | OpenAI | Whisper (gpt-4o-transcribe) | Pronunciation judging for EN, VI, ZH |
-| **TTS (text-to-speech)** | OpenAI | tts-1 / tts-1-hd | Word pronunciation playback for EN and VI |
-| **TTS (Chinese)** | OpenRouter | Any model with TTS support, or OpenAI tts-1 | Chinese word pronunciation (Mandarin) |
+| Service | Provider | Model | Purpose | Orchestration |
+|---|---|---|---|---|
+| **Vision (object recognition)** | OpenAI | GPT-4o | Primary: photo → structured JSON (word, translation, category) | BAML `VisionFallback` chain |
+| **Vision fallback** | OpenRouter | google/gemini-flash-2.5 or anthropic/claude-sonnet-4 | Fallback if OpenAI is down or over budget | BAML `VisionFallback` chain |
+| **Rarity classification** | OpenAI | GPT-4o-mini | Classify objects into rarity tiers | BAML `FastFallback` chain |
+| **Content safety** | OpenAI | GPT-4o-mini | Pre-flight image + post-flight word safety checks | BAML `FastFallback` chain |
+| **Pronunciation feedback** | OpenAI | GPT-4o-mini | Child-friendly pronunciation encouragement in Vietnamese | BAML `FastFallback` chain |
+| **ASR (speech-to-text)** | OpenAI | Whisper (gpt-4o-transcribe) | Pronunciation judging for EN, VI, ZH | Direct Python API call |
+| **TTS (text-to-speech)** | OpenAI | tts-1 / tts-1-hd | Word pronunciation playback for EN, VI, ZH | Direct Python API call |
 
-> **Note:** OpenRouter acts as a unified gateway to 100+ models (OpenAI, Anthropic, Google, Meta, etc.) with a single API key and billing. This gives us flexibility to switch models without code changes.
+> **BAML** defines two fallback chains: `VisionFallback` (GPT-4o → Gemini Flash → Claude Sonnet) for heavy vision tasks, and `FastFallback` (GPT-4o-mini → Gemini Flash) for lightweight tasks. All prompts, types, and provider configs are version-controlled in `.baml` files under `app/be/baml_src/`. See [ai.md § 2](./ai.md) for full BAML documentation.
+
+> **OpenRouter** acts as a unified gateway to 100+ models (OpenAI, Anthropic, Google, Meta, etc.) with a single API key and billing. This gives us flexibility to switch models without code changes.
 
 ---
 
@@ -122,45 +129,27 @@ Client                    Backend                     AI Services
   │  POST /api/capture       │                            │
   │  { image: base64/blob }  │                            │
   │ ─────────────────────►   │                            │
-  │                          │  1. Check reference cache   │
-  │                          │     (PostgreSQL lookup)     │
-  │                          │                            │
-  │                          │  [CACHE HIT]               │
-  │                          │  Return verified vocab      │
-  │                          │                            │
-  │                          │  [CACHE MISS]              │
-  │                          │  2. Send to OpenAI ────────►│
+  │                          │  1. Send to OpenAI ────────►│
   │                          │     GPT-4o (vision prompt)  │
   │                          │                            │
-  │                          │  3. Receive JSON ◄──────────│
+  │                          │  2. Receive JSON ◄──────────│
   │                          │     { object_en, object_vi, │
   │                          │       object_zh, category,  │
   │                          │       confidence, ... }     │
   │                          │                            │
-  │                          │  4. Safety filter           │
-  │                          │     (stop-list check)       │
-  │                          │                            │
-  │                          │  5. Duplicate detection     │
-  │                          │     (perceptual hash)       │
-  │                          │                            │
-  │                          │  6. Rarity calculation      │
-  │                          │     (frequency + difficulty)│
-  │                          │                            │
-  │                          │  7. Save CapturedVocab     │
+  │                          │  3. Save CapturedVocab     │
   │                          │     Update user XP          │
   │                          │     Check mission progress  │
   │                          │                            │
   │  ◄─────────────────────  │                            │
   │  { vocab_card, xp_delta, │                            │
-  │    mission_update,        │                            │
-  │    rarity, ... }          │                            │
+  │    mission_update, ... }  │                            │
 ```
 
 **Key design decisions:**
 - Image is compressed client-side (max 1024px, JPEG 80% quality) before upload to reduce latency.
-- Reference vocab cache is checked FIRST — serves ~60% of common household/school objects instantly without an AI call.
 - The AI always returns ALL languages (EN + VI + ZH) regardless of child's selected language. Backend stores all; frontend filters.
-- Perceptual hashing (pHash) detects same-object re-captures for duplicate handling.
+- Vision inference goes through BAML (`b.IdentifyObject()` or `b.IdentifyObjectFiltered()`), which handles provider fallback and type-safe parsing automatically.
 
 ### 3.2 Speech Service
 
@@ -214,7 +203,7 @@ GET /api/tts/{vocab_id}/{language}
 Server-authoritative gamification logic. The client never calculates XP or levels — it receives the result.
 
 **Responsibilities:**
-- **XP calculation:** Points per rarity tier, duplicate penalty (25%), pronunciation bonus (+5), mission rewards
+- **XP calculation:** Points per capture, pronunciation bonus (+5), mission rewards
 - **Level progression:** XP thresholds → level up → unlock features
 - **Streak tracking:** Daily capture check, streak counter, multiplier at milestones (7, 14, 30 days)
 - **Mission engine:** Generate daily/weekly missions based on child's uncaptured categories; track progress; expire old missions
@@ -269,10 +258,9 @@ Parent Account (email + password)
                      │ current_streak   │     │ rarity_tier    │
                      │ longest_streak   │     │ points_earned  │
                      │ streak_date      │     │ photo_url      │
-                     │ daily_capture_ct │     │ photo_hash     │
-                     │ created_at       │     │ mastery_en (0-5)│
-                     └──────────────────┘     │ mastery_vi (0-5)│
-                                              │ mastery_zh (0-5)│
+                     │ daily_capture_ct │     │ mastery_en (0-5)│
+                     │ created_at       │     │ mastery_vi (0-5)│
+                     └──────────────────┘     │ mastery_zh (0-5)│
                                               │ evolved        │
                                               │ captured_at    │
                                               │ last_practiced │
@@ -317,15 +305,11 @@ Parent Account (email + password)
 ### 4.2 Key indexes
 
 ```sql
--- Hot path: capture duplicate check
+-- Hot path: capture word lookup
 CREATE INDEX idx_captured_vocab_child_word ON captured_vocab(child_id, word_en, word_vi);
 
 -- Hot path: collection book by category
 CREATE INDEX idx_captured_vocab_child_cat ON captured_vocab(child_id, category);
-
--- Hot path: reference vocab lookup
-CREATE UNIQUE INDEX idx_ref_vocab_en ON reference_vocab(LOWER(word_en));
-CREATE UNIQUE INDEX idx_ref_vocab_vi ON reference_vocab(LOWER(word_vi));
 
 -- Leaderboard queries
 CREATE INDEX idx_leaderboard_scope_period ON leaderboard_entry(scope, period_start, total_points DESC);
@@ -344,7 +328,7 @@ CREATE UNIQUE INDEX idx_parent_email ON parent_account(LOWER(email));
 ZADD leaderboard:global:2026-03 {score} {child_id}
 ZADD leaderboard:class:{class_id}:2026-03 {score} {child_id}
 
-# Global capture frequency (for rarity calculation)
+# Global capture frequency (for future rarity calculation)
 ZINCRBY capture_frequency:global {1} {word_en_normalized}
 
 # Rate limiting (per child, per day)
@@ -424,7 +408,7 @@ SET refresh:{parent_id} {token_hash} EX 604800
 
 // Response (success)
 {
-  "status": "new_capture",  // or "duplicate"
+  "status": "new_capture",
   "vocab_card": {
     "id": "uuid",
     "word_en": "cat",
@@ -433,7 +417,6 @@ SET refresh:{parent_id} {token_hash} EX 604800
     "word_zh": "猫",
     "pinyin": "māo",
     "category": "animals",
-    "rarity_tier": "uncommon",
     "photo_url": "/uploads/photos/abc123.jpg",
     "fun_fact_vi": "Mèo có thể ngủ 16 giờ mỗi ngày!",
     "mastery_en": 0,
@@ -462,12 +445,6 @@ SET refresh:{parent_id} {token_hash} EX 604800
   "status": "low_confidence",
   "message_vi": "Hmm, mình chưa nhìn rõ lắm. Lại gần hơn nha!",
   "confidence": 0.45
-}
-
-// Response (safety block)
-{
-  "status": "blocked",
-  "message_vi": "Chụp thứ khác vui hơn nhé! 🌟"
 }
 ```
 
@@ -563,7 +540,7 @@ src/
 ├── lib/
 │   ├── imageCompression.ts        # Client-side image resize + compress
 │   ├── audioUtils.ts              # Audio blob processing
-│   └── constants.ts               # Rarity colors, XP values, category icons
+│   └── constants.ts               # XP values, category icons
 │
 ├── assets/
 │   ├── sounds/                    # SFX (capture click, chime, confetti, etc.)
@@ -610,11 +587,7 @@ All data is fetched from the server on each request. The frontend does **not** m
 
 ### 7.3 Content safety
 
-1. **AI prompt-level filtering** — GPT-4o system prompt explicitly refuses weapons, alcohol, tobacco, adult content, violence
-2. **Server-side stop-list** — curated blocklist of inappropriate words in EN, VI, ZH; checked before returning any vocab card
-3. **Confidence threshold** — AI responses below 0.7 confidence are rejected with a friendly retry message
-4. **No free-form AI chat** — all AI interactions are structured (photo → word identification only)
-5. **Content filter sensitivity** — parent can choose "Standard" or "Strict" (adds insects, medical imagery, scary content)
+1. **No free-form AI chat** — all AI interactions are structured (photo → word identification only)
 
 ---
 
@@ -626,15 +599,12 @@ Target: **< 4 seconds** from capture button tap to card reveal on a local/LAN co
 |---|---|---|
 | Image capture + compress | < 200ms | Client-side resize to 1024px, JPEG 80% |
 | Upload to server | < 100ms | Local network, compressed image ~100-200KB |
-| Reference cache check | < 50ms | PostgreSQL indexed lookup |
-| OpenAI GPT-4o call (cache miss) | < 3000ms | Streaming response |
-| Safety filter + rarity calc | < 100ms | In-memory stop-list, Redis frequency lookup |
+| OpenAI GPT-4o call | < 3000ms | Streaming response |
 | DB writes (vocab + XP) | < 100ms | Async, non-blocking for response |
 | Response to client | < 50ms | JSON response ~2KB |
-| **Total (cache hit)** | **< 500ms** | |
-| **Total (cache miss)** | **< 3.5s** | |
+| **Total** | **< 3.5s** | |
 
-**TTS latency:** Pre-cached for reference vocab (~1000 words). Novel words: OpenAI TTS ~500ms, cached to local filesystem for subsequent plays.
+**TTS latency:** Novel words: OpenAI TTS ~500ms, cached to local filesystem for subsequent plays.
 
 **ASR latency:** OpenAI Whisper API = 1-3s. Acceptable for pronunciation practice flow (child releases PTT button → 1-3s wait → stars appear).
 
@@ -745,7 +715,7 @@ The POC is designed for **100 beta users** running on a single machine. Here's w
 
 | Scale point | Challenge | Solution |
 |---|---|---|
-| **500+ users** | OpenAI API costs | Migrate common words to reference cache; switch to cheaper models via OpenRouter |
+| **500+ users** | OpenAI API costs | Switch to cheaper models via OpenRouter |
 | **1,000+ users** | Single machine bottleneck | Move to cloud VM with more CPU/RAM, or split frontend/backend to separate servers |
 | **5,000+ users** | Database load | Managed Postgres (e.g., Supabase, Railway), read replicas |
 | **10,000+ users** | File storage limits | Migrate local files to S3/CloudFlare R2 |
@@ -760,9 +730,9 @@ How the architecture rolls out across the 12-week POC:
 
 | Sprint | Weeks | Architecture components |
 |---|---|---|
-| **1** | 1-2 | Next.js PWA scaffold, Camera API, FastAPI skeleton, OpenAI GPT-4o integration, basic capture endpoint, Postgres schema (User, CapturedVocab, ReferenceVocab), email/password auth with JWT |
+| **1** | 1-2 | Next.js PWA scaffold, Camera API, FastAPI skeleton, OpenAI GPT-4o integration, basic capture endpoint, Postgres schema (User, CapturedVocab), email/password auth with JWT |
 | **2** | 3-4 | Speech service (OpenAI Whisper + TTS), pronunciation endpoint, audio recording/playback on frontend, star rating system, local TTS caching |
-| **3** | 5-6 | Collection Book UI + API, category queries, vocab detail, card mastery system, duplicate detection (pHash) |
+| **3** | 5-6 | Collection Book UI + API, category queries, vocab detail, card mastery system |
 | **4** | 7-8 | Mission engine, leaderboard (Redis sorted sets), level progression, XP system, bottom navigation |
 | **5** | 9-10 | Parent dashboard, Parent Gate, parental controls, activity feed |
 | **6** | 11-12 | Beta feedback iteration, performance optimization, anti-gaming tuning, logging review |

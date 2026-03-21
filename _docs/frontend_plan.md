@@ -723,7 +723,6 @@
 
 ### 9.1 Content Safety (Lọc nội dung)
 - AI được prompt để **từ chối** nhận diện: vũ khí, chất kích thích, nội dung người lớn, nội dung bạo lực.
-- Có **stop-list** các từ nhạy cảm — nếu AI trả về từ trong danh sách này → bỏ qua, yêu cầu chụp lại.
 
 ### 9.2 Privacy (Quyền riêng tư)
 - **PII Blurring:** Không lưu ảnh có mặt người (xử lý phía server hoặc prompt AI bỏ qua).
