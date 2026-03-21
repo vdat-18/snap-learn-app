@@ -223,9 +223,9 @@ const App: React.FC = () => {
         </motion.div>
 
         <div className="relative z-10 text-center flex flex-col items-center">
-          <h1 className="text-6xl font-black italic tracking-tighter mb-8 drop-shadow-xl">
+          <h1 className="text-4xl font-black italic tracking-tighter mb-8 drop-shadow-xl">
             SnapLearn
-            <div className="h-2 w-16 bg-sunshineYellow rounded-full mt-1 mx-auto" />
+            <div className="h-1.5 w-12 bg-sunshineYellow rounded-full mt-1 mx-auto" />
           </h1>
 
           {/* Interaction Button to Unlock Audio (Browser policy) */}
@@ -237,7 +237,7 @@ const App: React.FC = () => {
               mascotSpeak("Chào mừng bé yêu... đến với thế giới Snap Learn! Chúng mình... cùng bắt đầu... hành trình khám phá nhé!", 'vi-VN');
               setShowSplash(false);
             }}
-            className="bg-sunshineYellow text-deepNavy px-10 py-5 rounded-[32px] font-black text-2xl shadow-[0_8px_0_rgb(161,98,7)] flex items-center gap-3 active:shadow-none active:translate-y-[8px] transition-all border-t-2 border-white/40"
+            className="bg-sunshineYellow text-deepNavy px-8 py-4 rounded-[28px] font-black text-lg shadow-[0_6px_0_rgb(161,98,7)] flex items-center gap-3 active:shadow-none active:translate-y-[6px] transition-all border-t-2 border-white/40"
           >
             BẮT ĐẦU NGAY 🚀
           </motion.button>
@@ -270,9 +270,9 @@ const App: React.FC = () => {
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5 bg-skyBlue/90 backdrop-blur px-2 py-0.5 rounded-full w-fit mb-1 shadow-sm">
                   <span className="text-[14px]">⭐</span>
-                  <span className="text-[12px] font-black text-white leading-none">{level}</span>
+                  <span className="text-[12px] font-black text-white leading-none">Cấp {level}</span>
                 </div>
-                <span className="text-xl font-black text-white drop-shadow-md leading-none">{userName}</span>
+                <span className="text-base font-black text-white drop-shadow-md leading-none">{userName}</span>
               </div>
             </div>
           </div>
@@ -283,8 +283,18 @@ const App: React.FC = () => {
               <div className="w-10 h-10 rounded-full bg-sunshineYellow flex items-center justify-center shadow-[0_4px_0_rgb(161,98,7)] border-t-2 border-white/40">
                 <span className="text-xl">⚡</span>
               </div>
-              <span className="text-xl font-black text-white leading-none">85</span>
+              <span className="text-lg font-black text-white leading-none">85</span>
             </div>
+
+            <button
+              onClick={() => {
+                setIsBookOpen(true);
+                playPop();
+              }}
+              className="w-13 h-13 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-level-2 border border-white pointer-events-auto transition-transform active:scale-90"
+            >
+              <img src="/icon-book.png" alt="Book" className="w-9 h-9 object-contain mix-blend-multiply" />
+            </button>
 
             <button
               onClick={() => playPop()}
@@ -308,7 +318,7 @@ const App: React.FC = () => {
                   onClick={() => setupCamera(facingMode)}
                   className="mt-6 bg-skyBlue px-6 py-3 rounded-xl font-black text-white"
                 >
-                  THỬ LẠI
+                  CHƠI LẠI NÈ
                 </button>
               </div>
             ) : (
@@ -336,7 +346,7 @@ const App: React.FC = () => {
 
               <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2">
                 <Scan className="w-10 h-10 text-white opacity-40 animate-pulse" />
-                <span className="text-[10px] font-black text-white/40 uppercase tracking-[4px]">Scanning...</span>
+                <span className="text-[10px] font-black text-white/40 uppercase tracking-[4px]">Đang tìm...</span>
               </div>
             </motion.div>
           </div>
@@ -377,7 +387,7 @@ const App: React.FC = () => {
             <div className="bg-white/90 backdrop-blur-xl rounded-[32px] shadow-level-3 border-2 border-white px-2 py-3 flex items-center justify-around pointer-events-auto w-[92%] max-w-md mx-auto">
               <NavItem
                 image="/icon-book.png"
-                label="Book"
+                label="Kho báu"
                 bounce={bookBounce}
                 onClick={() => {
                   // Global Switch: Open Book, Close Others
@@ -392,7 +402,7 @@ const App: React.FC = () => {
               />
               <NavItem
                 image="/icon-quest.png"
-                label="Quest"
+                label="Vượt khó"
                 onClick={() => {
                   // Global Switch: Open Quest, Close Others
                   setIsQuestOpen(true);
@@ -406,7 +416,7 @@ const App: React.FC = () => {
               {/* Center Snap Button (Uniform Size) */}
               <NavItem
                 image="/icon-camera.png"
-                label="Snap"
+                label="Bắt lấy"
                 onClick={() => {
                   const isSomethingOpen = isBookOpen || isQuestOpen || isRankOpen || isProfileOpen || isRevealOpen;
 
@@ -427,7 +437,7 @@ const App: React.FC = () => {
               />
               <NavItem
                 image="/icon-rank.png"
-                label="Rank"
+                label="Siêu nhân"
                 onClick={() => {
                   // Global Switch: Open Rank, Close Others
                   setIsRankOpen(true);
@@ -440,7 +450,7 @@ const App: React.FC = () => {
               />
               <NavItem
                 image="/icon-me.png"
-                label="Me"
+                label="Góc của Bé"
                 onClick={() => {
                   // Global Switch: Open Profile, Close Others
                   setIsProfileOpen(true);

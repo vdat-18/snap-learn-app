@@ -39,6 +39,14 @@ const DuplicateCaptureModal: React.FC = () => {
         setDuplicateState(null);
     };
 
+    const rarityLabels: Record<string, string> = {
+        'Common': 'Thường nè',
+        'Uncommon': 'Đặc biệt đó',
+        'Rare': 'Hiếm quá đi',
+        'Epic': 'Siêu hiếm',
+        'Legendary': 'Huyền thoại luôn'
+    };
+
     return (
         <AnimatePresence>
             {duplicateState && (
@@ -62,8 +70,8 @@ const DuplicateCaptureModal: React.FC = () => {
                                     <AlertCircle className="w-7 h-7 text-lavenderPurple" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black text-deepNavy">Bạn đã có từ này rồi!</h2>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Duplicate Capture</p>
+                                    <h2 className="text-xl font-black text-deepNavy">Bé đã có thẻ này rồi nè!</h2>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Thẻ bị trùng mất rồi</p>
                                 </div>
                             </div>
                             <button
@@ -77,7 +85,7 @@ const DuplicateCaptureModal: React.FC = () => {
                         {/* Word Info */}
                         <div className="bg-slate-50 rounded-[28px] p-6 mb-6 border-2 border-slate-100">
                             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">
-                                Bạn đã sưu tập
+                                Bé đã sưu tập được
                             </p>
                             <div className="flex items-baseline gap-2 mb-4">
                                 <span className="text-3xl font-black text-deepNavy">
@@ -91,28 +99,28 @@ const DuplicateCaptureModal: React.FC = () => {
                             {/* Rarity Badge */}
                             <div className="inline-block">
                                 <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${duplicateState.rarity === 'Legendary'
-                                        ? 'bg-amber-100 border-amber-300 text-amber-700'
-                                        : duplicateState.rarity === 'Epic'
-                                            ? 'bg-purple-100 border-purple-300 text-purple-700'
-                                            : 'bg-slate-100 border-slate-300 text-slate-700'
+                                    ? 'bg-amber-100 border-amber-300 text-amber-700'
+                                    : duplicateState.rarity === 'Epic'
+                                        ? 'bg-purple-100 border-purple-300 text-purple-700'
+                                        : 'bg-slate-100 border-slate-300 text-slate-700'
                                     }`}>
-                                    {duplicateState.rarity} Rarity
+                                    {rarityLabels[duplicateState.rarity]}
                                 </span>
                             </div>
                         </div>
 
                         {/* Description */}
                         <p className="text-sm font-bold text-slate-600 mb-8 leading-relaxed">
-                            Bạn có thể tiếp tục chụp ảnh khác để thêm vào bộ sưu tập của từ này. Bạn sẽ nhận được 50% XP khi chụp lại từ đã có.
+                            Bé có thể tiếp tục chụp ảnh khác để thêm vào bộ sưu tập của từ này. Bé sẽ nhận được thêm sao may mắn khi chụp lại từ đã có nhé!
                         </p>
 
                         {/* XP Preview */}
                         <div className="bg-sunshineYellow/10 rounded-[24px] p-4 mb-8 border-2 border-sunshineYellow/20">
                             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                                ⭐ XP Reward
+                                ⭐ Quà tặng nè
                             </p>
                             <p className="text-2xl font-black text-sunshineYellow">
-                                +50 XP (50% bonus)
+                                +50 Sao (Quà tặng)
                             </p>
                         </div>
 
@@ -129,7 +137,7 @@ const DuplicateCaptureModal: React.FC = () => {
                             <motion.button
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleContinueCapture}
-                                className="flex-1 px-6 py-3 rounded-[20px] font-black text-sm uppercase tracking-wider bg-sunshineYellow text-deepNavy hover:bg-sunshineYellow/90 transition-colors shadow-[0_4px_0_rgb(161,98,7)] active:shadow-none active:translate-y-1 border-t-2 border-white/30"
+                                className="flex-1 px-6 py-3 rounded-[20px] font-black text-sm uppercase tracking-wider bg-sunshineYellow text-deepNavy hover:bg-sunshineYellow/90 transition-colors shadow-[0_4px_0_rgb(161,98,7)] active:shadow-none active:translate-y-1 border-t-2 border-white/40"
                             >
                                 <span className="flex items-center justify-center gap-2">
                                     <CheckCircle2 className="w-4 h-4" />
@@ -140,7 +148,7 @@ const DuplicateCaptureModal: React.FC = () => {
 
                         {/* Tip */}
                         <p className="text-xs text-slate-400 text-center mt-6 font-medium">
-                            💡 Mẹo: Chụp từ cùng từ từ nhiều góc độ để xây dựng bộ sưu tập!
+                            💡 Mẹo nhỏ nè: Bé hãy chụp từ nhiều hướng khác nhau để hình đẹp hơn nhé!
                         </p>
                     </motion.div>
                 </motion.div>

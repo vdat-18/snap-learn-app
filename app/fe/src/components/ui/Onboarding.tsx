@@ -15,8 +15,8 @@ const slides = [
     {
         id: 'welcome',
         type: 'standard',
-        title: "Chào mừng đến SnapLearn!",
-        description: "Khám phá thế giới và học từ mới mỗi ngày!",
+        title: "Chào mừng Bé yêu! 🦉",
+        description: "Cùng tớ khám phá bí mật của thế giới nhé!",
         image: "/owl-mascot.png",
         bgClass: "from-sky-300 to-sky-500",
         btnLabel: "TIẾP THEO"
@@ -24,8 +24,8 @@ const slides = [
     {
         id: 'language',
         type: 'language-select',
-        title: "Chọn ngôn ngữ yêu thích",
-        description: "Bé muốn học tiếng gì nhất?",
+        title: "Bé thích tiếng gì nhất? 🌈",
+        description: "Chọn ngôn ngữ bé muốn học nha!",
         image: null,
         bgClass: "from-purple-300 to-purple-500",
         btnLabel: null
@@ -33,8 +33,8 @@ const slides = [
     {
         id: 'secondary-language',
         type: 'secondary-language-select',
-        title: "Bé muốn học song ngữ?",
-        description: "Học thêm một ngôn ngữ khác cùng lúc nhé!",
+        title: "Học song ngữ thật ngầu? 🚀",
+        description: "Bé có muốn học thêm một thứ tiếng nữa không?",
         image: null,
         bgClass: "from-indigo-400 to-indigo-600",
         btnLabel: null
@@ -42,8 +42,8 @@ const slides = [
     {
         id: 'camera',
         type: 'standard',
-        title: "Chụp vật xung quanh!",
-        description: "Đưa camera về phía vật thể và nhấn nút chụp",
+        title: "Bấm 'Tách' để bắt thẻ! 📸",
+        description: "Đưa camera về phía vật và chụp ngay nào!",
         image: "/camera-kitten.png",
         bgClass: "from-yellow-400 to-green-500",
         btnLabel: "TIẾP TỤC"
@@ -51,8 +51,8 @@ const slides = [
     {
         id: 'pronunciation',
         type: 'standard',
-        title: "Nói để thu thập!",
-        description: "Phát âm đúng để thêm từ vào bộ sưu tập",
+        title: "Nói to để thu thập! 🎤",
+        description: "Bé hãy phát âm thật chuẩn để bắt bài nhé!",
         image: "/mic-waves.png",
         bgClass: "from-sky-300 to-sky-500",
         btnLabel: "TIẾP TỤC"
@@ -60,11 +60,11 @@ const slides = [
     {
         id: 'collection',
         type: 'standard',
-        title: "Sưu tập & Thăng cấp!",
-        description: "Thu thập từ hiếm, hoàn thành nhiệm vụ, trở thành nhà vô địch!",
+        title: "Lấp đầy kho báu! 💎",
+        description: "Sưu tập thẻ hiếm và trở thành nhà vô địch!",
         image: "/collection-cards.png",
         bgClass: "from-yellow-400 to-yellow-500",
-        btnLabel: "🚀 Bắt đầu khám phá!",
+        btnLabel: "🚀 Khám phá ngay!",
         btnClass: "bg-coralRed text-white shadow-[0_6px_0_rgb(153,27,27)]"
     }
 ];
@@ -150,9 +150,9 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                 <button onClick={() => { playPop(); onFinish(); }} className="w-10 h-10 flex items-center justify-center text-deepNavy/40 hover:text-deepNavy">
                     <X className="w-8 h-8" />
                 </button>
-                <h1 className="text-deepNavy font-black text-2xl tracking-tight">SnapLearn</h1>
-                <button onClick={() => { playPop(); onFinish(); }} className="text-deepNavy/40 font-bold text-lg hover:text-deepNavy px-2">
-                    Skip
+                <h1 className="text-deepNavy font-black text-xl tracking-tight">SnapLearn</h1>
+                <button onClick={() => { playPop(); onFinish(); }} className="text-deepNavy/40 font-bold text-base hover:text-deepNavy px-2">
+                    Bỏ qua nè
                 </button>
             </div>
 
@@ -232,16 +232,16 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
 
                                 {/* Info Box */}
                                 <div className={`rounded-[32px] p-8 w-full max-w-sm text-center ${currentSlide === slides.length - 1 ? 'bg-transparent' : 'bg-white shadow-level-3 border-b-[8px] border-slate-200'}`}>
-                                    <h2 className="text-deepNavy font-black text-3xl mb-4 leading-tight">
+                                    <h2 className="text-deepNavy font-black text-xl mb-4 leading-tight">
                                         {activeSlide.title}
                                     </h2>
-                                    <p className={`${currentSlide === slides.length - 1 ? 'text-deepNavy/80' : 'text-slate-500'} font-medium text-lg leading-snug mb-8`}>
+                                    <p className={`${currentSlide === slides.length - 1 ? 'text-deepNavy/80' : 'text-slate-500'} font-medium text-sm leading-snug mb-8`}>
                                         {activeSlide.description}
                                     </p>
 
                                     <button
                                         onClick={nextSlide}
-                                        className={`w-full ${activeSlide.btnClass || 'bg-sunshineYellow text-deepNavy shadow-[0_6px_0_rgb(161,98,7)]'} hover:brightness-110 font-black text-xl py-4 rounded-2xl active:shadow-none active:translate-y-[6px] transition-all flex items-center justify-center gap-2 border-t-2 border-white/30`}
+                                        className={`w-full ${activeSlide.btnClass || 'bg-sunshineYellow text-deepNavy shadow-[0_6px_0_rgb(161,98,7)]'} hover:brightness-110 font-black text-base py-4 rounded-2xl active:shadow-none active:translate-y-[6px] transition-all flex items-center justify-center gap-2 border-t-2 border-white/30`}
                                     >
                                         {activeSlide.btnLabel}
                                         {currentSlide !== slides.length - 1 && <ArrowRight className="w-6 h-6 stroke-[3px]" />}
@@ -250,7 +250,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                                     {/* Swipe hint */}
                                     {currentSlide > 0 && currentSlide < slides.length - 1 && (
                                         <p className="text-xs text-slate-400 font-bold mt-4">
-                                            ← Swipe or tap → to navigate
+                                            ← Vuốt hoặc chạm → để xem tiếp nè
                                         </p>
                                     )}
                                 </div>
@@ -260,10 +260,10 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                         {/* Language Selection Slide */}
                         {isLanguageSlide && (
                             <div className="flex flex-col items-center w-full max-w-sm">
-                                <h2 className="text-white font-black text-3xl mb-2 leading-tight text-center">
+                                <h2 className="text-white font-black text-2xl mb-2 leading-tight text-center">
                                     {activeSlide.title}
                                 </h2>
-                                <p className="text-white/80 font-medium text-lg mb-12 text-center">
+                                <p className="text-white/80 font-medium text-base mb-12 text-center">
                                     {activeSlide.description}
                                 </p>
 
@@ -277,7 +277,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                                             }`}
                                     >
                                         <span className="text-5xl">🇬🇧</span>
-                                        <span className="text-lg tracking-tight">English</span>
+                                        <span className="text-base tracking-tight">English</span>
                                     </motion.button>
 
                                     <motion.button
@@ -289,7 +289,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                                             }`}
                                     >
                                         <span className="text-5xl">🇨🇳</span>
-                                        <span className="text-lg tracking-tight">中文</span>
+                                        <span className="text-base tracking-tight">中文</span>
                                     </motion.button>
                                 </div>
                             </div>
@@ -298,10 +298,10 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                         {/* Secondary Language Selection Slide */}
                         {isSecondarySlide && (
                             <div className="flex flex-col items-center w-full max-w-sm">
-                                <h2 className="text-white font-black text-3xl mb-2 leading-tight text-center">
+                                <h2 className="text-white font-black text-2xl mb-2 leading-tight text-center">
                                     {activeSlide.title}
                                 </h2>
-                                <p className="text-white/80 font-medium text-lg mb-12 text-center">
+                                <p className="text-white/80 font-medium text-base mb-12 text-center">
                                     {activeSlide.description}
                                 </p>
 
@@ -340,7 +340,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                                             : 'bg-white/20 backdrop-blur-sm text-white/60 hover:bg-white/40'
                                             }`}
                                     >
-                                        <span>Không, chỉ học một cái thôi</span>
+                                        <span>Dạ thôi, bé chỉ học một cái thôi à</span>
                                     </motion.button>
                                 </div>
                             </div>

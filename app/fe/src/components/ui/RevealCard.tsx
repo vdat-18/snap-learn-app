@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
+import { ArrowLeft, Book } from 'lucide-react';
 import { triggerSparkles, triggerLegendaryBurst } from '../../utils/confetti';
 
 export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
@@ -85,7 +86,14 @@ const RevealCard: React.FC<RevealCardProps> = ({
     const [isFlyingToCollection, setIsFlyingToCollection] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     const { addCollection, target_language, secondary_language } = useGameStore();
-    const { playPop, playChime } = useSoundEffects();
+    const { playChime } = useSoundEffects();
+    const rarityLabels: Record<string, string> = {
+        'Common': 'Thường nè',
+        'Uncommon': 'Đặc biệt đó',
+        'Rare': 'Hiếm quá đi',
+        'Epic': 'Siêu hiếm',
+        'Legendary': 'Huyền thoại luôn'
+    };
 
     // Helper to save common word data
     const handleSaveCollection = (scoredStars: PronunciationTier, practiceCount: number) => {
@@ -169,10 +177,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
     }, [isOpen, rarity, playChime]);
 
 
-    // Manual replay button
-    const handleReplayAudio = () => {
-        playTTSSequence();
-    };
+
 
     const startSpeechRecognition = () => {
         // Don't allow more than 3 attempts
@@ -198,7 +203,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
 
         recognition.onstart = () => {
             setIsListening(true);
-            setTranscript('Listening...');
+            setTranscript('Tớ đang nghe...');
         };
 
         recognition.onresult = (event: any) => {
@@ -261,7 +266,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
         recognition.onerror = (event: any) => {
             console.error("Speech Recognition Error:", event.error);
             setIsListening(false);
-            setTranscript('Error, try again');
+            setTranscript('Bé nói lại nhé!');
         };
 
         recognition.onend = () => {
@@ -308,15 +313,30 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         {/* Close Button */}
                         <button
                             onClick={onClose}
-                            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold"
+                            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 font-bold"
                         >
                             ✕
+                        </button>
+
+                        {/* Navigation Arrow to Collection */}
+                        <button
+                            onClick={() => {
+                                if (onCardFlyToCollection) {
+                                    onCardFlyToCollection();
+                                }
+                                onClose();
+                            }}
+                            className="absolute top-6 left-6 flex items-center gap-2 bg-skyBlue/10 hover:bg-skyBlue/20 px-3 py-2 rounded-2xl transition-all"
+                        >
+                            <ArrowLeft className="w-5 h-5 text-skyBlue" />
+                            <Book className="w-5 h-5 text-skyBlue" />
+                            <span className="text-[10px] font-black text-skyBlue uppercase tracking-widest hidden sm:inline">Sổ của Bé</span>
                         </button>
 
                         {/* Rarity Badge */}
                         <div className="flex justify-center mb-6">
                             <span className={`px-4 py-1.5 ${rarityBadgeColor[rarity]} text-white text-[11px] font-bold uppercase tracking-widest rounded-full shadow-sm`}>
-                                {rarity}
+                                {rarityLabels[rarity]}
                             </span>
                         </div>
 
@@ -329,13 +349,13 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         {/* Multilingual Details — filtered by target_language */}
                         <div className="text-center space-y-3 mb-8">
                             {/* Vietnamese — always shown as scaffold */}
-                            <h2 className="text-3xl font-bold text-lang-vi">{word_vi}</h2>
+                            <h2 className="text-2xl font-bold text-lang-vi">{word_vi}</h2>
 
                             <div className="flex flex-col gap-1">
                                 {/* Target Language (Primary) */}
                                 {target_language === 'en' && (
                                     <div className="flex items-center justify-center gap-2">
-                                        <span className="text-xl font-bold text-lang-en">{word_en}</span>
+                                        <span className="text-lg font-bold text-lang-en">{word_en}</span>
                                         <span className="text-sm font-medium text-slate-400">{phonetic_en}</span>
                                         <button
                                             onClick={() => {
@@ -351,7 +371,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                 )}
                                 {target_language === 'zh' && (
                                     <div className="flex items-center justify-center gap-2">
-                                        <span className="text-xl font-bold text-lang-zh">{word_zh}</span>
+                                        <span className="text-lg font-bold text-lang-zh">{word_zh}</span>
                                         <span className="text-sm font-medium text-slate-400">{pinyin}</span>
                                         <button
                                             onClick={() => {
@@ -372,7 +392,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                         <div className="h-px bg-slate-200 my-2" />
                                         {secondary_language === 'en' && (
                                             <div className="flex items-center justify-center gap-2">
-                                                <span className="text-lg font-semibold text-lang-en">{word_en}</span>
+                                                <span className="text-base font-semibold text-lang-en">{word_en}</span>
                                                 <span className="text-xs font-medium text-slate-400">{phonetic_en}</span>
                                                 <button
                                                     onClick={() => {
@@ -388,7 +408,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                         )}
                                         {secondary_language === 'zh' && (
                                             <div className="flex items-center justify-center gap-2">
-                                                <span className="text-lg font-semibold text-lang-zh">{word_zh}</span>
+                                                <span className="text-base font-semibold text-lang-zh">{word_zh}</span>
                                                 <span className="text-xs font-medium text-slate-400">{pinyin}</span>
                                                 <button
                                                     onClick={() => {
@@ -411,13 +431,13 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         <div className={`transition-all duration-300 rounded-[24px] p-6 border ${stars === 3 ? 'bg-mintGreen/10 border-mintGreen/20' : stars ? 'bg-skyBlue/10 border-skyBlue/20' : 'bg-softCream border-sunshineYellow/20'}`}>
                             {showAutoCloseMessage ? (
                                 <div className="text-center space-y-3">
-                                    <span className="block text-lg font-bold text-coralRed">👏 Great job! Let's try again later!</span>
-                                    <p className="text-sm text-slate-600">You practiced {attemptCount} times — that's awesome!</p>
+                                    <span className="block text-base font-bold text-coralRed">👏 Bé giỏi lắm! Làm lại sau nhé!</span>
+                                    <p className="text-xs text-slate-600">Bé đã luyện tập {attemptCount} lần rồi đấy, thật tuyệt!</p>
                                 </div>
                             ) : (
                                 <>
-                                    <span className={`block text-center text-sm font-bold mb-4 uppercase tracking-wider ${stars === 3 ? 'text-mintGreen' : stars ? 'text-skyBlue' : isListening ? 'text-coralRed' : 'text-skyBlue'}`}>
-                                        {stars === 3 ? 'Perfect! You got it.' : stars === 2 ? 'Good try! 👍' : stars === 1 ? 'Let\'s practice! 🎯' : isListening ? 'Listening...' : `Say it to capture! (${attemptCount}/3 attempts)`}
+                                    <span className={`block text-center text-xs font-bold mb-4 uppercase tracking-wider ${stars === 3 ? 'text-mintGreen' : stars ? 'text-skyBlue' : isListening ? 'text-coralRed' : 'text-skyBlue'}`}>
+                                        {stars === 3 ? 'Tuyệt vời! Bé nói đúng rồi.' : stars === 2 ? 'Gần đúng rồi! 👍' : stars === 1 ? 'Cùng tớ tập nói nhé! 🎯' : isListening ? 'Tớ đang nghe bé nè...' : `Nói thật to để bắt bài nhé! (Lần ${attemptCount}/3)`}
                                     </span>
 
                                     <div className="flex flex-col items-center gap-4">
@@ -431,8 +451,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                         </motion.button>
 
                                         {transcript && !isListening && (
-                                            <p className={`text-sm font-bold animate-in fade-in slide-in-from-bottom-1 ${stars === 3 ? 'text-mintGreen' : stars === 2 ? 'text-skyBlue' : stars === 1 ? 'text-amber-500' : 'text-coralRed'}`}>
-                                                You said: "{transcript}"
+                                            <p className={`text-xs font-bold animate-in fade-in slide-in-from-bottom-1 ${stars === 3 ? 'text-mintGreen' : stars === 2 ? 'text-skyBlue' : stars === 1 ? 'text-amber-500' : 'text-coralRed'}`}>
+                                                Bé vừa nói: "{transcript}"
                                             </p>
                                         )}
 

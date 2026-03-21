@@ -11,7 +11,7 @@ interface LeaderboardScreenProps {
 }
 
 const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }) => {
-    const { xp, level } = useGameStore();
+    const { xp, level, userName } = useGameStore();
     const { playPop } = useSoundEffects();
     const [activeTab, setActiveTab] = useState('All');
 
@@ -35,9 +35,9 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                             <button onClick={() => { playPop(); onClose(); }} className="w-12 h-12 bg-white rounded-2xl shadow-level-2 flex items-center justify-center border-t-2 border-white/40">
                                 <X className="w-8 h-8 text-deepNavy" />
                             </button>
-                            <h1 className="text-2xl font-black text-deepNavy tracking-tight flex items-center gap-3">
+                            <h1 className="text-lg font-black text-deepNavy tracking-tight flex items-center gap-3">
                                 <img src="/icon-rank.png" alt="" className="w-10 h-10 object-contain mix-blend-multiply" />
-                                Xếp hạng
+                                👑 Siêu nhân Snap
                             </h1>
                         </div>
                     </header>
@@ -49,9 +49,9 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                 <button
                                     key={tab}
                                     onClick={() => { playPop(); setActiveTab(tab); }}
-                                    className={`flex-1 py-2.5 text-sm font-black rounded-xl transition-all relative z-10 ${activeTab === tab ? 'text-deepNavy' : 'text-slate-400'}`}
+                                    className={`flex-1 py-2.5 text-xs font-black rounded-xl transition-all relative z-10 ${activeTab === tab ? 'text-deepNavy' : 'text-slate-400'}`}
                                 >
-                                    {tab === 'Class' ? 'Lớp học' : tab === 'Friends' ? 'Bạn bè' : 'Tất cả'}
+                                    {tab === 'Class' ? '🏫 Lớp mình' : tab === 'Friends' ? '👫 Bạn bè' : '🌍 Thế giới'}
                                     {activeTab === tab && (
                                         <motion.div
                                             layoutId="activeTab"
@@ -64,9 +64,9 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                         </div>
 
                         {/* Countdown Timer */}
-                        <div className="flex items-center justify-center gap-2 mb-8 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 py-2 rounded-full border border-slate-100">
+                        <div className="flex items-center justify-center gap-2 mb-8 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 py-2 rounded-full border border-slate-100">
                             <Timer className="w-3 h-3" />
-                            Mùa giải kết thúc sau: 12 ngày 14 giờ
+                            ⏳ Sắp có nhà vô địch mới trong: 12 ngày
                         </div>
 
                         {/* Podium Section */}
@@ -96,7 +96,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                     <div className="text-6xl relative z-10">{top3[0]?.avatar || '👤'}</div>
                                 </div>
                                 <div className="w-full bg-sunshineYellow rounded-t-3xl shadow-level-2 p-3 text-center border-t-8 border-yellow-500 h-44 flex flex-col justify-end">
-                                    <span className="block font-black text-sm text-deepNavy truncate">{top3[0]?.name || '---'}</span>
+                                    <span className="block font-black text-xs text-deepNavy truncate">{top3[0]?.name || '---'}</span>
                                     <span className="block font-bold text-xs text-slate-700">{top3[0]?.points || 0} XP</span>
                                 </div>
                             </motion.div>
@@ -135,11 +135,11 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                             {player.avatar}
                                         </div>
                                         <div>
-                                            <h4 className="font-black text-deepNavy text-sm">{player.name}</h4>
+                                            <h4 className="font-black text-deepNavy text-xs">{player.name}</h4>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-black text-skyBlue text-sm">⭐ {player.points}</p>
+                                        <p className="font-black text-skyBlue text-xs">⭐ {player.points}</p>
                                     </div>
                                 </motion.div>
                             ))}
@@ -154,11 +154,11 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                     {level}
                                 </div>
                                 <div>
-                                    <h4 className="font-black text-white text-sm">YOU (Dat Nguyen)</h4>
+                                    <h4 className="font-black text-white text-xs">BÉ ({userName})</h4>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="font-black text-sunshineYellow text-lg">⭐ {xp}</p>
+                                <p className="font-black text-sunshineYellow text-base">⭐ {xp}</p>
                             </div>
                         </div>
                     </div>

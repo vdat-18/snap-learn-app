@@ -95,8 +95,8 @@ const LoginScreen: React.FC = () => {
                     transition={{ delay: 0.1 }}
                     className="text-center mb-8"
                 >
-                    <h1 className="text-5xl font-black text-white drop-shadow-lg tracking-tight">SnapLearn</h1>
-                    <p className="text-white/80 font-bold text-sm tracking-widest uppercase mt-1">Khám phá · Học · Vui</p>
+                    <h1 className="text-3xl font-black text-white drop-shadow-lg tracking-tight">SnapLearn</h1>
+                    <p className="text-white/80 font-bold text-xs tracking-widest uppercase mt-1">Khám phá · Học · Vui</p>
                 </motion.div>
 
                 {/* Selected avatar display */}
@@ -118,7 +118,7 @@ const LoginScreen: React.FC = () => {
                                 animate={{ scale: 1, rotate: 0 }}
                                 exit={{ scale: 0, rotate: 20 }}
                                 transition={{ type: 'spring', damping: 14 }}
-                                className="text-7xl"
+                                className="text-6xl"
                             >
                                 {selectedAvatar.emoji}
                             </motion.span>
@@ -170,7 +170,7 @@ const LoginScreen: React.FC = () => {
                             onChange={handleNameChange}
                             onKeyDown={(e) => e.key === 'Enter' && handleStartClick()}
                             maxLength={20}
-                            className={`w-full h-16 bg-white rounded-2xl px-5 text-xl font-black text-deepNavy placeholder:text-slate-300 placeholder:font-medium shadow-[0_6px_0_rgba(0,0,0,0.1)] border-[3px] transition-all focus:outline-none ${nameError
+                            className={`w-full h-16 bg-white rounded-2xl px-5 text-lg font-black text-deepNavy placeholder:text-slate-300 placeholder:font-medium shadow-[0_6px_0_rgba(0,0,0,0.1)] border-[3px] transition-all focus:outline-none ${nameError
                                 ? 'border-coralRed ring-4 ring-coralRed/20 animate-bounce-scale'
                                 : 'border-white/0 focus:border-skyBlue focus:ring-4 focus:ring-skyBlue/20'
                                 }`}
@@ -198,7 +198,7 @@ const LoginScreen: React.FC = () => {
                         whileTap={{ scale: 0.95, y: 6 }}
                         onClick={handleStartClick}
                         disabled={isJoining}
-                        className="w-full bg-sunshineYellow text-deepNavy h-18 py-4 rounded-[24px] font-black text-2xl shadow-[0_8px_0_rgb(161,98,7)] active:shadow-none active:translate-y-[8px] transition-all disabled:opacity-70 disabled:translate-y-0 disabled:shadow-none flex items-center justify-center gap-3 border-t-2 border-white/40"
+                        className="w-full bg-sunshineYellow text-deepNavy h-18 py-4 rounded-[24px] font-black text-xl shadow-[0_8px_0_rgb(161,98,7)] active:shadow-none active:translate-y-[8px] transition-all disabled:opacity-70 disabled:translate-y-0 disabled:shadow-none flex items-center justify-center gap-3 border-t-2 border-white/40"
                     >
                         <AnimatePresence mode="wait">
                             {isJoining ? (

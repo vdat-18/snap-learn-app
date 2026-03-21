@@ -50,6 +50,14 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
 
     const progressPercent = Math.min((word.practiceCount / 5) * 100, 100);
 
+    const rarityLabels: Record<string, string> = {
+        'Common': 'Thường nè',
+        'Uncommon': 'Đặc biệt đó',
+        'Rare': 'Hiếm quá đi',
+        'Epic': 'Siêu hiếm',
+        'Legendary': 'Huyền thoại luôn'
+    };
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -64,9 +72,9 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
                         <button onClick={onClose} className="p-2 -ml-2">
                             <X className="w-8 h-8 text-deepNavy" />
                         </button>
-                        <div className={`px-4 py-1.5 rounded-full border-2 text-[10px] font-black uppercase tracking-widest ${word.rarity === 'Legendary' ? 'bg-amber-100 border-amber-400 text-amber-600' : 'bg-slate-100 border-slate-300 text-slate-500'
+                        <div className={`px-4 py-1.5 rounded-full border-2 text-[9px] font-black uppercase tracking-widest ${word.rarity === 'Legendary' ? 'bg-amber-100 border-amber-400 text-amber-600' : 'bg-slate-100 border-slate-300 text-slate-500'
                             }`}>
-                            {word.rarity} {word.isEvolved && '• EVOLVED ✨'}
+                            {rarityLabels[word.rarity]} {word.isEvolved && '• TIẾN HÓA ✨'}
                         </div>
                         <div className="w-12 h-12" /> {/* Spacer */}
                     </header>
@@ -101,32 +109,32 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
                             {/* Words with TTS */}
                             <div className="flex flex-col gap-4">
                                 <div className="flex items-center justify-center gap-3">
-                                    <span className="text-4xl font-black text-deepNavy">{word.word_vi}</span>
+                                    <span className="text-2xl font-black text-deepNavy">{word.word_vi}</span>
                                     {/* Vietnamese voice button removed as requested by user to focus on learning EN/ZH */}
                                 </div>
                                 <div className="flex items-center justify-center gap-3">
-                                    <span className="text-3xl font-black text-skyBlue">{word.word_en}</span>
+                                    <span className="text-xl font-black text-skyBlue">{word.word_en}</span>
                                     <button onClick={() => mascotSpeak(word.word_en || '', 'en-US')} className="p-3 rounded-full bg-skyBlue/10 text-skyBlue active:scale-95 transition-all">
                                         <Volume2 className="w-6 h-6" />
                                     </button>
                                 </div>
                                 <div className="flex items-center justify-center gap-3">
-                                    <span className="text-3xl font-black text-lang-zh">{word.word_zh}</span>
+                                    <span className="text-2xl font-black text-lang-zh">{word.word_zh}</span>
                                     <button onClick={() => mascotSpeak(word.word_zh || '', 'zh-CN')} className="p-3 rounded-full bg-lang-zh/10 text-lang-zh active:scale-95 transition-all">
                                         <Volume2 className="w-6 h-6" />
                                     </button>
                                 </div>
                             </div>
-                            <p className="text-sm font-bold text-slate-500 mt-1">{word.word_vi === 'Con mèo' ? 'māo' : '...'}</p>
+                            <p className="text-xs font-bold text-slate-500 mt-1">{word.word_vi === 'Con mèo' ? 'māo' : '...'}</p>
                         </div>
 
                         {/* Evolution Progress */}
                         <section className="bg-white rounded-[32px] p-6 shadow-level-2 border-b-4 border-slate-100 mb-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xl font-bold flex items-center gap-2">
+                                <h3 className="text-lg font-bold flex items-center gap-2">
                                     🌱 <span className="text-deepNavy">Lớn lên nào!</span>
                                 </h3>
-                                <span className="text-lg font-black text-skyBlue bg-skyBlue/10 px-3 py-0.5 rounded-full">{word.practiceCount}/5</span>
+                                <span className="text-base font-black text-skyBlue bg-skyBlue/10 px-3 py-0.5 rounded-full">{word.practiceCount}/5</span>
                             </div>
 
                             <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden mb-4 p-0.5">
@@ -153,7 +161,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
                                 <div className={`p-3 rounded-2xl ${word.isEvolved ? 'bg-sunshineYellow text-white' : 'bg-slate-300 text-white shadow-inner'}`}>
                                     <span className="text-2xl">💡</span>
                                 </div>
-                                <h3 className={`font-black uppercase tracking-widest text-lg ${word.isEvolved ? 'text-deepNavy' : 'text-slate-400'}`}>
+                                <h3 className={`font-black uppercase tracking-widest text-base ${word.isEvolved ? 'text-deepNavy' : 'text-slate-400'}`}>
                                     Bí mật thẻ bài {word.isEvolved ? '✨' : '🔒'}
                                 </h3>
                             </div>
@@ -205,8 +213,8 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
                                     className="text-center"
                                 >
                                     <div className="text-8xl mb-6">✨🌟✨</div>
-                                    <h2 className="text-5xl font-black text-sunshineYellow mb-4 uppercase italic">EVOLVED!</h2>
-                                    <p className="text-white text-xl font-bold mb-10">Thẻ bài của bạn đã tiến hóa lên cấp độ mới!</p>
+                                    <h2 className="text-4xl font-black text-sunshineYellow mb-4 uppercase italic">TIẾN HÓA THÀNH CÔNG!</h2>
+                                    <p className="text-white text-lg font-bold mb-10">Thẻ bài của Bé đã biến hình rồi nè!</p>
                                     <button
                                         onClick={() => setJustEvolved(false)}
                                         className="bg-white text-deepNavy font-black px-10 py-4 rounded-2xl text-xl shadow-level-3"

@@ -30,12 +30,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
     };
 
     const badges = [
-        { id: '1', name: 'Explorer', icon: '🏅', description: 'Captured your first word', earned: collections.length > 0 },
-        { id: '2', name: 'Animal Friend', icon: '🐾', description: 'Collected 5 animals', earned: collections.filter(w => w.category === 'Animals').length >= 5 },
-        { id: '3', name: 'On Fire', icon: '🔥', description: '3-day streak', earned: streak >= 3 },
-        { id: '4', name: 'Scholar', icon: '🎓', description: 'Practiced 10 times', earned: collections.filter(w => w.practiceCount >= 10).length > 0 },
-        { id: '5', name: 'Photographer', icon: '📸', description: 'Took 100 photos', earned: collections.length >= 100 },
-        { id: '6', name: 'World Traveler', icon: '🌍', description: '5 different categories', earned: new Set(collections.map(w => w.category)).size >= 5 },
+        { id: '1', name: 'Dũng sĩ nhỏ', icon: '🏅', description: 'Bé đã bắt được từ đầu tiên!', earned: collections.length > 0 },
+        { id: '2', name: 'Bạn muôn loài', icon: '🐾', description: 'Bé đã tìm thấy 5 bạn động vật', earned: collections.filter(w => w.category === 'Animals').length >= 5 },
+        { id: '3', name: 'Bé chăm chỉ', icon: '🔥', description: 'Bé vào chơi 3 ngày liên tiếp', earned: streak >= 3 },
+        { id: '4', name: 'Học giả nhí', icon: '🎓', description: 'Bé đã luyện tập 10 lần rồi', earned: collections.filter(w => w.practiceCount >= 10).length > 0 },
+        { id: '5', name: 'Siêu thợ săn', icon: '📸', description: 'Bé đã săn được 100 tấm ảnh', earned: collections.length >= 100 },
+        { id: '6', name: 'Nhà thám hiểm', icon: '🌍', description: 'Bé khám phá 5 chủ đề khác nhau', earned: new Set(collections.map(w => w.category)).size >= 5 },
     ];
 
     const rareCount = collections.filter(w => ['Rare', 'Epic', 'Legendary'].includes(w.rarity)).length;
@@ -70,9 +70,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                             <button onClick={() => { playPop(); onClose(); }} className="w-12 h-12 bg-white rounded-2xl shadow-level-2 flex items-center justify-center border-t-2 border-white/40">
                                 <X className="w-8 h-8 text-deepNavy" />
                             </button>
-                            <h1 className="text-2xl font-black text-deepNavy tracking-tight flex items-center gap-3">
+                            <h1 className="text-lg font-black text-deepNavy tracking-tight flex items-center gap-3">
                                 <img src="/icon-me.png" alt="" className="w-10 h-10 object-contain mix-blend-multiply" />
-                                Cá nhân
+                                🌈 Nhà của Bé
                             </h1>
                         </div>
                         <button
@@ -98,9 +98,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                                 </div>
                             </div>
 
-                            <h2 className="text-3xl font-black text-deepNavy mb-1 uppercase tracking-tight">{userName || 'Explorer'}</h2>
+                            <h2 className="text-2xl font-black text-deepNavy mb-1 uppercase tracking-tight">{userName || 'Explorer'}</h2>
                             <div className="px-4 py-1.5 bg-sunshineYellow/20 rounded-full border border-sunshineYellow/30">
-                                <span className="text-sunshineYellow font-black text-[11px] uppercase tracking-widest">{xp} XP Đã học</span>
+                                <span className="text-sunshineYellow font-black text-[11px] uppercase tracking-widest">{xp} Sao thông thái</span>
                             </div>
                         </div>
 
@@ -108,22 +108,22 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                         <div className="grid grid-cols-3 gap-4 mb-10">
                             <div className="bg-white p-4 rounded-[24px] shadow-level-1 text-center border-b-4 border-slate-100">
                                 <span className="block text-3xl mb-2">📖</span>
-                                <span className="block text-xl font-black text-deepNavy">{collections.length}</span>
+                                <span className="block text-lg font-black text-deepNavy">{collections.length}</span>
                             </div>
                             <div className="bg-white p-4 rounded-[24px] shadow-level-1 text-center border-b-4 border-slate-100">
                                 <span className="block text-3xl mb-2">🔥</span>
-                                <span className="block text-xl font-black text-deepNavy">{streak}</span>
+                                <span className="block text-lg font-black text-deepNavy">{streak}</span>
                             </div>
                             <div className="bg-white p-4 rounded-[24px] shadow-level-1 text-center border-b-4 border-slate-100">
                                 <span className="block text-3xl mb-2">⭐</span>
-                                <span className="block text-xl font-black text-deepNavy">{rareCount}</span>
+                                <span className="block text-lg font-black text-deepNavy">{rareCount}</span>
                             </div>
                         </div>
 
                         {/* Badge Showcase */}
                         <section className="mb-10">
-                            <h3 className="text-xl font-black text-deepNavy mb-6 flex items-center gap-2">
-                                <span className="text-2xl">🎖️</span> Huy hiệu
+                            <h3 className="text-lg font-black text-deepNavy mb-6 flex items-center gap-2">
+                                <span className="text-xl">🎖️</span> Huy hiệu
                             </h3>
                             <div className="grid grid-cols-3 gap-6">
                                 {badges.map((badge) => (
@@ -151,7 +151,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                                 <div className="flex items-center gap-4">
                                     <div className="text-5xl">{favoriteCategory ? categoryEmojis[favoriteCategory[0]] || '📚' : '🎯'}</div>
                                     <div>
-                                        <h4 className="text-2xl font-black">{favoriteCategory ? favoriteCategory[0] : 'Chưa có'}</h4>
+                                        <h4 className="text-xl font-black">{favoriteCategory ? favoriteCategory[0] : 'Chưa có'}</h4>
                                         <p className="text-white/80 font-bold text-sm">{favoriteCategory ? `${favoriteCategory[1]} từ vựng` : 'Bắt đầu ngay!'}</p>
                                     </div>
                                 </div>
@@ -175,14 +175,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                                     className="bg-white rounded-[40px] p-10 w-full max-w-sm relative z-10 shadow-level-3 text-center"
                                 >
                                     <div className="text-7xl mb-6">🛡️</div>
-                                    <h3 className="text-2xl font-black text-deepNavy mb-4">Phụ Huynh</h3>
+                                    <h3 className="text-xl font-black text-deepNavy mb-4">Phụ Huynh</h3>
                                     <p className="text-slate-500 font-medium mb-8 leading-relaxed">Hãy giúp bé giải phép tính này để vào phần cài đặt nhé!</p>
                                     <div className="bg-slate-50 rounded-3xl p-8 mb-8">
-                                        <span className="text-4xl font-black text-sky-500 tracking-widest">7 + 8 = ?</span>
+                                        <span className="text-3xl font-black text-sky-500 tracking-widest">7 + 8 = ?</span>
                                     </div>
                                     <input
                                         type="number"
-                                        placeholder="Đáp án"
+                                        placeholder="Kết quả là..."
                                         value={gateAnswer}
                                         onChange={(e) => setGateAnswer(e.target.value)}
                                         className="w-full bg-slate-100 rounded-2xl py-5 px-6 text-center text-2xl font-black text-deepNavy focus:outline-none focus:ring-4 focus:ring-sky-200 mb-6"

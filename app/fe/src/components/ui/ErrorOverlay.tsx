@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export type ErrorType = 
-  | 'mic-denied' 
-  | 'api-error' 
-  | 'low-confidence' 
-  | 'no-internet' 
-  | 'time-limit' 
+export type ErrorType =
+  | 'mic-denied'
+  | 'api-error'
+  | 'low-confidence'
+  | 'no-internet'
+  | 'time-limit'
   | 'storage-full'
   | 'camera-denied'
   | 'generic';
@@ -19,12 +19,12 @@ interface ErrorOverlayProps {
   actionLabel?: string;
 }
 
-const ErrorOverlay: React.FC<ErrorOverlayProps> = ({ 
-  type, 
-  isVisible, 
-  onAction, 
+const ErrorOverlay: React.FC<ErrorOverlayProps> = ({
+  type,
+  isVisible,
+  onAction,
   onClose,
-  actionLabel 
+  actionLabel
 }) => {
   // Define error configurations
   const errorConfigs: Record<ErrorType, {
@@ -35,21 +35,21 @@ const ErrorOverlay: React.FC<ErrorOverlayProps> = ({
   }> = {
     'mic-denied': {
       emoji: '🎤',
-      title: 'Cho mình nghe giọng bạn nhé!',
-      message: 'SnapLearn cần quyền truy cập microphone để luyện phát âm.',
-      actionText: 'Cho phép Microphone'
+      title: 'Cho tớ nghe giọng bé nhé!',
+      message: 'SnapLearn cần quyền truy cập microphone để bé luyện phát âm nè.',
+      actionText: 'Cho bé nói nè'
     },
     'api-error': {
       emoji: '😴',
-      title: 'AI hơi buồn ngủ!',
-      message: 'Máy chủ đang bận. Thử lại trong vài giây nhé!',
-      actionText: 'Thử Lại'
+      title: 'Cú thông thái hơi buồn ngủ!',
+      message: 'Máy chủ đang bận. Thử lại trong một xíu nhé!',
+      actionText: 'Thử lại nè'
     },
     'low-confidence': {
       emoji: '🤔',
-      title: 'Hmm, mình thấy chưa rõ.',
-      message: 'Lại gần hơn hoặc xoay vật thể một chút nhé!',
-      actionText: 'Thử Lại'
+      title: 'Hơ... tớ thấy chưa rõ nè.',
+      message: 'Bé lại gần hơn hoặc xoay vật thể một chút nhé!',
+      actionText: 'Thử lại nè'
     },
     'no-internet': {
       emoji: '📡',
@@ -59,9 +59,9 @@ const ErrorOverlay: React.FC<ErrorOverlayProps> = ({
     },
     'time-limit': {
       emoji: '⏰',
-      title: 'Bạn đã học đủ hôm nay rồi!',
+      title: 'Bé đã học đủ hôm nay rồi nè!',
       message: 'Hãy nghỉ ngơi một chút. Ngày mai gặp lại nhé! 🌟',
-      actionText: 'Xem Bộ Sưu Tập'
+      actionText: 'Xem kho báu'
     },
     'storage-full': {
       emoji: '📦',
@@ -71,9 +71,9 @@ const ErrorOverlay: React.FC<ErrorOverlayProps> = ({
     },
     'camera-denied': {
       emoji: '📸',
-      title: 'Cho mình xem thế giới nhé!',
-      message: 'SnapLearn cần quyền camera để tìm các từ vựng xung quanh bạn.',
-      actionText: 'Cho Phép Camera'
+      title: 'Cho tớ xem thế giới nhé!',
+      message: 'SnapLearn cần quyền camera để tìm các từ vựng xung quanh bé.',
+      actionText: 'Bật Camera nè'
     },
     'generic': {
       emoji: '⚠️',

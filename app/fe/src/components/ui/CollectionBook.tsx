@@ -57,7 +57,7 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                                 </button>
                             )}
                             <div>
-                                <h1 className="text-2xl font-black text-deepNavy tracking-tight flex items-center gap-3">
+                                <h1 className="text-lg font-black text-deepNavy tracking-tight flex items-center gap-3">
                                     {selectedCategory ? (
                                         <>
                                             {categories.find(c => c.id === selectedCategory)?.icon.startsWith('/') ? (
@@ -70,12 +70,12 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                                     ) : (
                                         <>
                                             <img src="/icon-book.png" alt="" className="w-10 h-10 object-contain mix-blend-multiply" />
-                                            Bộ sưu tập
+                                            📖 Kho báu của Bé
                                         </>
                                     )}
                                 </h1>
                                 <p className="text-xs font-black text-sky-400 uppercase tracking-widest mt-0.5">
-                                    {collections.length} Captured Cards
+                                    {collections.length} Thẻ bài đã bắt
                                 </p>
                             </div>
                         </div>
@@ -106,7 +106,7 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                                                     <span className="text-5xl drop-shadow-lg">{cat.icon}</span>
                                                 )}
                                             </div>
-                                            <h3 className="font-black text-deepNavy text-lg mb-1">{cat.name}</h3>
+                                            <h3 className="font-black text-deepNavy text-base mb-1">{cat.name}</h3>
                                             <div className="w-full mt-2">
                                                 <div className="flex justify-between text-[10px] font-black text-slate-400 mb-1.5 px-1">
                                                     <span>{count}/{cat.total}</span>
@@ -135,6 +135,13 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                                         'Legendary': 'from-coralRed/20 to-coralRed/5'
                                     };
 
+                                    const rarityLabels: any = {
+                                        'Common': 'Thường nè',
+                                        'Uncommon': 'Đặc biệt đó',
+                                        'Rare': 'Hiếm quá đi',
+                                        'Legendary': 'Huyền thoại luôn'
+                                    };
+
                                     return (
                                         <motion.button
                                             key={word.id}
@@ -158,12 +165,12 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                                                     word.rarity === 'Rare' ? 'bg-sunshineYellow text-deepNavy' :
                                                         word.rarity === 'Uncommon' ? 'bg-skyBlue' : 'bg-mintGreen'
                                                     }`}>
-                                                    {word.rarity}
+                                                    {rarityLabels[word.rarity]}
                                                 </div>
                                             </div>
                                             <div className="px-2 pb-3 pt-1 text-center bg-white/40 backdrop-blur">
-                                                <h4 className="font-black text-deepNavy leading-tight text-[11px] truncate mb-0.5">{word.word_vi}</h4>
-                                                <p className="text-[9px] font-bold text-sky-500 leading-none">{word.word_en}</p>
+                                                <h4 className="font-black text-deepNavy leading-tight text-[10px] truncate mb-0.5">{word.word_vi}</h4>
+                                                <p className="text-[8px] font-bold text-sky-500 leading-none">{word.word_en}</p>
                                                 <div className="flex justify-center mt-1.5 gap-0.5">
                                                     {[1, 2, 3].map(s => (
                                                         <Star
@@ -181,7 +188,7 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                                 {Array.from({ length: Math.max(0, 12 - getCategoryWords(selectedCategory).length) }).map((_, i) => (
                                     <div key={`lock-${i}`} className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[16px] aspect-square flex flex-col items-center justify-center opacity-40 grayscale">
                                         <Lock className="w-5 h-5 text-slate-300" />
-                                        <span className="text-[8px] font-black mt-1 text-slate-300">LOCKED</span>
+                                        <span className="text-[8px] font-black mt-1 text-slate-300">BÍ MẬT</span>
                                     </div>
                                 ))}
                             </div>

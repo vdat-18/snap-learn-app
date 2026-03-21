@@ -6,9 +6,9 @@ interface AIProcessingLoadingProps {
   progress?: number; // 0-100, optional
 }
 
-const AIProcessingLoading: React.FC<AIProcessingLoadingProps> = ({ 
-  isVisible, 
-  progress = 0 
+const AIProcessingLoading: React.FC<AIProcessingLoadingProps> = ({
+  isVisible,
+  progress = 0
 }) => {
   // Animated particles for scanning effect
   const scanParticles = Array.from({ length: 12 }).map((_, i) => ({
@@ -37,7 +37,7 @@ const AIProcessingLoading: React.FC<AIProcessingLoadingProps> = ({
                 Bạn tìm thấy gì đây...?
               </h2>
               <p className="text-white/70 font-bold text-sm">
-                AI đang phân tích...
+                Cú thông thái đang nghĩ...
               </p>
             </motion.div>
 
