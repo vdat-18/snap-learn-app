@@ -51,7 +51,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
         }
     };
 
-    const badges = MOCK_BADGES.map((b: any) => ({
+    const badges: { id: string; name: string; icon: string; description: string; earned: boolean }[] = MOCK_BADGES.map((b: any) => ({
         id: b.id,
         name: b.name_vi,
         icon: b.icon,

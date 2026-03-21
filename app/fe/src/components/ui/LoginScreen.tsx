@@ -7,7 +7,7 @@ import { MOCK_AVATARS } from '../../store/mockData';
 import { Rocket, Volume2 } from 'lucide-react';
 
 // Animal avatars for child selection — visual, not text
-const avatars = MOCK_AVATARS.map((a: any) => ({
+const avatars: { emoji: string; sound: string }[] = MOCK_AVATARS.map((a: any) => ({
     emoji: a.emoji,
     sound: `${a.name_vi} tới đây!`
 }));

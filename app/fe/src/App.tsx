@@ -168,7 +168,7 @@ const App: React.FC = () => {
 
       setTimeout(() => {
         const validResponses = MOCK_AI_RESPONSES.filter((r: any) => r.response.object_en);
-        const randomResp = validResponses[Math.floor(Math.random() * validResponses.length)];
+        const randomResp = validResponses[Math.floor(Math.random() * validResponses.length)] as any;
 
         const result = {
           word_en: randomResp.response.object_en as string,
