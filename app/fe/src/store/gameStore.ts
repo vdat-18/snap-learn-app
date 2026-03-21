@@ -117,6 +117,10 @@ interface GameState {
     setTargetLanguage: (lang: 'en' | 'zh') => void;
     setSecondaryLanguage: (lang: 'en' | 'zh' | null) => void;
 
+    // Temporary Display XP state (for animated sync with particles)
+    displayXP: number;
+    setDisplayXP: (xp: number) => void;
+
     // Local-only UI state
     hasSelectedLanguage: boolean;
     setLanguageSelected: (selected: boolean) => void;
@@ -150,6 +154,7 @@ interface GameState {
 export const useGameStore = create<GameState>()((set, get) => ({
     // Server-synced state (defaults)
     xp: 0,
+    displayXP: 0,
     streak: 0,
     level: 1,
     lastCapturedAt: null,
@@ -196,6 +201,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
             target_language: (profile.target_language === 'en' || profile.target_language === 'zh') ? profile.target_language : 'en',
             secondary_language: profile.secondary_language === 'en' || profile.secondary_language === 'zh' ? profile.secondary_language : null,
             xp: profile.total_xp,
+            displayXP: profile.total_xp,
             level: profile.level,
         });
     },
@@ -211,6 +217,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
             userName: null,
             userAvatar: null,
             xp: 0,
+            displayXP: 0,
             level: 1,
             streak: 0,
             collections: [],
@@ -254,6 +261,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
         set((state) => {
             const updates: Partial<GameState> = {
                 xp: response.total_xp,
+                // displayXP is intentionally not updated here, it will be updated by XPFlyManager event or fallback
                 level: response.level,
                 levelUpMessage,
                 capturedCount: state.capturedCount + 1,
@@ -295,6 +303,9 @@ export const useGameStore = create<GameState>()((set, get) => ({
     secondary_language: null,
     setTargetLanguage: (lang: 'en' | 'zh') => set({ target_language: lang }),
     setSecondaryLanguage: (lang: 'en' | 'zh' | null) => set({ secondary_language: lang }),
+
+    // --- Display XP ---
+    setDisplayXP: (xp: number) => set({ displayXP: xp }),
 
     // --- Local UI Actions ---
 
@@ -385,6 +396,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
         clearTokens();
         set({
             xp: 0,
+            displayXP: 0,
             streak: 0,
             level: 1,
             lastCapturedAt: null,

@@ -133,45 +133,48 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                 <div className="flex items-end justify-center gap-2 mb-10 h-64 border-b-2 border-slate-50 pb-4">
                                     {/* #2 */}
                                     <motion.div
+                                        layout
                                         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                                        className="flex-1 flex flex-col items-center"
+                                        className="flex-1 flex flex-col items-center relative"
                                     >
-                                        <div className="text-4xl mb-2 relative">
+                                        <div className={`text-4xl mb-2 relative ${top3[1]?.name === userName ? 'scale-110 drop-shadow-[0_0_10px_rgba(255,214,52,0.8)]' : ''}`}>
                                             <span className="relative z-10">{top3[1] ? avatarEmoji(top3[1].avatar_id) : '👤'}</span>
                                             <div className="absolute -top-1 -right-1 text-xl">🥈</div>
                                         </div>
-                                        <div className="w-full bg-slate-100 rounded-t-2xl shadow-sm p-3 text-center border-t-4 border-slate-300 h-28 flex flex-col justify-end">
-                                            <span className="block font-black text-xs text-deepNavy truncate">{top3[1]?.name || '---'}</span>
+                                        <div className={`w-full ${top3[1]?.name === userName ? 'bg-sunshineYellow/20 border-sunshineYellow ring-1 ring-sunshineYellow/50' : 'bg-slate-100 border-slate-300'} rounded-t-2xl shadow-sm p-3 text-center border-t-4 h-28 flex flex-col justify-end transition-colors`}>
+                                            <span className="block font-black text-xs text-deepNavy truncate">{top3[1]?.name === userName ? 'BẠN' : top3[1]?.name || '---'}</span>
                                             <span className="block font-bold text-[10px] text-skyBlue">{top3[1]?.points || 0} XP</span>
                                         </div>
                                     </motion.div>
 
                                     {/* #1 */}
                                     <motion.div
+                                        layout
                                         initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1, type: 'spring' }}
-                                        className="flex-1 flex flex-col items-center -mb-4"
+                                        className="flex-1 flex flex-col items-center -mb-4 relative"
                                     >
-                                        <div className="relative mb-3">
+                                        <div className={`relative mb-3 ${top3[0]?.name === userName ? 'scale-110 drop-shadow-[0_0_15px_rgba(255,214,52,1)]' : ''}`}>
                                             <Crown className="w-10 h-10 text-sunshineYellow absolute -top-8 left-1/2 -translate-x-1/2 fill-sunshineYellow rotate-12 drop-shadow-sm" />
                                             <div className="text-6xl relative z-10">{top3[0] ? avatarEmoji(top3[0].avatar_id) : '👤'}</div>
                                         </div>
-                                        <div className="w-full bg-sunshineYellow rounded-t-3xl shadow-level-2 p-3 text-center border-t-8 border-yellow-500 h-44 flex flex-col justify-end">
-                                            <span className="block font-black text-xs text-deepNavy truncate">{top3[0]?.name || '---'}</span>
+                                        <div className={`w-full ${top3[0]?.name === userName ? 'bg-sunshineYellow ring-2 ring-orange-400' : 'bg-sunshineYellow'} rounded-t-3xl shadow-level-2 p-3 text-center border-t-8 border-yellow-500 h-44 flex flex-col justify-end transition-colors`}>
+                                            <span className="block font-black text-xs text-deepNavy truncate">{top3[0]?.name === userName ? 'BẠN' : top3[0]?.name || '---'}</span>
                                             <span className="block font-bold text-xs text-slate-700">{top3[0]?.points || 0} XP</span>
                                         </div>
                                     </motion.div>
 
                                     {/* #3 */}
                                     <motion.div
+                                        layout
                                         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                                        className="flex-1 flex flex-col items-center"
+                                        className="flex-1 flex flex-col items-center relative"
                                     >
-                                        <div className="text-4xl mb-2 relative">
+                                        <div className={`text-4xl mb-2 relative ${top3[2]?.name === userName ? 'scale-110 drop-shadow-[0_0_10px_rgba(255,214,52,0.8)]' : ''}`}>
                                             <span className="relative z-10">{top3[2] ? avatarEmoji(top3[2].avatar_id) : '👤'}</span>
                                             <div className="absolute -top-1 -right-1 text-xl">🥉</div>
                                         </div>
-                                        <div className="w-full bg-amber-50 rounded-t-2xl shadow-sm p-3 text-center border-t-4 border-amber-400 h-20 flex flex-col justify-end">
-                                            <span className="block font-black text-xs text-deepNavy truncate">{top3[2]?.name || '---'}</span>
+                                        <div className={`w-full ${top3[2]?.name === userName ? 'bg-sunshineYellow/20 border-sunshineYellow ring-1 ring-sunshineYellow/50' : 'bg-amber-50 border-amber-400'} rounded-t-2xl shadow-sm p-3 text-center border-t-4 h-20 flex flex-col justify-end transition-colors`}>
+                                            <span className="block font-black text-xs text-deepNavy truncate">{top3[2]?.name === userName ? 'BẠN' : top3[2]?.name || '---'}</span>
                                             <span className="block font-bold text-[10px] text-amber-600">{top3[2]?.points || 0} XP</span>
                                         </div>
                                     </motion.div>
@@ -179,28 +182,42 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
 
                                 {/* Others List */}
                                 <div className="space-y-4">
-                                    {others.map((player, idx) => (
-                                        <motion.div
-                                            key={player.child_id}
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: 0.1 * idx }}
-                                            className="bg-white p-4 rounded-[20px] shadow-sm flex items-center justify-between border-b-2 border-slate-50"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <span className="text-2xl font-black text-slate-400 w-8 text-center">{player.rank}</span>
-                                                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-2xl shadow-sm border-2 border-white">
-                                                    {avatarEmoji(player.avatar_id)}
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-black text-deepNavy text-xs">{player.name}</h4>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="font-black text-skyBlue text-xs">⭐ {player.points}</p>
-                                            </div>
-                                        </motion.div>
-                                    ))}
+                                    <AnimatePresence>
+                                        {others.map((player, idx) => {
+                                            const isMe = player.name === userName;
+                                            return (
+                                                <motion.div
+                                                    layout
+                                                    key={player.child_id}
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: 0.1 * idx, type: 'spring', bounce: 0.4 }}
+                                                    className={`p-4 rounded-[20px] flex items-center justify-between border-b-2 ${
+                                                        isMe
+                                                        ? 'bg-sunshineYellow/10 border-sunshineYellow/30 shadow-[0_0_15px_rgba(255,214,52,0.2)] ring-1 ring-sunshineYellow/50'
+                                                        : 'bg-white border-slate-50 shadow-sm'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <span className={`text-2xl font-black w-8 text-center ${isMe ? 'text-sunshineYellow' : 'text-slate-400'}`}>
+                                                            {player.rank}
+                                                        </span>
+                                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-sm border-2 ${isMe ? 'bg-white border-sunshineYellow' : 'bg-slate-100 border-white'}`}>
+                                                            {avatarEmoji(player.avatar_id)}
+                                                        </div>
+                                                        <div>
+                                                            <h4 className={`font-black text-xs ${isMe ? 'text-deepNavy' : 'text-deepNavy'}`}>
+                                                                {player.name} {isMe && '(Bạn)'}
+                                                            </h4>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className={`font-black text-xs ${isMe ? 'text-orange-500' : 'text-skyBlue'}`}>⭐ {player.points}</p>
+                                                    </div>
+                                                </motion.div>
+                                            )
+                                        })}
+                                    </AnimatePresence>
                                 </div>
                             </>
                         )}
