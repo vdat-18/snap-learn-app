@@ -97,7 +97,7 @@ async def pronounce(
     # Determine match type
     match_type = "exact" if pronunciation_result.is_match else "no_match"
 
-    # Look up vocab image on exact match (fuzzy-match against vocab.json)
+    # Look up vocab image on exact match
     image_url = lookup_vocab_image(target_word) if match_type == "exact" else None
 
     return PronounceResponse(
