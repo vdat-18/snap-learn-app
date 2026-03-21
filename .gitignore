@@ -216,4 +216,8 @@ __marimo__/
 # MacOS
 .DS_Store
 
+# Node.js
 baml_client/
+
+ignore/
+chromadb_disk/
