@@ -361,38 +361,27 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         setIsListening(false);
 
                         const scoredStars = result.stars as PronunciationTier;
-                        setStars(scoredStars);
                         setFeedbackText(result.feedback_vi || '');
 
                         const newAttemptCount = attemptCount + 1;
                         setAttemptCount(newAttemptCount);
 
-                        // If evolved, trigger celebration
-                        if (result.evolved) {
-                            triggerLegendaryBurst();
-                            playChime();
-                        }
-
-                        // If all 3 attempts used and not 3-star
-                        if (newAttemptCount >= 3 && scoredStars < 3) {
-                            setShowAutoCloseMessage(true);
-                            setTimeout(() => {
-                                handleSaveCollection(scoredStars, newAttemptCount);
-                                onClose();
-                            }, 2000);
-                        }
-                        // If got 3 stars
-                        else if (scoredStars === 3) {
+                        // Only set stars and show options if it's a perfect match (3 stars)
+                        if (scoredStars === 3) {
+                            setStars(scoredStars);
+                            // If evolved, trigger celebration
+                            if (result.evolved) {
+                                triggerLegendaryBurst();
+                                playChime();
+                            }
+                            
                             handleSaveCollection(scoredStars, newAttemptCount);
                             setTimeout(() => {
-                                setIsFlyingToCollection(true);
-                                playChime();
-                                triggerSparkles(window.innerWidth / 2, window.innerHeight / 2);
-                                setTimeout(() => {
-                                    if (onCardFlyToCollection) onCardFlyToCollection();
-                                    onClose();
-                                }, 1200);
+                                setShowPostRevealOptions(true);
                             }, 1500);
+                        } else {
+                            // Clear stars on incorrect attempt to force them to try again
+                            setStars(null);
                         }
                     } catch (err) {
                         console.error('Pronunciation API error:', err);
@@ -794,7 +783,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             ) : (
                                 <>
                                     <span className={`block text-center text-xs font-bold mb-4 uppercase tracking-wider ${stars === 3 ? 'text-mintGreen' : stars ? 'text-skyBlue' : isListening ? 'text-coralRed' : 'text-skyBlue'}`}>
-                                        {stars === 3 ? 'Tuyệt vời! Bạn nói đúng rồi.' : stars === 2 ? 'Gần đúng rồi! 👍' : stars === 1 ? 'Cùng tớ tập nói nhé! 🎯' : isListening ? 'Push to stop' : `Nói thật to để bắt bài nhé! (Lần ${attemptCount}/3)`}
+                                        {stars === 3 ? 'Tuyệt vời! Bạn nói đúng rồi.' : stars === 2 ? 'Gần đúng rồi! 👍' : stars === 1 ? 'Cùng tớ tập nói nhé! 🎯' : isListening ? 'Push to stop' : `Nói thật to để bắt bài nhé!`}
                                     </span>
 
                                     {/* Feedback from server */}
