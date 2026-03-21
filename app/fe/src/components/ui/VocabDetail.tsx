@@ -247,11 +247,99 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
 
             <AnimatePresence>
                 {justEvolved && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
-                        <div className="text-center bg-white p-8 rounded-[40px]">
-                            <h2 className="text-3xl font-black mb-4 uppercase">TIẾN HÓA THÀNH CÔNG!</h2>
-                            <button onClick={() => setJustEvolved(false)} className="bg-skyBlue text-white px-8 py-3 rounded-2xl font-black">TUYỆT VỜI!</button>
-                        </div>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[300] flex flex-col items-center justify-center p-6 bg-black/90 backdrop-blur-md overflow-hidden"
+                    >
+                        {/* Sunburst background rays */}
+                        <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1.5, opacity: 0.6, rotate: 360 }}
+                            transition={{
+                                scale: { delay: 1.8, duration: 0.5, type: 'spring' },
+                                opacity: { delay: 1.8, duration: 0.5 },
+                                rotate: { duration: 15, repeat: Infinity, ease: 'linear' }
+                            }}
+                            className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none"
+                        >
+                            {[...Array(12)].map((_, i) => (
+                                <div key={i} className="absolute w-[150%] h-12 bg-gradient-to-r from-transparent via-sunshineYellow to-transparent blur-md mix-blend-screen" style={{ transform: `rotate(${i * 30}deg)` }} />
+                            ))}
+                        </motion.div>
+
+                        {/* Blinding White Flash */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: [0, 0, 1, 0] }}
+                            transition={{ duration: 3, times: [0, 0.6, 0.7, 1] }}
+                            className="absolute inset-0 bg-white z-20 pointer-events-none"
+                        />
+
+                        {/* Simulated Crack Overlay (Lightning/fractal lines behind the card just before explosion) */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: [0, 1, 1, 0], scale: [0.8, 1, 1.2, 1.5] }}
+                            transition={{ duration: 2, times: [0, 0.7, 0.9, 1] }}
+                            className="absolute z-10 w-96 h-96 pointer-events-none flex items-center justify-center"
+                        >
+                            <svg viewBox="0 0 100 100" className="w-full h-full stroke-orange-500 fill-none drop-shadow-[0_0_10px_rgba(249,115,22,1)]" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                <motion.path d="M50 10 L55 30 L40 45 L60 65 L45 90" strokeDasharray="100" initial={{ strokeDashoffset: 100 }} animate={{ strokeDashoffset: [100, 0] }} transition={{ delay: 0.5, duration: 1 }} />
+                                <motion.path d="M10 50 L30 45 L45 60 L65 40 L90 55" strokeDasharray="100" initial={{ strokeDashoffset: 100 }} animate={{ strokeDashoffset: [100, 0] }} transition={{ delay: 0.8, duration: 0.7 }} />
+                            </svg>
+                        </motion.div>
+
+                        {/* The Evolving Card */}
+                        <motion.div
+                            className="relative z-10 w-64 h-64 rounded-[40px] shadow-[0_0_50px_rgba(255,210,52,0.8)] border-8 border-sunshineYellow overflow-hidden bg-white"
+                            initial={{ scale: 0.8 }}
+                            animate={{
+                                scale: [0.8, 1, 1.05, 1.1, 1.2, 1],
+                                x: [0, -10, 10, -15, 15, -20, 20, 0, 0],
+                                y: [0, 10, -10, 15, -15, 20, -20, 0, 0],
+                                filter: [
+                                    "brightness(1) contrast(1)",
+                                    "brightness(1.5) contrast(1.2) hue-rotate(90deg)",
+                                    "brightness(2) contrast(1.5) hue-rotate(180deg)",
+                                    "brightness(3) contrast(2) saturate(3)",
+                                    "brightness(10)", // Explosion point
+                                    "brightness(1) contrast(1.1) saturate(1.2)"   // Final evolved state
+                                ]
+                            }}
+                            transition={{ duration: 3, times: [0, 0.3, 0.5, 0.6, 0.7, 0.8], ease: "easeInOut" }}
+                        >
+                            <img src={word.image} alt={word.word_en} className="w-full h-full object-cover" />
+                            {/* Permanent Evolved Glow Overlay */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 2.2 }}
+                                className="absolute inset-0 bg-gradient-to-t from-sunshineYellow/60 via-transparent to-transparent mix-blend-overlay pointer-events-none"
+                            />
+                        </motion.div>
+
+                        {/* Victory Text & Action */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ delay: 2.4, type: 'spring', damping: 12 }}
+                            className="relative z-30 text-center mt-12 w-full max-w-sm"
+                        >
+                            <h2 className="text-[32px] font-black mb-1 text-white drop-shadow-[0_0_15px_rgba(255,210,52,1)] tracking-widest uppercase italic">
+                                Đã Tiến Hóa!
+                            </h2>
+                            <p className="text-sunshineYellow font-bold mb-10 uppercase tracking-[4px] text-xs opacity-90">Sức mạnh ngôn ngữ thức tỉnh ✨</p>
+
+                            <motion.button
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setJustEvolved(false)}
+                                className="w-full bg-sunshineYellow text-deepNavy px-8 py-4 rounded-[28px] font-black text-lg shadow-[0_6px_0_rgb(161,98,7)] active:shadow-none active:translate-y-[6px] border-t-2 border-white/40 flex justify-center items-center gap-2"
+                            >
+                                <span>THU THẬP NĂNG LƯỢNG</span>
+                                <span className="text-2xl">⚡</span>
+                            </motion.button>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>

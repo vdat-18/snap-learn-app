@@ -23,14 +23,7 @@ interface RevealCardProps {
     category: string;
     vocabId?: string;
     tts_urls?: { en: string; vi: string; zh: string };
-    description_en?: string | null;
-    description_vi?: string | null;
-    description_zh?: string | null;
-    description_tts_urls?: { en: string | null; vi: string | null; zh: string | null } | null;
-    fun_fact_vi?: string | null;
-    example_sentence_en?: string | null;
-    example_sentence_vi?: string | null;
-    example_sentence_zh?: string | null;
+    xpEarned?: number;
     onCardFlyToCollection?: () => void;
 }
 
@@ -65,14 +58,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
     category,
     vocabId,
     tts_urls,
-    description_en,
-    description_vi,
-    description_zh,
-    description_tts_urls,
-    fun_fact_vi,
-    example_sentence_en,
-    example_sentence_vi,
-    example_sentence_zh,
+    xpEarned,
     onCardFlyToCollection,
 }) => {
     const [isListening, setIsListening] = useState(false);
@@ -277,8 +263,16 @@ const RevealCard: React.FC<RevealCardProps> = ({
             setAttemptCount(0);
             setShowAutoCloseMessage(false);
             setIsFlyingToCollection(false);
-            setShowExamples(false);
-            setIsTTSLoading(false);
+            setHasTriggeredXP(false);
+
+            if (xpEarned && xpEarned > 0) {
+                setTimeout(() => {
+                    if (cardRef.current) {
+                        const rect = cardRef.current.getBoundingClientRect();
+                        triggerXPFly(rect.left + rect.width / 2, rect.top + rect.height / 4, Math.min(10, Math.ceil(xpEarned / 10)));
+                    }
+                }, 800);
+            }
 
             if (rarity === 'Legendary') {
                 setTimeout(() => {
@@ -484,11 +478,21 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             <span className="text-[10px] font-black text-skyBlue uppercase tracking-widest hidden sm:inline">Kho báu</span>
                         </button>
 
-                        {/* Rarity Badge */}
-                        <div className="flex justify-center mb-6">
-                            <span className={`px-4 py-1.5 ${rarityBadgeColor[rarity]} text-white text-[11px] font-bold uppercase tracking-widest rounded-full shadow-sm`}>
+                        {/* Rarity Badge & XP */}
+                        <div className="flex justify-center mb-6 relative">
+                            <span className={`px-4 py-1.5 ${rarityBadgeColor[rarity]} text-white text-[11px] font-bold uppercase tracking-widest rounded-full shadow-sm relative z-10`}>
                                 {rarityLabels[rarity]}
                             </span>
+                            {xpEarned && xpEarned > 0 ? (
+                                <motion.div
+                                    initial={{ scale: 0, y: 20 }}
+                                    animate={{ scale: 1, y: -10 }}
+                                    transition={{ type: 'spring', bounce: 0.6, delay: 0.5 }}
+                                    className="absolute -top-4 -right-2 md:right-16 bg-sunshineYellow text-deepNavy font-black text-sm px-2.5 py-1 rounded-bl-xl rounded-tr-xl rounded-tl-sm rounded-br-sm shadow-[0_4px_0_rgb(161,98,7)] rotate-12 z-20 border-2 border-white"
+                                >
+                                    +{xpEarned} XP
+                                </motion.div>
+                            ) : null}
                         </div>
 
                         {/* Captured Image with Glow & Effects */}
