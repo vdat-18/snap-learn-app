@@ -4,6 +4,8 @@ import { X, ArrowLeft, Star, Lock, Sparkles, Loader2 } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { collectionApi, type CollectionOverview, type CategoryDetail } from '../../services/collectionApi';
+import { CollectionSkeleton } from './Skeleton';
+// TODO: Remove once server provides full category vocab reference data via collectionApi.getCategoryDetail()
 import { MOCK_REFERENCE_VOCAB } from '../../store/mockData';
 import VocabDetail from './VocabDetail';
 
@@ -33,6 +35,7 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
     const [serverCategories, setServerCategories] = useState<CollectionOverview | null>(null);
     const [categoryDetail, setCategoryDetail] = useState<CategoryDetail | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [fetchError, setFetchError] = useState(false);
 
     // Notify parent about category selection to show/hide nav
     React.useEffect(() => {
@@ -41,26 +44,36 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
         }
     }, [selectedCategory, isOpen, onCategorySelectChange]);
 
+    const loadCollection = () => {
+        setIsLoading(true);
+        setFetchError(false);
+        collectionApi.getCollection()
+            .then(data => setServerCategories(data))
+            .catch(() => setFetchError(true))
+            .finally(() => setIsLoading(false));
+    };
+
+    const loadCategory = (catId: string) => {
+        setIsLoading(true);
+        setFetchError(false);
+        setCategoryDetail(null);
+        collectionApi.getCategoryDetail(catId)
+            .then(data => setCategoryDetail(data))
+            .catch(() => setFetchError(true))
+            .finally(() => setIsLoading(false));
+    };
+
     // Fetch collection overview when opened
     useEffect(() => {
         if (isOpen && !selectedCategory) {
-            setIsLoading(true);
-            collectionApi.getCollection()
-                .then(data => setServerCategories(data))
-                .catch(err => console.error('Failed to fetch collection:', err))
-                .finally(() => setIsLoading(false));
+            loadCollection();
         }
     }, [isOpen, selectedCategory]);
 
     // Fetch category detail when a category is selected
     useEffect(() => {
         if (selectedCategory) {
-            setIsLoading(true);
-            setCategoryDetail(null);
-            collectionApi.getCategoryDetail(selectedCategory)
-                .then(data => setCategoryDetail(data))
-                .catch(err => console.error('Failed to fetch category:', err))
-                .finally(() => setIsLoading(false));
+            loadCategory(selectedCategory);
         }
     }, [selectedCategory]);
 
@@ -124,12 +137,24 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
 
                     <div className="flex-1 overflow-y-auto p-6">
                         {isLoading && (
-                            <div className="flex items-center justify-center py-20">
-                                <Loader2 className="w-10 h-10 text-skyBlue animate-spin" />
+                            <CollectionSkeleton />
+                        )}
+
+                        {fetchError && !isLoading && (
+                            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                <span className="text-5xl">😴</span>
+                                <p className="text-base font-black text-deepNavy">Ối! Không tải được dữ liệu</p>
+                                <p className="text-sm text-slate-400 font-bold">Kiểm tra kết nối mạng rồi thử lại nhé!</p>
+                                <button
+                                    onClick={() => selectedCategory ? loadCategory(selectedCategory) : loadCollection()}
+                                    className="bg-skyBlue text-white px-6 py-3 rounded-2xl font-black text-sm shadow-level-2"
+                                >
+                                    🔄 Thử lại
+                                </button>
                             </div>
                         )}
 
-                        {!isLoading && !selectedCategory && (
+                        {!isLoading && !fetchError && !selectedCategory && (
                             /* Category Grid */
                             <div className="grid grid-cols-2 gap-5 pb-20">
                                 {categories.map((cat, i) => {
@@ -173,7 +198,7 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                             </div>
                         )}
 
-                        {!isLoading && selectedCategory && (
+                        {!isLoading && !fetchError && selectedCategory && (
                             /* Vocab Word Grid */
                             <div className="grid grid-cols-3 gap-4 pb-24">
                                 {MOCK_REFERENCE_VOCAB.filter(w => w.category === selectedCategory).map((refWord, i) => {

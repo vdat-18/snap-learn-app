@@ -5,6 +5,7 @@ import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from '../../utils/feedbackUtils';
 import { missionApi, type Mission } from '../../services/missionApi';
+import { QuestSkeleton } from './Skeleton';
 
 interface QuestScreenProps {
     isOpen: boolean;
@@ -38,26 +39,28 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
     const { playPop } = useSoundEffects();
     const [quests, setQuests] = useState<DisplayQuest[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [fetchError, setFetchError] = useState(false);
+
+    const loadMissions = () => {
+        setIsLoading(true);
+        setFetchError(false);
+        missionApi.getMissions()
+            .then(data => {
+                const mapped: DisplayQuest[] = [
+                    ...data.daily.map(m => mapMissionToQuest(m, 'Today')),
+                    ...data.weekly.map(m => mapMissionToQuest(m, 'Weekly')),
+                    ...data.category_challenges.map(m => mapMissionToQuest(m, 'Challenge')),
+                ];
+                setQuests(mapped);
+            })
+            .catch(() => setFetchError(true))
+            .finally(() => setIsLoading(false));
+    };
 
     // Fetch missions from API when opened
     useEffect(() => {
         if (isOpen) {
-            setIsLoading(true);
-            missionApi.getMissions()
-                .then(data => {
-                    const mapped: DisplayQuest[] = [
-                        ...data.daily.map(m => mapMissionToQuest(m, 'Today')),
-                        ...data.weekly.map(m => mapMissionToQuest(m, 'Weekly')),
-                        ...data.category_challenges.map(m => mapMissionToQuest(m, 'Challenge')),
-                    ];
-                    setQuests(mapped);
-                })
-                .catch(err => {
-                    console.error('Failed to fetch missions:', err);
-                    // Fallback to gameStore quests
-                    setQuests(useGameStore.getState().quests);
-                })
-                .finally(() => setIsLoading(false));
+            loadMissions();
         }
     }, [isOpen]);
 
@@ -147,12 +150,21 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                         </motion.div>
 
                         {isLoading && (
-                            <div className="flex items-center justify-center py-16">
-                                <Loader2 className="w-10 h-10 text-skyBlue animate-spin" />
+                            <QuestSkeleton />
+                        )}
+
+                        {fetchError && !isLoading && (
+                            <div className="flex flex-col items-center justify-center py-16 gap-4">
+                                <span className="text-5xl">😴</span>
+                                <p className="text-base font-black text-deepNavy">Ối! Không tải được nhiệm vụ</p>
+                                <p className="text-sm text-slate-400 font-bold">Kiểm tra kết nối mạng rồi thử lại nhé!</p>
+                                <button onClick={loadMissions} className="bg-skyBlue text-white px-6 py-3 rounded-2xl font-black text-sm shadow-level-2">
+                                    🔄 Thử lại
+                                </button>
                             </div>
                         )}
 
-                        {!isLoading && ['Today', 'Weekly', 'Challenge'].map((cat) => {
+                        {!isLoading && !fetchError && ['Today', 'Weekly', 'Challenge'].map((cat) => {
                             const categoryQuests = quests.filter(q => q.category === cat);
                             if (categoryQuests.length === 0) return null;
 

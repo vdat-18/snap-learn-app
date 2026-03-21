@@ -5,6 +5,7 @@ import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { profileApi, type ProfileResponse } from '../../services/profileApi';
 import { parentApi, type ChallengeResponse, type DashboardResponse } from '../../services/parentApi';
+import { ProfileSkeleton } from './Skeleton';
 
 interface ProfileScreenProps {
     isOpen: boolean;
@@ -27,15 +28,21 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
     const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
     const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
+    const [profileError, setProfileError] = useState(false);
+
+    const loadProfile = () => {
+        setIsLoadingProfile(true);
+        setProfileError(false);
+        profileApi.getProfile()
+            .then(data => setProfile(data))
+            .catch(() => setProfileError(true))
+            .finally(() => setIsLoadingProfile(false));
+    };
 
     // Fetch profile from API when opened
     useEffect(() => {
         if (isOpen) {
-            setIsLoadingProfile(true);
-            profileApi.getProfile()
-                .then(data => setProfile(data))
-                .catch(err => console.error('Failed to fetch profile:', err))
-                .finally(() => setIsLoadingProfile(false));
+            loadProfile();
         }
     }, [isOpen]);
 
@@ -247,8 +254,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
 
                     <div className="flex-1 overflow-y-auto px-6 py-8">
                         {isLoadingProfile && (
-                            <div className="flex items-center justify-center py-10">
-                                <Loader2 className="w-8 h-8 text-skyBlue animate-spin" />
+                            <ProfileSkeleton />
+                        )}
+
+                        {profileError && !isLoadingProfile && (
+                            <div className="flex flex-col items-center justify-center py-16 gap-4">
+                                <span className="text-5xl">😴</span>
+                                <p className="text-base font-black text-deepNavy">Ối! Không tải được hồ sơ</p>
+                                <p className="text-sm text-slate-400 font-bold">Kiểm tra kết nối mạng rồi thử lại nhé!</p>
+                                <button onClick={loadProfile} className="bg-skyBlue text-white px-6 py-3 rounded-2xl font-black text-sm shadow-level-2">
+                                    🔄 Thử lại
+                                </button>
                             </div>
                         )}
 

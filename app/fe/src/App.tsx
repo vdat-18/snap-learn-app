@@ -75,6 +75,20 @@ const App: React.FC = () => {
     hydrateFromStorage();
   }, [hydrateFromStorage]);
 
+  // Online/offline detection
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   // Initialization
   useEffect(() => {
     // Initial check for daily usage
@@ -584,6 +598,11 @@ const App: React.FC = () => {
         isVisible={showLowConfidence}
         onClose={() => setShowLowConfidence(false)}
         actionLabel={lowConfidenceMessage || undefined}
+      />
+      <ErrorOverlay
+        type="no-internet"
+        isVisible={isOffline}
+        onClose={() => setIsOffline(false)}
       />
 
       <AIProcessingLoading isVisible={isAIProcessing} />

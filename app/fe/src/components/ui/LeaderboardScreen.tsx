@@ -4,6 +4,7 @@ import { X, Crown, Timer, Loader2 } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { leaderboardApi, type LeaderboardResponse } from '../../services/leaderboardApi';
+import { LeaderboardSkeleton } from './Skeleton';
 
 interface LeaderboardScreenProps {
     isOpen: boolean;
@@ -25,15 +26,21 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
     const [activeTab, setActiveTab] = useState('global');
     const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [fetchError, setFetchError] = useState(false);
+
+    const loadLeaderboard = (scope: string) => {
+        setIsLoading(true);
+        setFetchError(false);
+        leaderboardApi.getLeaderboard(scope)
+            .then(data => setLeaderboard(data))
+            .catch(() => setFetchError(true))
+            .finally(() => setIsLoading(false));
+    };
 
     // Fetch leaderboard when tab changes or screen opens
     useEffect(() => {
         if (isOpen) {
-            setIsLoading(true);
-            leaderboardApi.getLeaderboard(activeTab)
-                .then(data => setLeaderboard(data))
-                .catch(err => console.error('Failed to fetch leaderboard:', err))
-                .finally(() => setIsLoading(false));
+            loadLeaderboard(activeTab);
         }
     }, [isOpen, activeTab]);
 
@@ -107,12 +114,21 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                         </div>
 
                         {isLoading && (
-                            <div className="flex items-center justify-center py-20">
-                                <Loader2 className="w-10 h-10 text-skyBlue animate-spin" />
+                            <LeaderboardSkeleton />
+                        )}
+
+                        {fetchError && !isLoading && (
+                            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                <span className="text-5xl">😴</span>
+                                <p className="text-base font-black text-deepNavy">Ối! Không tải được bảng xếp hạng</p>
+                                <p className="text-sm text-slate-400 font-bold">Kiểm tra kết nối mạng rồi thử lại nhé!</p>
+                                <button onClick={() => loadLeaderboard(activeTab)} className="bg-skyBlue text-white px-6 py-3 rounded-2xl font-black text-sm shadow-level-2">
+                                    🔄 Thử lại
+                                </button>
                             </div>
                         )}
 
-                        {!isLoading && top3.length > 0 && (
+                        {!isLoading && !fetchError && top3.length > 0 && (
                             <>
                                 {/* Podium Section */}
                                 <div className="flex items-end justify-center gap-2 mb-10 h-64 border-b-2 border-slate-50 pb-4">

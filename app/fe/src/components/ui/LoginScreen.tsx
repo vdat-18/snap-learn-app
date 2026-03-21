@@ -5,15 +5,17 @@ import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { mascotSpeak } from '../../utils/feedbackUtils';
 import { authApi } from '../../services/authApi';
 import { AppError } from '../../services/api';
-import { MOCK_AVATARS } from '../../store/mockData';
 import { Rocket, Volume2, Mail, Lock, UserPlus, LogIn, Globe } from 'lucide-react';
 
-// Animal avatars for child selection — visual, not text
-const avatars: { id: string; emoji: string; sound: string }[] = MOCK_AVATARS.map((a: any) => ({
-    id: a.id || a.emoji,
-    emoji: a.emoji,
-    sound: `${a.name_vi} tới đây!`
-}));
+// Animal avatars for child selection — static config, no backend needed
+const avatars: { id: string; emoji: string; sound: string }[] = [
+    { id: 'owl', emoji: '🦉', sound: 'Cú mèo tới đây!' },
+    { id: 'rabbit', emoji: '🐰', sound: 'Thỏ con tới đây!' },
+    { id: 'cat', emoji: '🐱', sound: 'Mèo con tới đây!' },
+    { id: 'bear', emoji: '🐻', sound: 'Gấu bông tới đây!' },
+    { id: 'fox', emoji: '🦊', sound: 'Cáo nhỏ tới đây!' },
+    { id: 'panda', emoji: '🐼', sound: 'Gấu trúc tới đây!' },
+];
 
 type AuthMode = 'login' | 'register';
 type Step = 'auth' | 'create-child';

@@ -5,6 +5,7 @@ import { useGameStore, type CapturedWord } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from '../../utils/feedbackUtils';
 import { speechApi } from '../../services/speechApi';
+// TODO: Remove once collectionApi.getVocabDetail() returns fun_fact_vi and sentence data
 import { MOCK_REFERENCE_VOCAB } from '../../store/mockData';
 
 interface VocabDetailProps {
