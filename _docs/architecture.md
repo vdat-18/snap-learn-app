@@ -661,7 +661,7 @@ services:
       - "8000:8000"
     env_file: .env
     volumes:
-      - ./backend/app:/app/app
+      - ./be/app:/app/app
       - ./data/uploads:/app/uploads
       - ./data/tts_cache:/app/tts_cache
       - ./data/logs:/app/logs

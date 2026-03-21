@@ -7,56 +7,56 @@
 
 // ── Object Categories ─────────────────────────────────────────
 enum ObjectCategory {
-  animals      @alias("animals")      @description("Living creatures: mammals, birds, fish, insects")
-  food         @alias("food")         @description("Edible items: fruits, vegetables, dishes, snacks")
-  nature       @alias("nature")       @description("Natural world: plants, flowers, trees, rocks, water")
-  household    @alias("household")    @description("Home items: furniture, appliances, kitchenware")
-  school       @alias("school")       @description("School items: books, pens, backpacks, desks")
-  vehicles     @alias("vehicles")     @description("Transportation: cars, bicycles, buses, boats")
-  clothing     @alias("clothing")     @description("Wearables: shirts, pants, shoes, hats")
-  body_parts   @alias("body_parts")   @description("Human body: hand, eye, nose, ear")
-  toys         @alias("toys")         @description("Play items: dolls, balls, blocks, puzzles")
-  tools        @alias("tools")        @description("Implements: hammer, scissors, ruler, brush")
-  buildings    @alias("buildings")    @description("Structures: house, school, temple, bridge")
-  weather      @alias("weather")      @description("Weather phenomena: rain, sun, cloud, snow")
-  colors       @alias("colors")       @description("Color objects: rainbow, paint, crayon")
-  instruments  @alias("instruments")  @description("Musical: piano, guitar, drum, flute")
-  sports       @alias("sports")       @description("Athletic: ball, racket, goal, pool")
-  technology   @alias("technology")   @description("Tech items: phone, computer, tablet, camera")
+  Animals      @alias("animals")      @description("Living creatures: mammals, birds, fish, insects")
+  Food         @alias("food")         @description("Edible items: fruits, vegetables, dishes, snacks")
+  Nature       @alias("nature")       @description("Natural world: plants, flowers, trees, rocks, water")
+  Household    @alias("household")    @description("Home items: furniture, appliances, kitchenware")
+  School       @alias("school")       @description("School items: books, pens, backpacks, desks")
+  Vehicles     @alias("vehicles")     @description("Transportation: cars, bicycles, buses, boats")
+  Clothing     @alias("clothing")     @description("Wearables: shirts, pants, shoes, hats")
+  BodyParts    @alias("body_parts")   @description("Human body: hand, eye, nose, ear")
+  Toys         @alias("toys")         @description("Play items: dolls, balls, blocks, puzzles")
+  Tools        @alias("tools")        @description("Implements: hammer, scissors, ruler, brush")
+  Buildings    @alias("buildings")    @description("Structures: house, school, temple, bridge")
+  Weather      @alias("weather")      @description("Weather phenomena: rain, sun, cloud, snow")
+  Colors       @alias("colors")       @description("Color objects: rainbow, paint, crayon")
+  Instruments  @alias("instruments")  @description("Musical: piano, guitar, drum, flute")
+  Sports       @alias("sports")       @description("Athletic: ball, racket, goal, pool")
+  Technology   @alias("technology")   @description("Tech items: phone, computer, tablet, camera")
 }
 
 // ── Rarity Tiers ──────────────────────────────────────────────
 enum RarityTier {
-  common       @alias("common")       @description("White ⚪ — very common, >50% of users captured, 10 XP")
-  uncommon     @alias("uncommon")     @description("Green 🟢 — somewhat common, 20-50% of users, 25 XP")
-  rare         @alias("rare")         @description("Blue 🔵 — infrequent, 5-20% of users, 50 XP")
-  epic         @alias("epic")         @description("Purple 🟣 — hard to find, 1-5% of users, 100 XP")
-  legendary    @alias("legendary")    @description("Gold 🟡 — extremely rare, <1% of users, 250 XP")
+  Common       @alias("common")       @description("White ⚪ — very common, >50% of users captured, 10 XP")
+  Uncommon     @alias("uncommon")     @description("Green 🟢 — somewhat common, 20-50% of users, 25 XP")
+  Rare         @alias("rare")         @description("Blue 🔵 — infrequent, 5-20% of users, 50 XP")
+  Epic         @alias("epic")         @description("Purple 🟣 — hard to find, 1-5% of users, 100 XP")
+  Legendary    @alias("legendary")    @description("Gold 🟡 — extremely rare, <1% of users, 250 XP")
 }
 
 // ── Supported Languages ───────────────────────────────────────
 enum Language {
-  en @description("English")
-  vi @description("Vietnamese")
-  zh @description("Mandarin Chinese")
+  En @alias("en") @description("English")
+  Vi @alias("vi") @description("Vietnamese")
+  Zh @alias("zh") @description("Mandarin Chinese")
 }
 
 // ── Safety Status ─────────────────────────────────────────────
 enum SafetyStatus {
-  safe    @description("Content is appropriate for children aged 6-10")
-  blocked @description("Content is inappropriate or contains a person")
+  Safe    @description("Content is appropriate for children aged 6-10")
+  Blocked @description("Content is inappropriate or contains a person")
 }
 
 enum BlockReason {
-  inappropriate_content @description("Weapons, alcohol, tobacco, drugs, adult, violence, hate, gambling")
-  person_detected       @description("Human face or person detected — privacy protection")
-  low_confidence        @description("AI confidence below 0.7 threshold")
+  InappropriateContent @alias("inappropriate_content") @description("Weapons, alcohol, tobacco, drugs, adult, violence, hate, gambling")
+  PersonDetected       @alias("person_detected")       @description("Human face or person detected — privacy protection")
+  LowConfidence        @alias("low_confidence")        @description("AI confidence below 0.7 threshold")
 }
 
 // ── Content Filter Level ──────────────────────────────────────
 enum FilterLevel {
-  standard @description("Blocks weapons, alcohol, tobacco, drugs, adult, violence, hate, gambling")
-  strict   @description("Standard + insects, medical imagery, skulls, scary items for ages 5-7")
+  Standard @description("Blocks weapons, alcohol, tobacco, drugs, adult, violence, hate, gambling")
+  Strict   @description("Standard + insects, medical imagery, skulls, scary items for ages 5-7")
 }
 
 // ── Vision Service Types ──────────────────────────────────────

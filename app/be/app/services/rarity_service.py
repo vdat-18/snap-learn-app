@@ -17,21 +17,21 @@ logger = logging.getLogger(__name__)
 
 # ── XP Table ───────────────────────────────────────────────────
 RARITY_XP = {
-    RarityTier.common: 10,
-    RarityTier.uncommon: 25,
-    RarityTier.rare: 50,
-    RarityTier.epic: 100,
-    RarityTier.legendary: 250,
+    RarityTier.Common: 10,
+    RarityTier.Uncommon: 25,
+    RarityTier.Rare: 50,
+    RarityTier.Epic: 100,
+    RarityTier.Legendary: 250,
 }
 
 # ── Category Diversity Multipliers ─────────────────────────────
 DIVERSITY_MULTIPLIER = {
-    1: 1.5,    # First capture in category
-    2: 1.0,    # 2nd-4th
+    1: 1.5,  # First capture in category
+    2: 1.0,  # 2nd-4th
     3: 1.0,
     4: 1.0,
-    5: 0.8,    # 5th-14th (diminishing)
-    15: 0.6,   # 15th+ (strong diminishing)
+    5: 0.8,  # 5th-14th (diminishing)
+    15: 0.6,  # 15th+ (strong diminishing)
 }
 
 

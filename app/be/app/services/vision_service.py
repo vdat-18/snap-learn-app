@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 async def identify_object(
     image_bytes: bytes,
-    filter_level: FilterLevel = FilterLevel.standard,
+    filter_level: FilterLevel = FilterLevel.Standard,
     *,
     run_safety_preflight: bool = True,
 ) -> Union[VisionResult, BlockedResult]:

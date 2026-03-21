@@ -24,9 +24,9 @@ logger = logging.getLogger(__name__)
 TTS_MODEL = "tts-1"
 TTS_VOICE = "nova"
 TTS_SPEED = {
-    Language.en: 0.85,
-    Language.vi: 0.80,
-    Language.zh: 0.75,
+    Language.En: 0.85,
+    Language.Vi: 0.80,
+    Language.Zh: 0.75,
 }
 TTS_CACHE_DIR = Path("tts_cache")
 TTS_CACHE_TTL_DAYS = 90

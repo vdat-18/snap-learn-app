@@ -91,6 +91,7 @@ services:
 
     volumes:
       - ./app/be:/app
+      - baml_client:/app/baml_client
       - backend_uploads:/app/uploads
       - backend_tts_cache:/app/tts_cache
       - backend_logs:/app/logs
@@ -109,52 +110,51 @@ services:
     # Command override if using uvicorn directly (for development)
     command: >
       sh -c "
-      alembic upgrade head &&
-      python scripts/seed_reference_vocab.py &&
+      PYTHONPATH=/app python scripts/seed_reference_vocab.py &&
       uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
       "
 
   # Next.js Frontend
-  frontend:
-    build:
-      context: ./app/fe
-      dockerfile: Dockerfile
-    container_name: snaplearn-frontend
-    environment:
-      # Next.js
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
-      NODE_ENV: ${NODE_ENV:-development}
+  # frontend:
+  #   build:
+  #     context: ./app/fe
+  #     dockerfile: Dockerfile
+  #   container_name: snaplearn-frontend
+  #   environment:
+  #     # Next.js
+  #     NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+  #     NODE_ENV: ${NODE_ENV:-development}
 
-      # Analytics/Monitoring (optional)
-      NEXT_PUBLIC_ANALYTICS_ID: ${NEXT_PUBLIC_ANALYTICS_ID}
+  #     # Analytics/Monitoring (optional)
+  #     NEXT_PUBLIC_ANALYTICS_ID: ${NEXT_PUBLIC_ANALYTICS_ID}
 
-      # PWA
-      NEXT_PUBLIC_PWA_ENABLED: ${NEXT_PUBLIC_PWA_ENABLED:-true}
+  #     # PWA
+  #     NEXT_PUBLIC_PWA_ENABLED: ${NEXT_PUBLIC_PWA_ENABLED:-true}
 
-      # Timezone
-      TZ: 'UTC+7'
+  #     # Timezone
+  #     TZ: 'UTC+7'
 
-    ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+  #   ports:
+  #     - "${FRONTEND_PORT:-3000}:3000"
 
-    volumes:
-      - ./app/fe:/app
-      - /app/node_modules
-      - /app/.next
+  #   volumes:
+  #     - ./app/fe:/app
+  #     - /app/node_modules
+  #     - /app/.next
 
-    depends_on:
-      - backend
+  #   depends_on:
+  #     - backend
 
-    networks:
-      - snaplearn-network
+  #   networks:
+  #     - snaplearn-network
 
-    restart: unless-stopped
+  #   restart: unless-stopped
 
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3000"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
 
 networks:
   snaplearn-network:
@@ -164,6 +164,8 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  baml_client:
     driver: local
   backend_uploads:
     driver: local
