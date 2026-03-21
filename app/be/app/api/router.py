@@ -9,6 +9,7 @@ from app.api.capture import router as capture_router
 from app.api.children import router as children_router
 from app.api.collection import router as collection_router
 from app.api.leaderboard import router as leaderboard_router
+from app.api.mascot_audio import router as mascot_audio_router
 from app.api.missions import router as missions_router
 from app.api.parent import router as parent_router
 from app.api.parent_gate import router as parent_gate_router
@@ -21,6 +22,7 @@ api_router.include_router(auth_router)
 api_router.include_router(children_router)
 api_router.include_router(capture_router)
 api_router.include_router(speech_router)
+api_router.include_router(mascot_audio_router)
 api_router.include_router(collection_router)
 api_router.include_router(missions_router)
 api_router.include_router(leaderboard_router)

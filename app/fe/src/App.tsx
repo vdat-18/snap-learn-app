@@ -14,6 +14,7 @@ import { useGameStore } from './store/gameStore';
 import { useSoundEffects } from './hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from './utils/feedbackUtils';
 import { captureApi } from './services/captureApi';
+import { fetchManifest, preloadCriticalAudio } from './services/mascotAudioApi';
 import { Scan, WifiOff, RefreshCw, Image } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -84,6 +85,15 @@ const App: React.FC = () => {
   useEffect(() => {
     hydrateFromStorage();
   }, [hydrateFromStorage]);
+
+  // Load mascot audio manifest on mount (best-effort, fallback to Web Speech API)
+  useEffect(() => {
+    fetchManifest().then((manifest) => {
+      if (manifest) {
+        preloadCriticalAudio('vi');
+      }
+    });
+  }, []);
 
   // Online/offline detection
   const [isOffline, setIsOffline] = useState(!navigator.onLine);

@@ -1,0 +1,243 @@
+# SnapLearn — Mascot Voice Instructions (Trilingual: VI / EN / ZH)
+# Each entry has: vi, en, zh translations + a stable key for audio file lookup
+# Template sentences (with {variables}) are marked template: true — these use runtime TTS
+
+# ── Random (không thuộc screen cụ thể) ──
+random_motivational:
+  - key: "random_motivational__0"
+    vi: "Oa! Quà xịn đây rồi nè!"
+    en: "Wow! What an awesome find!"
+    zh: "哇！好棒的发现！"
+
+  - key: "random_motivational__1"
+    vi: "Tuyệt quá! Tìm thêm từ nữa đi!"
+    en: "Amazing! Let's find more words!"
+    zh: "太棒了！再找更多词吧！"
+
+  - key: "random_motivational__2"
+    vi: "Bạn tinh mắt thật! Tiếp thôi!"
+    en: "You have sharp eyes! Keep going!"
+    zh: "你的眼睛真亮！继续吧！"
+
+  - key: "random_motivational__3"
+    vi: "Từ này hay quá! Tập nói nha!"
+    en: "What a cool word! Try saying it!"
+    zh: "这个词真棒！试着说说看！"
+
+  - key: "random_motivational__4"
+    vi: "Bạn nhạy bén thật! Sâu ơi!"
+    en: "So clever! You're on a roll!"
+    zh: "你真聪明！太厉害了！"
+
+  - key: "random_motivational__5"
+    vi: "Sắp đầy kho báu rồi! Cố lên!"
+    en: "Your treasure chest is almost full! Keep it up!"
+    zh: "宝箱快满了！加油！"
+
+# ── App.tsx (main shell) ──
+app_shell:
+  - key: "app_shell__0"
+    vi: "Kho báu của bạn ở đây nè!"
+    en: "Your treasure is right here!"
+    zh: "你的宝藏在这里！"
+    context: "screen: Collection"
+
+  - key: "app_shell__1"
+    vi: "Nhiệm vụ nhận quà xịn nha!"
+    en: "Complete quests for awesome rewards!"
+    zh: "完成任务拿好礼！"
+    context: "screen: Quest"
+
+  - key: "app_shell__2"
+    vi: "Ai đang đứng đầu bảng thế nhỉ?"
+    en: "Who's at the top of the leaderboard?"
+    zh: "谁在排行榜第一名呢？"
+    context: "screen: Leaderboard"
+
+  - key: "app_shell__3"
+    vi: "Góc bí mật của riêng bạn đó!"
+    en: "This is your secret corner!"
+    zh: "这是你的秘密角落！"
+    context: "screen: Profile"
+
+  - key: "app_shell__4"
+    vi: "Tìm từ mới bằng camera ngay nha!"
+    en: "Find new words with the camera now!"
+    zh: "用相机找新词吧！"
+    context: "screen: Camera (default)"
+
+  - key: "app_shell__5"
+    vi: "Hãy dùng máy ảnh tìm xem những từ trốn ở đâu nhé!"
+    en: "Use the camera to find where the words are hiding!"
+    zh: "用相机看看那些词藏在哪里吧！"
+    context: "screen: Camera (return from other screen)"
+
+  - key: "app_shell__6"
+    vi: "Chào mừng bạn yêu đến với thế giới Snap Learn! Chúng mình cùng bắt đầu hành trình khám phá nhé!"
+    en: "Welcome to the world of Snap Learn! Let's start our adventure together!"
+    zh: "欢迎来到Snap Learn的世界！让我们一起开始探索之旅吧！"
+    context: "screen: Splash"
+
+  - key: "app_shell__7"
+    vi: "Bạn ơi, hãy cho phép app dùng Camera để bắt học từ mới nhé!"
+    en: "Please allow the app to use the camera to catch new words!"
+    zh: "请允许应用使用相机来学习新词哦！"
+    context: "screen: Camera (permission error)"
+
+  - key: "app_shell__8"
+    vi: "Hơ... tớ thấy chưa rõ nè. Thử lại nhé!"
+    en: "Hmm... I can't see it clearly. Let's try again!"
+    zh: "嗯……我看不太清楚，再试一次吧！"
+    context: "screen: Camera (low confidence)"
+
+# ── LoginScreen.tsx ──
+login:
+  - key: "login__0"
+    vi: "Chào bạn! Hãy đăng nhập hoặc tạo tài khoản mới nhé!"
+    en: "Hello! Please log in or create a new account!"
+    zh: "你好！请登录或创建新账号！"
+
+  - key: "login__1"
+    vi: "Cú mèo tới đây!"
+    en: "Owl is here!"
+    zh: "猫头鹰来啦！"
+    context: "avatar 🦉"
+
+  - key: "login__2"
+    vi: "Thỏ con tới đây!"
+    en: "Bunny is here!"
+    zh: "小兔子来啦！"
+    context: "avatar 🐰"
+
+  - key: "login__3"
+    vi: "Mèo con tới đây!"
+    en: "Kitty is here!"
+    zh: "小猫咪来啦！"
+    context: "avatar 🐱"
+
+  - key: "login__4"
+    vi: "Gấu bông tới đây!"
+    en: "Teddy bear is here!"
+    zh: "小熊来啦！"
+    context: "avatar 🐻"
+
+  - key: "login__5"
+    vi: "Cáo nhỏ tới đây!"
+    en: "Little fox is here!"
+    zh: "小狐狸来啦！"
+    context: "avatar 🦊"
+
+  - key: "login__6"
+    vi: "Gấu trúc tới đây!"
+    en: "Panda is here!"
+    zh: "小熊猫来啦！"
+    context: "avatar 🐼"
+
+  - key: "login__7"
+    vi: "Chào mừng trở lại! Chúng mình cùng khám phá tiếp nhé!"
+    en: "Welcome back! Let's keep exploring together!"
+    zh: "欢迎回来！让我们继续探索吧！"
+
+  - key: "login__8"
+    vi: "Tuyệt vời! Bây giờ hãy tạo hồ sơ cho bé nhé!"
+    en: "Wonderful! Now let's create a profile!"
+    zh: "太棒了！现在来创建一个资料吧！"
+
+  - key: "login__9"
+    vi: "Bạn ơi, đừng quên điền tên của mình vào nhé!"
+    en: "Don't forget to fill in your name!"
+    zh: "别忘了填写你的名字哦！"
+
+  - key: "login__10"
+    vi: "Xin chào {childName}! Chúng mình cùng bắt đầu khám phá nào!"
+    en: "Hello {childName}! Let's start exploring together!"
+    zh: "你好{childName}！让我们一起开始探索吧！"
+    template: true
+
+# ── Onboarding.tsx ──
+onboarding:
+  - key: "onboarding__0"
+    vi: "Chào bạn! Khám phá thế giới cùng tớ nhé!"
+    en: "Hello! Let's explore the world together!"
+    zh: "你好！和我一起探索世界吧！"
+    context: "slide: welcome"
+
+  - key: "onboarding__1"
+    vi: "Dùng camera tìm đồ vật nha!"
+    en: "Use the camera to find objects!"
+    zh: "用相机找东西吧！"
+    context: "slide: camera"
+
+  - key: "onboarding__2"
+    vi: "Phát âm chuẩn để thẻ tiến hóa!"
+    en: "Pronounce it right to evolve your cards!"
+    zh: "发音准确让卡片进化！"
+    context: "slide: pronunciation"
+
+  - key: "onboarding__3"
+    vi: "Kho báu đang chờ. Bắt đầu thôi!"
+    en: "Treasure awaits. Let's go!"
+    zh: "宝藏在等着你，出发吧！"
+    context: "slide: collection"
+
+# ── RevealCard.tsx ──
+reveal_card:
+  - key: "reveal_card__0"
+    vi: "TRỜI ƠI! BẠN VỪA BẮT ĐƯỢC THẺ HUYỀN THOẠI RỒI NÈ!"
+    en: "OH WOW! YOU JUST CAUGHT A LEGENDARY CARD!"
+    zh: "天哪！你刚刚抓到了一张传说级卡片！"
+    context: "Legendary"
+
+  - key: "reveal_card__1"
+    vi: "Oa! Đồ hiếm nha!"
+    en: "Whoa! A rare one!"
+    zh: "哇！稀有的！"
+    context: "Epic / Rare"
+
+  # Note: Common/Uncommon uses random_motivational phrases (no separate entry needed)
+
+  - key: "reveal_card__2"
+    vi: "Tớ đang nghe..."
+    en: "I'm listening..."
+    zh: "我在听……"
+    context: "voice recognition active"
+
+  - key: "reveal_card__3"
+    vi: "Có lỗi xảy ra, thử lại nhé!"
+    en: "Oops, something went wrong. Try again!"
+    zh: "出错了，再试一次吧！"
+    context: "pronunciation API error"
+
+  - key: "reveal_card__4"
+    vi: "Cho tớ nghe giọng bạn nhé!"
+    en: "Let me hear your voice!"
+    zh: "让我听听你的声音吧！"
+    context: "microphone error"
+
+# ── QuestScreen.tsx ──
+quest:
+  - key: "quest__0"
+    vi: "Bạn hãy hoàn thành các thử thách này để nhận được thật nhiều sao may mắn nhé!"
+    en: "Complete these challenges to earn lots of lucky stars!"
+    zh: "完成这些挑战来获得很多幸运星吧！"
+
+# ── LevelUpCelebration.tsx ──
+level_up:
+  - key: "level_up__0"
+    vi: "Chúc mừng bạn đã lên cấp {newLevel}!"
+    en: "Congratulations! You've reached level {newLevel}!"
+    zh: "恭喜你升到{newLevel}级了！"
+    template: true
+
+# ── ErrorOverlay.tsx ──
+error_overlay:
+  - key: "error_overlay__0"
+    vi: "Hơ... tớ thấy chưa rõ nè."
+    en: "Hmm... I can't see it clearly."
+    zh: "嗯……我看不太清楚。"
+
+  - key: "error_overlay__1"
+    vi: "Bạn lại gần hơn hoặc xoay vật thể một chút nhé!"
+    en: "Move closer or rotate the object a little!"
+    zh: "靠近一点或者转一下物体吧！"
+    context: "subtitle"

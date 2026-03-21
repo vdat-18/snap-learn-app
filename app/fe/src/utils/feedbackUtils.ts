@@ -1,4 +1,5 @@
 import { useGameStore } from '../store/gameStore';
+import { getTextToKeyMap, getMascotAudioUrl, getRandomMotivationalEntries } from '../services/mascotAudioApi';
 
 /**
  * Triggers a vibration on supported devices (Android/WebXR)
@@ -15,6 +16,7 @@ export const triggerHaptic = (pattern: number | number[] = 50) => {
 
 /**
  * Mascot motivational phrases in Vietnamese (Short & Sweet)
+ * Used as fallback when manifest is not loaded.
  */
 const MOTIVATIONAL_PHRASES = [
     "Oa! Quà xịn đây rồi nè!",
@@ -26,21 +28,130 @@ const MOTIVATIONAL_PHRASES = [
 ];
 
 /**
- * Speak text using Web Speech API (TTS)
+ * Map FE language codes to BE language codes.
+ */
+const LANG_CODE_MAP: Record<string, string> = {
+    'vi-VN': 'vi',
+    'en-US': 'en',
+    'zh-CN': 'zh',
+};
+
+/**
+ * Currently playing Audio element (for interrupt support).
+ */
+let currentAudio: HTMLAudioElement | null = null;
+
+/**
+ * Speak text using pre-generated ElevenLabs audio (primary) or Web Speech API (fallback).
+ *
+ * The function signature is backward-compatible — no changes needed in call sites.
  */
 export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = 'vi-VN', forceInterrupt = false) => {
-    const phrase = text || MOTIVATIONAL_PHRASES[Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)];
+    const textToKey = getTextToKeyMap();
+    const beLang = LANG_CODE_MAP[lang] || 'vi';
 
-    // Update UI first
+    // Determine the phrase to speak
+    let phrase: string;
+    let audioKey: string | undefined;
+
+    if (!text) {
+        // No text: pick a random motivational phrase
+        const motivationalEntries = getRandomMotivationalEntries();
+        if (motivationalEntries.length > 0) {
+            const entry = motivationalEntries[Math.floor(Math.random() * motivationalEntries.length)];
+            phrase = entry.vi; // Display text is always Vietnamese
+            audioKey = entry.key;
+        } else {
+            // Fallback to hardcoded phrases if manifest not loaded
+            phrase = MOTIVATIONAL_PHRASES[Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)];
+        }
+    } else {
+        phrase = text;
+        audioKey = textToKey[text];
+    }
+
+    // Update UI first (always, regardless of audio source)
     useGameStore.getState().setMascotMessage({
         text: phrase,
         state: 'talking'
     });
 
+    // Force interrupt: stop any currently playing audio
+    if (forceInterrupt) {
+        _stopCurrentAudio();
+    }
+
+    // Try pre-generated audio first, fall back to Web Speech API
+    if (audioKey) {
+        _playPreGeneratedAudio(audioKey, beLang, phrase, lang, forceInterrupt);
+    } else {
+        // No matching key — use Web Speech API directly
+        console.log(`[MascotTTS] No pre-generated audio for: "${phrase.substring(0, 40)}..." — using Web Speech API`);
+        _speakWithWebSpeechAPI(phrase, lang, forceInterrupt);
+    }
+};
+
+/**
+ * Play pre-generated audio from the backend.
+ * Falls back to Web Speech API on error.
+ */
+function _playPreGeneratedAudio(
+    key: string,
+    beLang: string,
+    phrase: string,
+    feLang: 'vi-VN' | 'en-US' | 'zh-CN',
+    forceInterrupt: boolean,
+): void {
+    const url = getMascotAudioUrl(key, beLang);
+
+    const audio = new Audio(url);
+    currentAudio = audio;
+
+    audio.addEventListener('error', () => {
+        console.warn(`[MascotTTS] Pre-generated audio failed for ${key}/${beLang} — falling back to Web Speech API`);
+        _speakWithWebSpeechAPI(phrase, feLang, forceInterrupt);
+    });
+
+    audio.addEventListener('ended', () => {
+        if (currentAudio === audio) {
+            currentAudio = null;
+        }
+    });
+
+    audio.play().then(() => {
+        console.log(`[MascotTTS] Playing pre-generated: ${key}/${beLang}`);
+    }).catch((err) => {
+        console.warn(`[MascotTTS] Audio play() failed for ${key}/${beLang}:`, err);
+        _speakWithWebSpeechAPI(phrase, feLang, forceInterrupt);
+    });
+}
+
+/**
+ * Stop currently playing audio (both Audio element and Web Speech API).
+ */
+function _stopCurrentAudio(): void {
+    // Stop Audio element
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+    }
+
+    // Also cancel Web Speech API
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+}
+
+/**
+ * Fallback: Speak text using Web Speech API (TTS).
+ * This is the original implementation, kept as fallback.
+ */
+function _speakWithWebSpeechAPI(phrase: string, lang: 'vi-VN' | 'en-US' | 'zh-CN', forceInterrupt: boolean): void {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
     const startSpeak = () => {
-        // Force engine to resume 
+        // Force engine to resume
         window.speechSynthesis.resume();
 
         // Optional interrupt (can cause skipping if triggered too fast)
@@ -48,7 +159,7 @@ export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = '
             window.speechSynthesis.cancel();
         }
 
-        console.log(`[TTS] Speaking: ${phrase} (${lang})`);
+        console.log(`[MascotTTS:WebSpeech] Speaking: ${phrase} (${lang})`);
 
         const utterance = new SpeechSynthesisUtterance(phrase);
         utterance.lang = lang;
@@ -88,4 +199,4 @@ export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = '
     } else {
         startSpeak();
     }
-};
+}
