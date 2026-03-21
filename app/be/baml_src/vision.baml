@@ -27,9 +27,15 @@ function IdentifyObject(
     - Use IPA format for English phonetics (e.g. /kæt/)
     - Use pinyin WITH tone marks for Mandarin (e.g. māo, not mao)
     - Difficulty 1–5 per language (1=very common like "cat", 5=very rare like "telescope")
+    - description_en: Write an excited, friendly English sentence as if
+      a child is showing you something (1–2 sentences max)
+      Example: "Wow! A fluffy brown dog lying on the floor!"
     - description_vi: Write an excited, friendly Vietnamese sentence as if
       a child is showing you something (1–2 sentences max)
       Example: "Ồ hay quá! Có một chú chó lông nâu đang nằm trên sàn nhà kìa!"
+    - description_zh: Write an excited, friendly Mandarin sentence as if
+      a child is showing you something (1–2 sentences max, simplified Chinese)
+      Example: "哇！地板上躺着一只毛茸茸的棕色小狗！"
     - fun_fact_vi: One fun, child-friendly fact in Vietnamese
     - Example sentences should be simple, age-appropriate (6–10 year olds)
     - Confidence: 0.0–1.0 reflecting how certain you are
@@ -86,7 +92,9 @@ function IdentifyObjectFiltered(
     - IPA phonetics for English (e.g. /kæt/)
     - Pinyin with tone marks for Mandarin (e.g. māo)
     - Difficulty 1–5 per language
-    - Excited Vietnamese description (1–2 sentences)
+    - Excited description in English (1–2 sentences, e.g. "Wow! A fluffy brown dog lying on the floor!")
+    - Excited description in Vietnamese (1–2 sentences, e.g. "Ồ hay quá! Có một chú chó lông nâu đang nằm trên sàn nhà kìa!")
+    - Excited description in Mandarin (1–2 sentences, simplified Chinese, e.g. "哇！地板上躺着一只毛茸茸的棕色小狗！")
     - Fun fact in Vietnamese
     - Simple example sentences in all three languages
     - Confidence 0.0–1.0

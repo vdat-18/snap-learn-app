@@ -31,6 +31,14 @@ const App: React.FC = () => {
     category: string;
     vocabId: string;
     tts_urls: { en: string; vi: string; zh: string };
+    description_en: string | null;
+    description_vi: string | null;
+    description_zh: string | null;
+    description_tts_urls: { en: string | null; vi: string | null; zh: string | null } | null;
+    fun_fact_vi: string | null;
+    example_sentence_en: string | null;
+    example_sentence_vi: string | null;
+    example_sentence_zh: string | null;
   } | null>(null);
 
   const [isAIProcessing, setIsAIProcessing] = useState(false);
@@ -206,6 +214,14 @@ const App: React.FC = () => {
         category: categoryMap[vc.category] || vc.category,
         vocabId: vc.id,
         tts_urls: response.tts_urls || { en: '', vi: '', zh: '' },
+        description_en: vc.description_en || null,
+        description_vi: vc.description_vi || null,
+        description_zh: vc.description_zh || null,
+        description_tts_urls: response.description_tts_urls || null,
+        fun_fact_vi: vc.fun_fact_vi || null,
+        example_sentence_en: vc.example_sentence_en || null,
+        example_sentence_vi: vc.example_sentence_vi || null,
+        example_sentence_zh: vc.example_sentence_zh || null,
       };
 
       setCapturedResult(result);
@@ -493,6 +509,14 @@ const App: React.FC = () => {
           phonetic_en={capturedResult.phonetic_en}
           vocabId={capturedResult.vocabId}
           tts_urls={capturedResult.tts_urls}
+          description_en={capturedResult.description_en}
+          description_vi={capturedResult.description_vi}
+          description_zh={capturedResult.description_zh}
+          description_tts_urls={capturedResult.description_tts_urls}
+          fun_fact_vi={capturedResult.fun_fact_vi}
+          example_sentence_en={capturedResult.example_sentence_en}
+          example_sentence_vi={capturedResult.example_sentence_vi}
+          example_sentence_zh={capturedResult.example_sentence_zh}
           onCardFlyToCollection={() => { setIsBookOpen(true); playPop(); }}
         />
       )}

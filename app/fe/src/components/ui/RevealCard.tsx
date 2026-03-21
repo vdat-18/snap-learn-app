@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
 import { triggerSparkles, triggerLegendaryBurst } from '../../utils/confetti';
 import { mascotSpeak } from '../../utils/feedbackUtils';
 import { speechApi } from '../../services/speechApi';
@@ -23,6 +23,14 @@ interface RevealCardProps {
     category: string;
     vocabId?: string;
     tts_urls?: { en: string; vi: string; zh: string };
+    description_en?: string | null;
+    description_vi?: string | null;
+    description_zh?: string | null;
+    description_tts_urls?: { en: string | null; vi: string | null; zh: string | null } | null;
+    fun_fact_vi?: string | null;
+    example_sentence_en?: string | null;
+    example_sentence_vi?: string | null;
+    example_sentence_zh?: string | null;
     onCardFlyToCollection?: () => void;
 }
 
@@ -57,6 +65,14 @@ const RevealCard: React.FC<RevealCardProps> = ({
     category,
     vocabId,
     tts_urls,
+    description_en,
+    description_vi,
+    description_zh,
+    description_tts_urls,
+    fun_fact_vi,
+    example_sentence_en,
+    example_sentence_vi,
+    example_sentence_zh,
     onCardFlyToCollection,
 }) => {
     const [isListening, setIsListening] = useState(false);
@@ -69,9 +85,13 @@ const RevealCard: React.FC<RevealCardProps> = ({
     const [isFlyingToCollection, setIsFlyingToCollection] = useState(false);
     const [showPostRevealOptions, setShowPostRevealOptions] = useState(false);
     const [hasTriggeredXP, setHasTriggeredXP] = useState(false);
+    const [isTTSLoading, setIsTTSLoading] = useState(false);
+    const [showExamples, setShowExamples] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const blobUrlsRef = useRef<string[]>([]);
     const { addCollection, target_language, secondary_language } = useGameStore();
     const { playChime, playPop } = useSoundEffects();
     const rarityLabels: Record<string, string> = {
@@ -81,6 +101,18 @@ const RevealCard: React.FC<RevealCardProps> = ({
         'Epic': 'Siêu hiếm',
         'Legendary': 'Huyền thoại luôn'
     };
+
+    // Get description for the target language
+    const descriptionMap: Record<string, string | null | undefined> = {
+        en: description_en,
+        zh: description_zh,
+    };
+    const targetDescription = descriptionMap[target_language || 'en'] || null;
+
+    // Helper: track blob URLs for cleanup
+    const trackBlobUrl = useCallback((url: string) => {
+        blobUrlsRef.current.push(url);
+    }, []);
 
     // Helper to save word to collection
     const handleSaveCollection = (scoredStars: PronunciationTier, practiceCount: number) => {
@@ -106,10 +138,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
         }
     };
 
-    // TTS playback — prefer server TTS, fallback to Web Speech API
-    const playTTSSequence = useCallback(async () => {
-        window.speechSynthesis.cancel();
-
+    // TTS playback — word only (for manual speaker button tap)
+    const playWordTTS = useCallback(async (signal?: AbortSignal) => {
         const targetWord = target_language === 'zh' ? word_zh : word_en;
         const targetLang = target_language === 'zh' ? 'zh-CN' : 'en-US';
         const ttsLangKey = target_language === 'zh' ? 'zh' : 'en';
@@ -117,16 +147,13 @@ const RevealCard: React.FC<RevealCardProps> = ({
         // Try server TTS URL from capture response first
         if (tts_urls && tts_urls[ttsLangKey]) {
             try {
-                const audio = new Audio(tts_urls[ttsLangKey]);
-                audio.play().catch(() => {
-                    // Fallback to Web Speech API
-                    const utterance = new SpeechSynthesisUtterance(targetWord);
-                    utterance.lang = targetLang;
-                    utterance.rate = 0.8;
-                    window.speechSynthesis.speak(utterance);
-                });
+                const blobUrl = await speechApi.getTTSAudio(vocabId || '', ttsLangKey, signal);
+                trackBlobUrl(blobUrl);
+                const audio = new Audio(blobUrl);
+                await audio.play();
                 return;
-            } catch {
+            } catch (err) {
+                if (signal?.aborted) return;
                 // Fall through to Web Speech API
             }
         }
@@ -134,21 +161,103 @@ const RevealCard: React.FC<RevealCardProps> = ({
         // Try on-demand server TTS
         if (vocabId) {
             try {
-                const blobUrl = await speechApi.getTTSAudio(vocabId, ttsLangKey);
+                const blobUrl = await speechApi.getTTSAudio(vocabId, ttsLangKey, signal);
+                trackBlobUrl(blobUrl);
                 const audio = new Audio(blobUrl);
                 await audio.play();
                 return;
-            } catch {
+            } catch (err) {
+                if (signal?.aborted) return;
                 // Fall through to Web Speech API
             }
         }
 
         // Fallback: Web Speech API
-        const utterance = new SpeechSynthesisUtterance(targetWord);
-        utterance.lang = targetLang;
-        utterance.rate = 0.8;
-        window.speechSynthesis.speak(utterance);
-    }, [target_language, word_en, word_zh, tts_urls, vocabId]);
+        if (!signal?.aborted) {
+            const utterance = new SpeechSynthesisUtterance(targetWord);
+            utterance.lang = targetLang;
+            utterance.rate = 0.8;
+            window.speechSynthesis.speak(utterance);
+        }
+    }, [target_language, word_en, word_zh, tts_urls, vocabId, trackBlobUrl]);
+
+    // Full TTS sequence: description narration → pause → word TTS
+    const playTTSSequence = useCallback(async () => {
+        window.speechSynthesis.cancel();
+        setIsTTSLoading(true);
+
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+        const signal = abortController.signal;
+
+        const ttsLangKey = target_language === 'zh' ? 'zh' : 'en';
+        const targetLangCode = target_language === 'zh' ? 'zh-CN' : 'en-US';
+
+        try {
+            // Step 1: Try to play description TTS (if available)
+            if (targetDescription && vocabId) {
+                let descriptionPlayed = false;
+
+                // Try ElevenLabs TTS for description
+                if (description_tts_urls && description_tts_urls[ttsLangKey]) {
+                    try {
+                        const blobUrl = await speechApi.getDescriptionTTSAudio(vocabId, ttsLangKey, signal);
+                        if (signal.aborted) return;
+                        trackBlobUrl(blobUrl);
+                        const audio = new Audio(blobUrl);
+                        await new Promise<void>((resolve, reject) => {
+                            audio.onended = () => resolve();
+                            audio.onerror = () => reject(new Error('Audio playback error'));
+                            audio.play().catch(reject);
+                        });
+                        descriptionPlayed = true;
+                    } catch (err) {
+                        if (signal.aborted) return;
+                        // Fall through to Web Speech fallback
+                    }
+                }
+
+                // Fallback: Web Speech API for description with 2s timeout
+                if (!descriptionPlayed && targetDescription && !signal.aborted) {
+                    try {
+                        await new Promise<void>((resolve) => {
+                            const timeout = setTimeout(resolve, 2000);
+                            mascotSpeak(targetDescription, targetLangCode);
+                            // Listen for speech end or timeout
+                            const checkEnd = setInterval(() => {
+                                if (!window.speechSynthesis.speaking) {
+                                    clearInterval(checkEnd);
+                                    clearTimeout(timeout);
+                                    resolve();
+                                }
+                            }, 100);
+                        });
+                    } catch {
+                        // Continue to word TTS
+                    }
+                }
+
+                // Step 2: Pause 500ms between description and word
+                if (!signal.aborted) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
+
+            // Step 3: Play word TTS
+            if (!signal.aborted) {
+                setIsTTSLoading(false);
+                await playWordTTS(signal);
+            }
+        } catch (err) {
+            if (!signal.aborted) {
+                // If everything fails, try basic word TTS
+                setIsTTSLoading(false);
+                await playWordTTS(signal);
+            }
+        } finally {
+            setIsTTSLoading(false);
+        }
+    }, [target_language, targetDescription, description_tts_urls, vocabId, playWordTTS, trackBlobUrl]);
 
     // Auto-play TTS when card opens
     useEffect(() => {
@@ -168,6 +277,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
             setAttemptCount(0);
             setShowAutoCloseMessage(false);
             setIsFlyingToCollection(false);
+            setShowExamples(false);
+            setIsTTSLoading(false);
 
             if (rarity === 'Legendary') {
                 setTimeout(() => {
@@ -182,6 +293,22 @@ const RevealCard: React.FC<RevealCardProps> = ({
             }
         }
     }, [isOpen, rarity, playChime]);
+
+    // Cleanup on close: abort TTS fetches, cancel speechSynthesis, revoke blob URLs
+    useEffect(() => {
+        return () => {
+            // Abort in-flight TTS fetches
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+                abortControllerRef.current = null;
+            }
+            // Cancel Web Speech API
+            window.speechSynthesis.cancel();
+            // Clean up blob URLs
+            blobUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+            blobUrlsRef.current = [];
+        };
+    }, [isOpen]);
 
     // Real speech recognition via MediaRecorder + backend API
     const startSpeechRecognition = async () => {
@@ -283,6 +410,9 @@ const RevealCard: React.FC<RevealCardProps> = ({
         }
     };
 
+    // Check if any example sentences are available
+    const hasExamples = example_sentence_en || example_sentence_vi || example_sentence_zh;
+
     const cardVariants = {
         idle: { y: 0, scale: 1 },
         shake: {
@@ -331,7 +461,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             damping: 20,
                             stiffness: 300
                         }}
-                        className="relative w-full max-w-md bg-white rounded-t-[32px] p-8 pb-12 shadow-level-3"
+                        className="relative w-full max-w-md bg-white rounded-t-[32px] p-8 pb-12 shadow-level-3 max-h-[90vh] overflow-y-auto"
                     >
                         {/* Close Button */}
                         <button
@@ -362,7 +492,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         </div>
 
                         {/* Captured Image with Glow & Effects */}
-                        <div className={`aspect-square w-full rounded-card overflow-hidden bg-slate-100 mb-8 border-4 border-white relative ${rarityGlowMap[rarity]}`}>
+                        <div className={`aspect-square w-full rounded-card overflow-hidden bg-slate-100 mb-6 border-4 border-white relative ${rarityGlowMap[rarity]}`}>
                             {/* Background beams for Rare+ */}
                             {(rarity === 'Rare' || rarity === 'Epic' || rarity === 'Legendary') && (
                                 <motion.div
@@ -423,8 +553,31 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             {!imageUrl && <div className="w-full h-full flex items-center justify-center text-4xl relative z-10">📸</div>}
                         </div>
 
+                        {/* Mascot Description Speech Bubble */}
+                        {targetDescription && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2, duration: 0.4 }}
+                                className="relative mb-6"
+                            >
+                                <div className="bg-gradient-to-br from-skyBlue/10 to-skyBlue/5 rounded-2xl p-4 border border-skyBlue/20">
+                                    {/* Speech bubble tail */}
+                                    <div className="absolute -top-2 left-8 w-4 h-4 bg-skyBlue/10 border-l border-t border-skyBlue/20 rotate-45" />
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-skyBlue/20 flex items-center justify-center flex-shrink-0">
+                                            <img src="/owl-mascot.png" alt="Mascot" className="w-8 h-8 object-contain" />
+                                        </div>
+                                        <p className="text-sm font-medium text-slate-700 leading-relaxed flex-1">
+                                            {targetDescription}
+                                        </p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
                         {/* Multilingual Details */}
-                        <div className="text-center space-y-3 mb-8">
+                        <div className="text-center space-y-3 mb-6">
                             {/* Vietnamese — always shown */}
                             <div className="flex items-center justify-center gap-2 mb-2">
                                 <span className="text-xl mr-1">🇻🇳</span>
@@ -450,8 +603,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                         <span className="text-base font-bold text-lang-en">{word_en}</span>
                                         <span className="text-xs font-medium text-slate-400">{phonetic_en}</span>
                                         <button
-                                            onClick={() => playTTSSequence()}
-                                            className="w-10 h-10 rounded-full bg-skyBlue/10 flex items-center justify-center text-skyBlue text-base"
+                                            onClick={() => playWordTTS()}
+                                            className={`w-10 h-10 rounded-full bg-skyBlue/10 flex items-center justify-center text-skyBlue text-base ${isTTSLoading ? 'animate-pulse' : ''}`}
                                         >
                                             🔊
                                         </button>
@@ -468,8 +621,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                         <span className="text-base font-bold text-lang-zh">{word_zh}</span>
                                         <span className="text-xs font-medium text-slate-400">{pinyin}</span>
                                         <button
-                                            onClick={() => playTTSSequence()}
-                                            className="w-10 h-10 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-base"
+                                            onClick={() => playWordTTS()}
+                                            className={`w-10 h-10 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-base ${isTTSLoading ? 'animate-pulse' : ''}`}
                                         >
                                             🔊
                                         </button>
@@ -512,6 +665,77 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                 )}
                             </div>
                         </div>
+
+                        {/* Fun Fact Section */}
+                        {fun_fact_vi && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4 }}
+                                className="mb-4 bg-amber-50 rounded-2xl p-4 border border-amber-200/50"
+                            >
+                                <div className="flex items-start gap-3">
+                                    <Lightbulb className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                                    <p className="text-sm font-medium text-amber-800 leading-relaxed">
+                                        {fun_fact_vi}
+                                    </p>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Example Sentences Section (Collapsible) */}
+                        {hasExamples && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5 }}
+                                className="mb-6"
+                            >
+                                <button
+                                    onClick={() => setShowExamples(!showExamples)}
+                                    className="flex items-center justify-center gap-2 w-full py-2 text-xs font-bold text-slate-500 uppercase tracking-wider hover:text-slate-700 transition-colors"
+                                >
+                                    Câu ví dụ
+                                    {showExamples ? (
+                                        <ChevronUp className="w-4 h-4" />
+                                    ) : (
+                                        <ChevronDown className="w-4 h-4" />
+                                    )}
+                                </button>
+                                <AnimatePresence>
+                                    {showExamples && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="space-y-2 pt-2">
+                                                {example_sentence_en && (
+                                                    <div className="flex items-start gap-2 px-3 py-2 bg-slate-50 rounded-xl">
+                                                        <span className="text-sm flex-shrink-0">🇺🇸</span>
+                                                        <p className="text-sm text-slate-600 italic">{example_sentence_en}</p>
+                                                    </div>
+                                                )}
+                                                {example_sentence_vi && (
+                                                    <div className="flex items-start gap-2 px-3 py-2 bg-slate-50 rounded-xl">
+                                                        <span className="text-sm flex-shrink-0">🇻🇳</span>
+                                                        <p className="text-sm text-slate-600 italic">{example_sentence_vi}</p>
+                                                    </div>
+                                                )}
+                                                {example_sentence_zh && (
+                                                    <div className="flex items-start gap-2 px-3 py-2 bg-slate-50 rounded-xl">
+                                                        <span className="text-sm flex-shrink-0">🇨🇳</span>
+                                                        <p className="text-sm text-slate-600 italic">{example_sentence_zh}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
+                        )}
 
                         {/* Practice Area OR Post-Reveal Options */}
                         <div className={`transition-all duration-300 rounded-[24px] p-6 border ${stars === 3 ? 'bg-mintGreen/10 border-mintGreen/20' : stars ? 'bg-skyBlue/10 border-skyBlue/20' : 'bg-softCream border-sunshineYellow/20'}`}>

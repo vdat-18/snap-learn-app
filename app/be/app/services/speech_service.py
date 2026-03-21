@@ -13,6 +13,7 @@ import hashlib
 import logging
 import os
 from pathlib import Path
+from collections.abc import AsyncIterator
 from typing import Optional
 
 import openai
@@ -141,6 +142,28 @@ async def get_pronunciation_hint(word: str, language: Language) -> str:
 # ── TTS (ElevenLabs with filesystem caching) ─────────────────
 
 
+def _tts_cache_path(
+    text: str, language: Language, cache_dir: Optional[Path] = None,
+) -> Path:
+    """Return the cache file path for a given text/language pair, creating dirs."""
+    cache_root = cache_dir or TTS_CACHE_DIR
+    lang_dir = cache_root / language.value
+    lang_dir.mkdir(parents=True, exist_ok=True)
+    text_hash = hashlib.sha256(text.encode()).hexdigest()[:16]
+    return lang_dir / f"{text_hash}.mp3"
+
+
+def _tts_voice_and_speed(language: Language) -> tuple[str, float]:
+    """Resolve voice ID and speed; raises if voice ID is missing."""
+    speed = TTS_SPEED.get(language, 0.85)
+    voice_id = ELEVENLABS_VOICE_ID or os.environ.get("ELEVENLABS_VOICE_ID", "")
+    if not voice_id:
+        raise RuntimeError(
+            "ELEVENLABS_VOICE_ID environment variable is required for TTS"
+        )
+    return voice_id, speed
+
+
 async def synthesize_speech(
     text: str,
     language: Language,
@@ -148,6 +171,9 @@ async def synthesize_speech(
 ) -> bytes:
     """
     Generate TTS audio via ElevenLabs with local filesystem caching.
+
+    Buffers the full response before returning — use for background
+    pre-generation where latency is not user-facing.
 
     Args:
         text: Text to synthesize
@@ -157,13 +183,7 @@ async def synthesize_speech(
     Returns:
         MP3 audio bytes
     """
-    cache_root = cache_dir or TTS_CACHE_DIR
-    lang_dir = cache_root / language.value
-    lang_dir.mkdir(parents=True, exist_ok=True)
-
-    # Cache key: hash of text
-    text_hash = hashlib.sha256(text.encode()).hexdigest()[:16]
-    cache_file = lang_dir / f"{text_hash}.mp3"
+    cache_file = _tts_cache_path(text, language, cache_dir)
 
     # Cache hit
     if cache_file.exists():
@@ -171,12 +191,7 @@ async def synthesize_speech(
         return cache_file.read_bytes()
 
     # Cache miss: generate via ElevenLabs
-    speed = TTS_SPEED.get(language, 0.85)
-    voice_id = ELEVENLABS_VOICE_ID or os.environ.get("ELEVENLABS_VOICE_ID", "")
-    if not voice_id:
-        raise RuntimeError(
-            "ELEVENLABS_VOICE_ID environment variable is required for TTS"
-        )
+    voice_id, speed = _tts_voice_and_speed(language)
 
     client = _get_elevenlabs_client()
     audio_iterator = client.text_to_speech.convert(
@@ -199,3 +214,63 @@ async def synthesize_speech(
     logger.info("TTS generated and cached: %s (%d bytes)", cache_file, len(audio_bytes))
 
     return audio_bytes
+
+
+async def synthesize_speech_stream(
+    text: str,
+    language: Language,
+    cache_dir: Optional[Path] = None,
+) -> AsyncIterator[bytes]:
+    """
+    Stream TTS audio from ElevenLabs, yielding chunks as they arrive.
+
+    Uses the ElevenLabs streaming endpoint with ``optimize_streaming_latency=3``
+    for minimum time-to-first-byte.  Each chunk is yielded to the caller
+    *and* accumulated so the full audio is written to the filesystem cache
+    once the stream completes (tee pattern).
+
+    On cache hit the entire file is yielded in a single chunk (already fast).
+
+    Args:
+        text: Text to synthesize
+        language: Target language (affects speed)
+        cache_dir: Override cache directory (default: tts_cache/)
+
+    Yields:
+        MP3 audio byte chunks
+    """
+    cache_file = _tts_cache_path(text, language, cache_dir)
+
+    # Cache hit — yield the whole file in one go (sub-ms read)
+    if cache_file.exists():
+        logger.debug("TTS stream cache hit: %s", cache_file)
+        yield cache_file.read_bytes()
+        return
+
+    # Cache miss — stream from ElevenLabs
+    voice_id, speed = _tts_voice_and_speed(language)
+    client = _get_elevenlabs_client()
+
+    audio_stream = await client.text_to_speech.stream(
+        text=text,
+        voice_id=voice_id,
+        model_id=ELEVENLABS_MODEL,
+        output_format=TTS_OUTPUT_FORMAT,
+        optimize_streaming_latency=3,
+        voice_settings={
+            "speed": speed,
+        },
+    )
+
+    # Tee: yield each chunk to the HTTP response AND accumulate for cache
+    cache_chunks: list[bytes] = []
+    async for chunk in audio_stream:
+        cache_chunks.append(chunk)
+        yield chunk
+
+    # Persist to cache after the full stream has been sent
+    audio_bytes = b"".join(cache_chunks)
+    cache_file.write_bytes(audio_bytes)
+    logger.info(
+        "TTS streamed and cached: %s (%d bytes)", cache_file, len(audio_bytes),
+    )

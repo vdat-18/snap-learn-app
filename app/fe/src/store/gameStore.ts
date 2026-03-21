@@ -29,7 +29,13 @@ export interface CaptureResponse {
         phonetic_en: string;
         category: string;
         rarity_tier: string;
-        fun_fact_vi: string;
+        description_en: string | null;
+        description_vi: string | null;
+        description_zh: string | null;
+        fun_fact_vi: string | null;
+        example_sentence_en: string | null;
+        example_sentence_vi: string | null;
+        example_sentence_zh: string | null;
         confidence: number;
         photo_url: string;
     };
@@ -45,6 +51,7 @@ export interface CaptureResponse {
         completed: boolean;
     }>;
     tts_urls: { en: string; vi: string; zh: string };
+    description_tts_urls: { en: string | null; vi: string | null; zh: string | null } | null;
     message_vi: string;
 }
 
@@ -60,6 +67,9 @@ export interface CapturedWord {
     capturedAt: string;
     practiceCount: number;
     isEvolved: boolean;
+    description_en?: string | null;
+    description_vi?: string | null;
+    description_zh?: string | null;
 }
 
 export interface LeaderboardEntry {

@@ -184,6 +184,9 @@ async def process_capture(
         category=cat_value,
         rarity_tier=rarity_value,
         confidence=vision_result.confidence,
+        description_en=getattr(vision_result, "description_en", None),
+        description_vi=getattr(vision_result, "description_vi", None),
+        description_zh=getattr(vision_result, "description_zh", None),
         fun_fact_vi=getattr(vision_result, "fun_fact_vi", None),
         example_sentence_en=getattr(vision_result, "example_sentence_en", None),
         example_sentence_vi=getattr(vision_result, "example_sentence_vi", None),
@@ -217,11 +220,15 @@ async def process_capture(
             word_vi=vision_result.object_vi,
             word_zh=vision_result.object_zh,
             cache_dir=settings.TTS_CACHE_DIR,
+            description_en=getattr(vision_result, "description_en", None),
+            description_vi=getattr(vision_result, "description_vi", None),
+            description_zh=getattr(vision_result, "description_zh", None),
         )
     )
 
     # 14. Build TTS URLs
     tts_urls = tts_service.get_urls(vocab.id)
+    description_tts_urls = tts_service.get_description_urls(vocab.id)
 
     return CaptureResponse(
         status="new_capture",
@@ -232,6 +239,7 @@ async def process_capture(
         level_up=leveled_up,
         mission_updates=mission_updates,
         tts_urls=tts_urls,
+        description_tts_urls=description_tts_urls,
     )
 
 
@@ -250,6 +258,9 @@ def _vocab_to_response(vocab: CapturedVocab) -> VocabCardResponse:
         phonetic_en=vocab.phonetic_en,
         category=vocab.category,
         rarity_tier=vocab.rarity_tier,
+        description_en=vocab.description_en,
+        description_vi=vocab.description_vi,
+        description_zh=vocab.description_zh,
         fun_fact_vi=vocab.fun_fact_vi,
         example_sentence_en=vocab.example_sentence_en,
         example_sentence_vi=vocab.example_sentence_vi,

@@ -20,6 +20,9 @@ class VocabCardResponse(BaseModel):
     phonetic_en: str | None = None
     category: str
     rarity_tier: str
+    description_en: str | None = None
+    description_vi: str | None = None
+    description_zh: str | None = None
     fun_fact_vi: str | None = None
     example_sentence_en: str | None = None
     example_sentence_vi: str | None = None
@@ -52,4 +55,5 @@ class CaptureResponse(BaseModel):
     level_up: bool = False
     mission_updates: list[MissionUpdateResponse] = []
     tts_urls: TTSUrls | None = None
+    description_tts_urls: TTSUrls | None = None
     message_vi: str | None = None

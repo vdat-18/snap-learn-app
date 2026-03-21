@@ -13,6 +13,65 @@ export interface PronunciationResponse {
     total_xp: number;
 }
 
+// --- Helpers ---
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
+/**
+ * Build auth headers matching the axios interceptor pattern.
+ */
+function getAuthHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {};
+    const token = localStorage.getItem('snap-learn-access-token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const childId = localStorage.getItem('snap-learn-child-id');
+    if (childId) headers['X-Child-Id'] = childId;
+    return headers;
+}
+
+/**
+ * Fetch audio via streaming ReadableStream, accumulate into Blob URL.
+ * Supports AbortSignal for cancellation on component unmount.
+ */
+async function fetchAudioStream(url: string, signal?: AbortSignal): Promise<string> {
+    const response = await fetch(`${BASE_URL}${url}`, {
+        headers: getAuthHeaders(),
+        signal,
+    });
+
+    if (!response.ok) {
+        throw new Error(`TTS fetch failed: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+        // Fallback: read as blob directly
+        const blob = await response.blob();
+        return URL.createObjectURL(blob);
+    }
+
+    const chunks: Uint8Array[] = [];
+    let totalLength = 0;
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        totalLength += value.length;
+    }
+
+    // Combine chunks into a single ArrayBuffer → Blob
+    const combined = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+        combined.set(chunk, offset);
+        offset += chunk.length;
+    }
+
+    const blob = new Blob([combined], { type: 'audio/mpeg' });
+    return URL.createObjectURL(blob);
+}
+
 // --- Speech API ---
 
 export const speechApi = {
@@ -33,13 +92,28 @@ export const speechApi = {
     },
 
     /**
-     * Get TTS audio for a vocab word
-     * Returns a blob URL for audio playback
+     * Get TTS audio for a vocab word via streaming fetch.
+     * Returns a blob URL for audio playback.
+     * Supports AbortSignal for cancellation.
      */
-    getTTSAudio: async (vocab_id: string, language: string): Promise<string> => {
-        const response = await api.get(`/tts/${vocab_id}/${language}`, {
-            responseType: 'blob',
-        });
-        return URL.createObjectURL(response.data);
+    getTTSAudio: async (
+        vocab_id: string,
+        language: string,
+        signal?: AbortSignal
+    ): Promise<string> => {
+        return fetchAudioStream(`/tts/${vocab_id}/${language}`, signal);
+    },
+
+    /**
+     * Get TTS audio for a vocab description via streaming fetch.
+     * Returns a blob URL for audio playback.
+     * Supports AbortSignal for cancellation.
+     */
+    getDescriptionTTSAudio: async (
+        vocab_id: string,
+        language: string,
+        signal?: AbortSignal
+    ): Promise<string> => {
+        return fetchAudioStream(`/tts/description/${vocab_id}/${language}`, signal);
     },
 };

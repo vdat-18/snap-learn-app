@@ -4,26 +4,31 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import logging
 from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
 import openai
 import redis.asyncio as aioredis
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi.responses import Response, StreamingResponse
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings, get_settings
-from app.dependencies import get_current_child, get_db, get_redis
+from app.dependencies import get_current_child, get_current_parent, get_db, get_redis
 from app.models.captured_vocab import CapturedVocab
 from app.models.child_profile import ChildProfile
 from app.schemas.speech import PronounceRequest, PronounceResponse
 from app.services import game_service
-from app.services.speech_service import synthesize_speech
+from app.services.speech_service import synthesize_speech, synthesize_speech_stream
+from app.services.tts_service import clear_cache
 from app.utils.errors import AudioInvalid
 from app.utils.vocab_image import lookup_vocab_image
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["speech"])
 
@@ -121,7 +126,7 @@ async def get_tts(
     db: Annotated[AsyncSession, Depends(get_db)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> Response:
-    """Serve TTS audio (MP3) from cache, generating on miss."""
+    """Serve TTS audio (MP3) — cached hits return immediately, misses stream."""
 
     if language not in ("en", "vi", "zh"):
         raise HTTPException(
@@ -147,31 +152,211 @@ async def get_tts(
     text_map = {"en": vocab.word_en, "vi": vocab.word_vi, "zh": vocab.word_zh}
     text = text_map[language]
 
+    # Check cache first — serve cached files as a plain Response (fastest)
+    cache_root = Path(settings.TTS_CACHE_DIR)
+    lang_dir = cache_root / language
+    text_hash = hashlib.sha256(text.encode()).hexdigest()[:16]
+    cache_file = lang_dir / f"{text_hash}.mp3"
+
+    response_headers = {
+        "Content-Disposition": f'inline; filename="{vocab_id}_{language}.mp3"',
+    }
+
+    if cache_file.exists():
+        audio_bytes = cache_file.read_bytes()
+        return Response(
+            content=audio_bytes,
+            media_type="audio/mpeg",
+            headers=response_headers,
+        )
+
+    # Cache miss — stream from ElevenLabs for lower time-to-first-byte
+    from baml_client.types import Language as BamlLanguage
+
+    lang_enum_map = {
+        "en": BamlLanguage.En,
+        "vi": BamlLanguage.Vi,
+        "zh": BamlLanguage.Zh,
+    }
+
+    return StreamingResponse(
+        synthesize_speech_stream(
+            text=text,
+            language=lang_enum_map[language],
+            cache_dir=cache_root,
+        ),
+        media_type="audio/mpeg",
+        headers=response_headers,
+    )
+
+
+@router.get("/tts/description/{vocab_id}/{language}")
+async def get_description_tts(
+    vocab_id: UUID,
+    language: str,
+    child_id: Annotated[UUID, Depends(get_current_child)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> Response:
+    """Serve description TTS audio (MP3) — cached hits return immediately, misses stream."""
+
+    if language not in ("en", "vi", "zh"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Language must be 'en', 'vi', or 'zh'.",
+        )
+
+    # Load vocab to get the description text
+    result = await db.execute(
+        select(CapturedVocab).where(
+            CapturedVocab.id == vocab_id,
+            CapturedVocab.child_id == child_id,
+        )
+    )
+    vocab = result.scalar_one_or_none()
+    if vocab is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vocab card not found.",
+        )
+
+    # Get description text for this language
+    text_map = {
+        "en": vocab.description_en,
+        "vi": vocab.description_vi,
+        "zh": vocab.description_zh,
+    }
+    text = text_map[language]
+
+    if not text:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No description available for this language.",
+        )
+
     # Check cache first
     cache_root = Path(settings.TTS_CACHE_DIR)
     lang_dir = cache_root / language
     text_hash = hashlib.sha256(text.encode()).hexdigest()[:16]
     cache_file = lang_dir / f"{text_hash}.mp3"
 
+    response_headers = {
+        "Content-Disposition": f'inline; filename="desc_{vocab_id}_{language}.mp3"',
+    }
+
     if cache_file.exists():
         audio_bytes = cache_file.read_bytes()
-    else:
-        # Generate on demand
-        from baml_client.types import Language as BamlLanguage
+        return Response(
+            content=audio_bytes,
+            media_type="audio/mpeg",
+            headers=response_headers,
+        )
 
-        lang_enum_map = {
-            "en": BamlLanguage.En,
-            "vi": BamlLanguage.Vi,
-            "zh": BamlLanguage.Zh,
-        }
-        audio_bytes = await synthesize_speech(
+    # Cache miss — stream from ElevenLabs
+    from baml_client.types import Language as BamlLanguage
+
+    lang_enum_map = {
+        "en": BamlLanguage.En,
+        "vi": BamlLanguage.Vi,
+        "zh": BamlLanguage.Zh,
+    }
+
+    return StreamingResponse(
+        synthesize_speech_stream(
             text=text,
             language=lang_enum_map[language],
             cache_dir=cache_root,
+        ),
+        media_type="audio/mpeg",
+        headers=response_headers,
+    )
+
+
+# ── Admin: TTS Cache Management ──────────────────────────────
+
+
+class TTSCacheRefreshRequest(BaseModel):
+    language: str | None = None
+
+
+class TTSCacheRefreshResponse(BaseModel):
+    status: str
+    deleted: int = 0
+    generated: int = 0
+    failed: int = 0
+    message: str = ""
+
+
+@router.post(
+    "/tts/cache/refresh",
+    response_model=TTSCacheRefreshResponse,
+)
+async def refresh_tts_cache(
+    body: TTSCacheRefreshRequest,
+    background_tasks: BackgroundTasks,
+    parent_id: Annotated[UUID, Depends(get_current_parent)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> TTSCacheRefreshResponse:
+    """Clear TTS cache and regenerate all vocab audio in the background.
+
+    Requires parent authentication (admin action).
+    The response returns immediately; regeneration happens in a background task.
+    """
+    if body.language and body.language not in ("en", "vi", "zh"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Language must be 'en', 'vi', or 'zh'.",
         )
 
-    return Response(
-        content=audio_bytes,
-        media_type="audio/mpeg",
-        headers={"Content-Disposition": f'inline; filename="{vocab_id}_{language}.mp3"'},
+    cache_dir = settings.TTS_CACHE_DIR
+
+    # Load all distinct words and descriptions from the DB
+    result = await db.execute(
+        select(
+            CapturedVocab.word_en,
+            CapturedVocab.word_vi,
+            CapturedVocab.word_zh,
+            CapturedVocab.description_en,
+            CapturedVocab.description_vi,
+            CapturedVocab.description_zh,
+        ).distinct()
+    )
+    rows = result.all()
+    words = [(row.word_en, row.word_vi, row.word_zh) for row in rows]
+    descriptions = [(row.description_en, row.description_vi, row.description_zh) for row in rows]
+
+    if not words:
+        deleted = clear_cache(cache_dir, language=body.language)
+        return TTSCacheRefreshResponse(
+            status="completed",
+            deleted=deleted,
+            message="Cache cleared. No vocab found to regenerate.",
+        )
+
+    # Clear synchronously so the user knows old files are gone
+    deleted = clear_cache(cache_dir, language=body.language)
+
+    # Warm in the background — don't block the HTTP response
+    async def _warm() -> None:
+        try:
+            from app.services.tts_service import warm_cache
+            success, failed = await warm_cache(words, cache_dir, descriptions=descriptions)
+            logger.info(
+                "Background TTS warm complete: %d ok, %d failed", success, failed,
+            )
+        except Exception:
+            logger.exception("Background TTS warm failed")
+
+    background_tasks.add_task(_warm)
+
+    return TTSCacheRefreshResponse(
+        status="warming",
+        deleted=deleted,
+        generated=0,
+        failed=0,
+        message=(
+            f"Cache cleared ({deleted} files). "
+            f"Regenerating {len(words)} word sets in the background."
+        ),
     )

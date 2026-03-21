@@ -42,6 +42,9 @@ class CapturedVocab(Base):
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
 
     # Enrichment
+    description_en: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    description_vi: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    description_zh: Mapped[str | None] = mapped_column(String(500), nullable=True)
     fun_fact_vi: Mapped[str | None] = mapped_column(String(500), nullable=True)
     example_sentence_en: Mapped[str | None] = mapped_column(String(500), nullable=True)
     example_sentence_vi: Mapped[str | None] = mapped_column(String(500), nullable=True)
