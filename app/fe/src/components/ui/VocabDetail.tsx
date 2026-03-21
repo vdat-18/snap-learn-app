@@ -185,8 +185,8 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
                 <div className="w-12 h-12" />
             </header>
 
-            <BackgroundParallax className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto px-6 pb-10">
+            <BackgroundParallax className="flex-1 flex flex-col overflow-hidden relative">
+                <div className="flex-1 overflow-y-auto px-6 pb-32 no-scrollbar">
                     <div className="relative mb-8">
                         <motion.div
                             className={`rounded-[40px] overflow-hidden shadow-level-3 border-8 border-white aspect-square relative ${vocab.evolved ? 'ring-8 ring-sunshineYellow/20' : ''}`}
@@ -307,6 +307,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
                         )}
                     </section>
                 </div>
+
             </BackgroundParallax>
 
             <div className="p-6 bg-white border-t border-slate-100 px-8">

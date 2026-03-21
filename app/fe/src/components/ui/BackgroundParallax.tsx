@@ -44,7 +44,7 @@ const BackgroundParallax: React.FC<BackgroundParallaxProps> = ({ children, class
             </motion.div>
 
             {/* Main Content */}
-            <div className="relative z-10 w-full h-full">
+            <div className={`relative z-10 w-full h-full ${className.includes('flex-col') ? 'flex flex-col' : ''}`}>
                 {children}
             </div>
         </div>
