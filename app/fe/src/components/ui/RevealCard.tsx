@@ -67,7 +67,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
     const [attemptCount, setAttemptCount] = useState(0);
     const [stars, setStars] = useState<PronunciationTier | null>(null);
     const [feedbackText, setFeedbackText] = useState('');
-    const [showAutoCloseMessage, setShowAutoCloseMessage] = useState(false);
     const [isFlyingToCollection, setIsFlyingToCollection] = useState(false);
     const [showPostRevealOptions, setShowPostRevealOptions] = useState(false);
     const [hasTriggeredXP, setHasTriggeredXP] = useState(false);
@@ -482,8 +481,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
 
                         {/* Card Image — flips from camera photo to achievement card on 3 stars */}
                         <div className={`aspect-square w-full rounded-card overflow-hidden bg-slate-100 mb-6 border-4 relative ${showAchievementFlip
-                                ? 'border-sunshineYellow shadow-[0_0_30px_rgba(255,210,52,0.6)]'
-                                : `border-white ${rarityGlowMap[rarity]}`
+                            ? 'border-sunshineYellow shadow-[0_0_30px_rgba(255,210,52,0.6)]'
+                            : `border-white ${rarityGlowMap[rarity]}`
                             }`}
                             style={{ perspective: '1200px' }}
                         >

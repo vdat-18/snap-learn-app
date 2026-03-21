@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, Trophy, Star, Sparkles, MessageCircle } from 'lucide-react';
+import { X, CheckCircle2, Trophy, Star, Sparkles, MessageCircle, Loader2 } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from '../../utils/feedbackUtils';
@@ -67,7 +67,7 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
     const handleClaim = async (questId: string, event: React.MouseEvent, rewardXP: number) => {
         try {
             const result = await missionApi.claimMission(questId);
-            
+
             // Trigger XP Fly Animation from the button click position
             const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
             window.dispatchEvent(new CustomEvent('trigger-xp-fly', {
@@ -344,15 +344,15 @@ const QuestCard: React.FC<{ quest: DisplayQuest; onClaim: (e: React.MouseEvent) 
                     )}
 
                     {isClaiming && !isClaimed && (
-                         <motion.div
+                        <motion.div
                             key="claiming-btn"
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             className="w-full mt-4 bg-mintGreen text-white font-black py-4 rounded-[32px] flex items-center justify-center gap-2 shadow-inner"
-                         >
+                        >
                             <Loader2 className="w-6 h-6 animate-spin" />
                             ĐANG NHẬN...
-                         </motion.div>
+                        </motion.div>
                     )}
                 </AnimatePresence>
             </div>
