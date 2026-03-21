@@ -145,21 +145,74 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
         earned: b.earned,
     })) || [];
 
-    const rareCount = profile?.stats
-        ? profile.stats.total_words
-        : collections.filter(w => ['Rare', 'Epic', 'Legendary'].includes(w.rarity)).length;
+    // LEVEL PROGRESS CALCULATION
+    const LEVEL_THRESHOLDS = [
+        { level: 1, xp: 0 },
+        { level: 5, xp: 500 },
+        { level: 10, xp: 2000 },
+        { level: 20, xp: 8000 },
+        { level: 35, xp: 25000 },
+        { level: 50, xp: 60000 },
+    ];
+
+    const getLevelProgress = () => {
+        const currentXP = displayXP;
+        let startXP = 0;
+        let endXP = 500;
+
+        for (let i = 0; i < LEVEL_THRESHOLDS.length - 1; i++) {
+            if (currentXP >= LEVEL_THRESHOLDS[i].xp && currentXP < LEVEL_THRESHOLDS[i + 1].xp) {
+                startXP = LEVEL_THRESHOLDS[i].xp;
+                endXP = LEVEL_THRESHOLDS[i + 1].xp;
+                break;
+            }
+            if (i === LEVEL_THRESHOLDS.length - 2 && currentXP >= LEVEL_THRESHOLDS[i + 1].xp) {
+                startXP = LEVEL_THRESHOLDS[i + 1].xp;
+                endXP = LEVEL_THRESHOLDS[i + 1].xp * 2; // Arbitrary next
+            }
+        }
+
+        const progress = (currentXP - startXP) / (endXP - startXP);
+        return Math.min(Math.max(progress, 0), 1);
+    };
+
+    const levelProgressPercent = getLevelProgress();
+    const circumference = 2 * Math.PI * 66; // r=66 for 132x132 container
+    const strokeDashoffset = circumference - (levelProgressPercent * circumference);
 
     const totalWords = profile?.stats?.total_words || collections.length;
 
-    // Favorite category (local fallback)
-    const categoryCount: Record<string, number> = {};
-    collections.forEach(w => {
-        categoryCount[w.category] = (categoryCount[w.category] || 0) + 1;
-    });
-    const favoriteCategory = Object.entries(categoryCount).sort((a, b) => b[1] - a[1])[0];
-    const categoryEmojis: Record<string, string> = {
-        'Animals': '🐾', 'Food': '🍎', 'Home': '🏠', 'School': '📚', 'Nature': '🌿',
+    // Category progress calculations
+    const CATEGORY_ICONS: Record<string, string> = {
+        'animals': '🐾', 'food': '🍎', 'nature': '🌿', 'household': '🏠',
+        'school': '📚', 'vehicles': '🚗', 'clothing': '👕', 'toys': '🧸',
+        'colors': '🎨', 'technology': '💻', 'sports': '⚽'
     };
+    const CATEGORY_NAMES: Record<string, string> = {
+        'animals': 'Động vật', 'food': 'Đồ ăn', 'nature': 'Tự nhiên', 'household': 'Nhà cửa',
+        'school': 'Trường học', 'vehicles': 'Giao thông', 'clothing': 'Quần áo', 'toys': 'Đồ chơi',
+        'colors': 'Màu sắc', 'technology': 'Công nghệ', 'sports': 'Thể thao'
+    };
+
+    const categoryStats = Object.keys(CATEGORY_NAMES).map(catId => {
+        const count = collections.filter(w => w.category.toLowerCase() === catId).length;
+        return { id: catId, name: CATEGORY_NAMES[catId], icon: CATEGORY_ICONS[catId] || '✨', count };
+    }).filter(s => s.count > 0);
+
+    const recentCaptures = profile?.recent_captures?.map(rc => ({
+        id: rc.id,
+        word_en: rc.word_en,
+        image: rc.photo_url,
+        capturedAt: new Date().toISOString() // Not key here, just for sort if needed
+    })) || [];
+
+    const mascotMessages = [
+        "Oa! Bạn đã sưu tầm được quá trời từ vựng luôn!",
+        "Hôm nay chúng mình cùng khám phá thêm thẻ mới nhé?",
+        "Bạn là thám hiểm nhí tài ba nhất mà tớ từng thấy!",
+        "Đừng quên luyện tập phát âm mỗi ngày để thẻ bài tiến hóa nha!"
+    ];
+    const mascotMsg = mascotMessages[Math.floor((xp / 50) % mascotMessages.length)];
 
     // --- PARENT DASHBOARD VIEW ---
     if (showParentDashboard) {
@@ -252,7 +305,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                         </button>
                     </header>
 
-                    <div className="flex-1 overflow-y-auto px-6 py-8">
+                    <div className="flex-1 overflow-y-auto px-6 pt-8 pb-32">
                         {isLoadingProfile && (
                             <ProfileSkeleton />
                         )}
@@ -269,181 +322,211 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                         )}
 
                         {/* Avatar & Name */}
-                        <div className="flex flex-col items-center mb-10 text-center">
-                            <div className="relative mb-4">
-                                <div className="w-32 h-32 rounded-full border-8 border-white shadow-level-3 overflow-hidden bg-white">
-                                    <img src={userAvatar || '/avatar-owl.png'} alt="Avatar" className="w-full h-full object-cover" />
-                                </div>
-                                <div className="absolute -bottom-2 -right-2 bg-skyBlue p-2 rounded-2xl border-4 border-white shadow-level-1">
-                                    <span className="text-white font-black text-sm">{displayLevel}</span>
-                                </div>
+                        <div className="flex flex-col items-center mb-10 text-center relative mt-16">
+                            {/* Avatar Speech Bubble */}
+                            <div className="absolute -top-16 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    className="bg-white/95 backdrop-blur-md px-6 py-4 rounded-[28px] shadow-level-3 border-2 border-skyBlue/30 max-w-[180px] relative"
+                                >
+                                    <p className="text-[11px] font-black text-deepNavy leading-tight text-center">
+                                        {mascotMsg}
+                                    </p>
+                                    {/* Bubble Tail pointing to Avatar */}
+                                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-r-2 border-b-2 border-skyBlue/30 rotate-45" />
+                                </motion.div>
                             </div>
-                            <h2 className="text-2xl font-black text-deepNavy mb-1 uppercase tracking-tight">{displayName || 'Explorer'}</h2>
-                            <div className="px-4 py-1.5 bg-sunshineYellow/20 rounded-full border border-sunshineYellow/30">
-                                <span className="text-sunshineYellow font-black text-[11px] uppercase tracking-widest">
+
+                            <div className="relative mb-4 group">
+                                <div className="relative w-36 h-36 flex items-center justify-center">
+                                    {/* Circular Progress SVG */}
+                                    <svg className="absolute inset-0 w-full h-full -rotate-90 transform" viewBox="0 0 144 144">
+                                        <circle
+                                            cx="72" cy="72" r="66"
+                                            fill="none" stroke="#f1f5f9" strokeWidth="8"
+                                        />
+                                        <motion.circle
+                                            cx="72" cy="72" r="66"
+                                            fill="none"
+                                            stroke="url(#levelGradient)"
+                                            strokeWidth="8"
+                                            strokeLinecap="round"
+                                            initial={{ strokeDasharray: circumference, strokeDashoffset: circumference }}
+                                            animate={{ strokeDashoffset: strokeDashoffset }}
+                                            transition={{ duration: 1.5, ease: "easeOut" }}
+                                        />
+                                        <defs>
+                                            <linearGradient id="levelGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" stopColor="#0EA5E9" />
+                                                <stop offset="100%" stopColor="#10B981" />
+                                            </linearGradient>
+                                        </defs>
+                                    </svg>
+
+                                    <motion.div
+                                        whileHover={{ scale: 1.05 }}
+                                        className="w-28 h-28 rounded-[38px] overflow-hidden relative z-10 bg-white shadow-inner"
+                                    >
+                                        <img
+                                            src={userAvatar?.startsWith('http') || userAvatar?.startsWith('/') ? userAvatar : `/avatar-owl.png`}
+                                            alt="Avatar"
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = '/avatar-owl.png';
+                                            }}
+                                        />
+                                    </motion.div>
+                                </div>
+
+                                <motion.div
+                                    animate={{ y: [0, -4, 0] }}
+                                    transition={{ repeat: Infinity, duration: 2 }}
+                                    className="absolute -bottom-1 -right-1 bg-gradient-to-br from-skyBlue to-deepNavy p-2.5 rounded-2xl border-4 border-white shadow-level-2 z-20"
+                                >
+                                    <span className="text-white font-black text-sm">{displayLevel}</span>
+                                </motion.div>
+                            </div>
+                            <h2 className="text-2xl font-black text-deepNavy mb-1 uppercase tracking-tight">{displayName || 'Thám hiểm nhí'}</h2>
+                            <div className="px-5 py-2 bg-white rounded-full border border-slate-100 shadow-sm flex items-center gap-2">
+                                <span className="text-sunshineYellow text-sm">✨</span>
+                                <span className="text-slate-500 font-black text-[10px] uppercase tracking-widest leading-none translate-y-[1px]">
                                     {profile?.level_name || `${displayXP} Sao thông thái`}
                                 </span>
                             </div>
                         </div>
 
-                        {/* Stats Grid */}
+                        {/* Summary Stats Grid - Gamified Dashboard Style */}
                         <div className="grid grid-cols-3 gap-4 mb-10">
-                            <div className="bg-white p-4 rounded-[24px] shadow-level-1 text-center border-b-4 border-slate-100">
-                                <span className="block text-3xl mb-2">📖</span>
-                                <span className="block text-lg font-black text-deepNavy">{totalWords}</span>
-                            </div>
-                            <div className="bg-white p-4 rounded-[24px] shadow-level-1 text-center border-b-4 border-slate-100">
-                                <span className="block text-3xl mb-2">🔥</span>
-                                <span className="block text-lg font-black text-deepNavy">{displayStreak}</span>
-                            </div>
-                            <div className="bg-white p-4 rounded-[24px] shadow-level-1 text-center border-b-4 border-slate-100">
-                                <span className="block text-3xl mb-2">⭐</span>
-                                <span className="block text-lg font-black text-deepNavy">{rareCount}</span>
-                            </div>
+                            <motion.div
+                                whileTap={{ scale: 0.95 }}
+                                className="bg-white p-4 rounded-[28px] shadow-level-1 text-center border-b-4 border-slate-100 flex flex-col items-center"
+                            >
+                                <span className="block text-3xl mb-1">📖</span>
+                                <span className="block text-xs font-black text-slate-400 uppercase tracking-tighter mb-1">Bài học</span>
+                                <span className="block text-xl font-black text-deepNavy">{collections.length}</span>
+                            </motion.div>
+
+                            <motion.div
+                                animate={{
+                                    scale: [1, 1.05, 1],
+                                    filter: ["drop-shadow(0 0 2px rgba(239,68,68,0.1))", "drop-shadow(0 0 6px rgba(239,68,68,0.3))", "drop-shadow(0 0 2px rgba(239,68,68,0.1))"]
+                                }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                                whileTap={{ scale: 0.95 }}
+                                className="bg-white p-4 rounded-[28px] shadow-level-1 text-center border-b-4 border-orange-100 flex flex-col items-center"
+                            >
+                                <span className="block text-3xl mb-1">🔥</span>
+                                <span className="block text-xs font-black text-slate-400 uppercase tracking-tighter mb-1">Chuỗi</span>
+                                <span className="block text-xl font-black text-deepNavy">{streak}</span>
+                            </motion.div>
+
+                            <motion.div
+                                whileTap={{ scale: 0.95 }}
+                                className="bg-white p-4 rounded-[28px] shadow-level-1 text-center border-b-4 border-yellow-100 flex flex-col items-center"
+                            >
+                                <motion.span
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                                    className="block text-3xl mb-1"
+                                >
+                                    ⭐
+                                </motion.span>
+                                <span className="block text-xs font-black text-slate-400 uppercase tracking-tighter mb-1">Sao</span>
+                                <span className="block text-xl font-black text-deepNavy">{xp}</span>
+                            </motion.div>
                         </div>
 
-                        {/* Badge Showcase */}
-                        {badges.length > 0 && (
+                        {/* Recent Captures Row */}
+                        {recentCaptures.length > 0 && (
                             <section className="mb-10">
-                                <h3 className="text-lg font-black text-deepNavy mb-6 flex items-center gap-2">
-                                    <span className="text-xl">🎖️</span> Huy hiệu
-                                </h3>
-                                <div className="grid grid-cols-3 gap-6">
-                                    {badges.slice(0, 9).map((badge) => (
-                                        <div key={badge.id} className="flex flex-col items-center text-center">
-                                            <div
-                                                className={`w-20 h-20 rounded-3xl flex items-center justify-center text-4xl mb-2 shadow-level-2 transition-all duration-500 ${badge.earned
-                                                    ? 'bg-white border-2 border-sunshineYellow rotate-0'
-                                                    : 'bg-slate-100 border-2 border-dashed border-slate-200 grayscale opacity-40 -rotate-3'
-                                                    }`}
-                                                title={badge.description}
-                                            >
-                                                {badge.earned ? badge.icon : '🔒'}
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-sm font-black text-deepNavy uppercase tracking-wider flex items-center gap-2">
+                                        📸 Mới thu thập
+                                    </h3>
+                                </div>
+                                <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 no-scrollbar">
+                                    {recentCaptures.map(word => (
+                                        <motion.div
+                                            key={word.id}
+                                            whileTap={{ scale: 0.95 }}
+                                            className="min-w-[110px] aspect-[3/4] bg-slate-100 rounded-[24px] shadow-level-1 border-2 border-white overflow-hidden relative group"
+                                        >
+                                            {word.image ? (
+                                                <img
+                                                    src={word.image}
+                                                    alt={word.word_en}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = '/icon-box.png';
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-skyBlue/5 text-3xl">📸</div>
+                                            )}
+                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3 pt-6">
+                                                <p className="text-[10px] font-black text-white truncate uppercase tracking-wider">{word.word_en}</p>
                                             </div>
-                                            <span className={`text-[10px] font-black uppercase tracking-tight ${badge.earned ? 'text-deepNavy' : 'text-slate-300'}`}>
-                                                {badge.name}
-                                            </span>
-                                        </div>
+                                        </motion.div>
                                     ))}
                                 </div>
                             </section>
                         )}
 
-                        <h2 className="text-2xl font-black text-deepNavy mb-1 uppercase tracking-tight">{userName || 'Explorer'}</h2>
-                        <div className="w-full max-w-[200px] mt-2">
-                            <div className="flex justify-between text-[10px] font-black text-sky-400 mb-1.5 px-1 uppercase tracking-wider">
-                                <span>{xp % 100}/100 XP</span>
-                                <span>Cấp {level}</span>
-                            </div>
-                            <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden p-1 shadow-inner">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${xp % 100}%` }}
-                                    className="h-full bg-gradient-to-r from-sunshineYellow to-orange-400 rounded-full shadow-[0_0_10px_rgba(255,180,0,0.4)]"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Summary Stats Grid - Gamified Dashboard Style */}
-                    <div className="grid grid-cols-3 gap-4 mb-8">
-                        <motion.div
-                            whileTap={{ scale: 0.95 }}
-                            className="bg-white p-4 rounded-[28px] shadow-level-1 text-center border-b-4 border-slate-100 flex flex-col items-center"
-                        >
-                            <span className="block text-3xl mb-1">📖</span>
-                            <span className="block text-xs font-black text-slate-400 uppercase tracking-tighter mb-1">Bài học</span>
-                            <span className="block text-xl font-black text-deepNavy">{collections.length}</span>
-                        </motion.div>
-
-                        <motion.div
-                            animate={{
-                                scale: [1, 1.05, 1],
-                                filter: ["drop-shadow(0 0 2px rgba(239,68,68,0.1))", "drop-shadow(0 0 6px rgba(239,68,68,0.3))", "drop-shadow(0 0 2px rgba(239,68,68,0.1))"]
-                            }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            whileTap={{ scale: 0.95 }}
-                            className="bg-white p-4 rounded-[28px] shadow-level-1 text-center border-b-4 border-orange-100 flex flex-col items-center"
-                        >
-                            <span className="block text-3xl mb-1">🔥</span>
-                            <span className="block text-xs font-black text-slate-400 uppercase tracking-tighter mb-1">Chuỗi</span>
-                            <span className="block text-xl font-black text-deepNavy">{streak}</span>
-                        </motion.div>
-
-                        <motion.div
-                            whileTap={{ scale: 0.95 }}
-                            className="bg-white p-4 rounded-[28px] shadow-level-1 text-center border-b-4 border-yellow-100 flex flex-col items-center"
-                        >
-                            <motion.span
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                                className="block text-3xl mb-1"
-                            >
-                                ⭐
-                            </motion.span>
-                            <span className="block text-xs font-black text-slate-400 uppercase tracking-tighter mb-1">Sao</span>
-                            <span className="block text-xl font-black text-deepNavy">{xp}</span>
-                        </motion.div>
-                    </div>
-
-                    {/* Quick Mission Summary */}
-                    <section className="bg-white/60 backdrop-blur-sm rounded-[32px] p-6 border-b-4 border-slate-100 mb-10">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-black text-deepNavy uppercase tracking-wider flex items-center gap-2">
-                                🚀 Nhiệm vụ hôm nay
+                        {/* Language Garden - Category Progress */}
+                        <section className="bg-white/80 backdrop-blur-md rounded-[40px] p-8 border-2 border-white shadow-level-2 mb-10">
+                            <h3 className="text-base font-black text-deepNavy mb-6 flex items-center gap-3">
+                                <span className="text-xl">🌿</span> Khu vườn ngôn ngữ
                             </h3>
-                            <span className="text-[10px] font-black text-skyBlue underline">Xem tất cả</span>
-                        </div>
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-sm">🌅</div>
-                                <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 shadow-inner">
-                                    <div className="h-full w-2/3 bg-orange-400 rounded-full" />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-400">2/3</span>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Badge Showcase */}
-                    <section className="mb-10">
-                        <h3 className="text-lg font-black text-deepNavy mb-6 flex items-center gap-2">
-                            <span className="text-xl">🎖️</span> Huy hiệu
-                        </h3>
-                        <div className="grid grid-cols-3 gap-6">
-                            {badges.slice(0, 9).map((badge) => (
-                                <div key={badge.id} className="flex flex-col items-center text-center">
-                                    <div
-                                        className={`w-20 h-20 rounded-3xl flex items-center justify-center text-4xl mb-2 shadow-level-2 transition-all duration-500 ${badge.earned
-                                            ? 'bg-white border-2 border-sunshineYellow rotate-0'
-                                            : 'bg-slate-100 border-2 border-dashed border-slate-200 grayscale opacity-40 -rotate-3'
-                                            }`}
-                                        title={badge.description}
-                                    >
-                                        {badge.earned ? badge.icon : '🔒'}
+                            <div className="space-y-6">
+                                {categoryStats.length > 0 ? categoryStats.slice(0, 4).map(stat => (
+                                    <div key={stat.id} className="space-y-2">
+                                        <div className="flex justify-between items-end">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-lg">{stat.icon}</span>
+                                                <span className="text-xs font-black text-slate-600 uppercase tracking-tight">{stat.name}</span>
+                                            </div>
+                                            <span className="text-[10px] font-black text-skyBlue">{stat.count} thẻ</span>
+                                        </div>
+                                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${Math.min((stat.count / 15) * 100, 100)}%` }}
+                                                className="h-full bg-gradient-to-r from-skyBlue to-mintGreen rounded-full"
+                                            />
+                                        </div>
                                     </div>
-                                    <span className={`text-[10px] font-black uppercase tracking-tight ${badge.earned ? 'text-deepNavy' : 'text-slate-300'}`}>
-                                        {badge.name}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* Favorite Category */}
-                    <section className="bg-gradient-to-br from-sky-400 to-sky-600 rounded-[32px] p-6 text-white shadow-level-3 relative overflow-hidden">
-                        <div className="relative z-10">
-                            <h3 className="text-xs font-black uppercase tracking-[2px] opacity-70 mb-2">Chủ đề yêu thích</h3>
-                            <div className="flex items-center gap-4">
-                                <div className="text-5xl">{favoriteCategory ? categoryEmojis[favoriteCategory[0]] || '📚' : '🎯'}</div>
-                                <div>
-                                    <h4 className="text-xl font-black">{favoriteCategory ? favoriteCategory[0] : 'Chưa có'}</h4>
-                                    <p className="text-white/80 font-bold text-sm">{favoriteCategory ? `${favoriteCategory[1]} từ vựng` : 'Bắt đầu ngay!'}</p>
-                                </div>
+                                )) : (
+                                    <p className="text-center text-xs text-slate-400 font-bold py-4">Chụp ảnh để bắt đầu khu vườn nhé! 🌸</p>
+                                )}
                             </div>
-                        </div>
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-                    </section>
+                        </section>
+
+                        {/* Badge Showcase */}
+                        <section className="mb-10">
+                            <h3 className="text-lg font-black text-deepNavy mb-6 flex items-center gap-2">
+                                <span className="text-xl">🎖️</span> Huy hiệu
+                            </h3>
+                            <div className="grid grid-cols-3 gap-6">
+                                {badges.slice(0, 9).map((badge) => (
+                                    <div key={badge.id} className="flex flex-col items-center text-center">
+                                        <div
+                                            className={`w-20 h-20 rounded-3xl flex items-center justify-center text-4xl mb-2 shadow-level-2 transition-all duration-500 ${badge.earned
+                                                ? 'bg-white border-2 border-sunshineYellow rotate-0'
+                                                : 'bg-slate-100 border-2 border-dashed border-slate-200 grayscale opacity-40 -rotate-3'
+                                                }`}
+                                            title={badge.description}
+                                        >
+                                            {badge.earned ? badge.icon : '🔒'}
+                                        </div>
+                                        <span className={`text-[10px] font-black uppercase tracking-tight ${badge.earned ? 'text-deepNavy' : 'text-slate-300'}`}>
+                                            {badge.name}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    </div>
 
                     {/* Parent Gate Modal */}
                     <AnimatePresence>
