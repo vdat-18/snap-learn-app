@@ -159,11 +159,9 @@ async def get_tts(
             "vi": BamlLanguage.vi,
             "zh": BamlLanguage.zh,
         }
-        openai_client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
         audio_bytes = await synthesize_speech(
             text=text,
             language=lang_enum_map[language],
-            openai_client=openai_client,
             cache_dir=cache_root,
         )
 

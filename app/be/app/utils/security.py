@@ -16,14 +16,24 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Password hashing
 # ---------------------------------------------------------------------------
 
+def _pre_hash(password: str) -> str:
+    """SHA-256 pre-hash so bcrypt always receives ≤64 bytes.
+
+    bcrypt silently truncates (or now raises) at 72 bytes. Pre-hashing with
+    SHA-256 produces a fixed 64-char hex digest that is safe for any input
+    length while still being a one-way transformation of the original secret.
+    """
+    return hashlib.sha256(password.encode()).hexdigest()
+
+
 def hash_password(password: str) -> str:
-    """Hash a plain-text password using bcrypt."""
-    return pwd_context.hash(password)
+    """Hash a plain-text password using bcrypt (with SHA-256 pre-hash)."""
+    return pwd_context.hash(_pre_hash(password))
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its bcrypt hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify(_pre_hash(plain_password), hashed_password)
 
 
 # ---------------------------------------------------------------------------
