@@ -45,25 +45,39 @@ A camera-first app where every real-world object becomes a vocabulary card to ca
 
 ---
 
-## What Makes This Different: Shared Visual Context
+## What Makes This Different: Three Tangible Innovations
 
-Most AI interactions are passive. Chatbots sit and wait for you to type a prompt. The user initiates everything. The AI is reactive.
+### 1. Passive → Active: The Child Creates the Curriculum
 
-**SnapLearn inverts this.**
+Every other kids' learning app is content the child consumes — videos, flashcards, quizzes someone else designed. SnapLearn inverts this. The child goes out into the world and builds their own vocabulary collection by choosing what to photograph. The real world is the curriculum. No two children's collections are the same.
 
-When a child snaps a photo, they don't think they're "prompting an AI." They think they're capturing a Pokémon. But the camera snap IS the prompt — and because the AI now sees the same object the child sees, they share a **visual context**.
+This is fundamentally different from Duolingo (structured curriculum on a screen) or YouTube Kids (passive content chosen by algorithm). The child is the content creator.
 
-This shared context enables something powerful: **the AI feels proactive.** It doesn't wait for a question — it responds to what the child just discovered. "That's a *cat*! In English we say *cat*. Can you say it?"
+### 2. Gamified Learning: Pokémon Go Psychology for Education
 
-And this interaction model extends far beyond vocabulary:
+Pokémon Go proved that exploration + collection + rarity + competition = obsession. We channel that exact psychology into vocabulary building:
+- **Rarity tiers** (Common → Legendary) make every snap feel like opening a loot box
+- **Points + levels** create visible progression
+- **Leaderboards** drive social competition
+- **Collection completionism** ("47 more Common words to find!") drives daily engagement
 
-> Imagine the AI sees the same cat as you and asks: *"Is that your cat? What's its name?"*
->
-> Suddenly it's a conversation seemingly initiated by the AI — triggered by a shared moment in the real world.
+Kids don't feel like they're studying. They feel like they're playing.
 
-**This is our real innovation.** Not the tech stack (we're professional AI builders — the plumbing is straightforward). The innovation is a **new interaction paradigm**: the physical world as shared context between child and AI, with the camera as a disguised prompt mechanism. The AI becomes a companion, not a tool.
+### 3. Audio-First UX: Genuinely Accessible AI for Pre-Literate Children
 
-For the hackathon, we demonstrate this with vocabulary. But the platform can extend to storytelling, science exploration, cultural discovery — any domain where "look at this thing together" is the starting point.
+Our primary user is a 6-year-old who cannot read. This constraint drives every design decision:
+- **Every text is also spoken** via TTS
+- **Navigation uses icons only** — no text labels, no menus
+- **Error states use mascot voice** + retry icon
+- **Tutorials use illustrations**, not paragraphs
+
+This isn't a nice-to-have accessibility feature — it's the core interaction model. The app is usable with ears and taps alone. This makes it genuinely accessible to pre-literate children, children with reading difficulties, and visually impaired users.
+
+### The Deeper Innovation: Shared Visual Context
+
+Beyond these three, there's a deeper interaction paradigm at play. When a child snaps a photo, they don't think they're "prompting an AI." They think they're capturing a Pokémon. But the camera snap IS the prompt — and because the AI now sees the same object the child sees, they share a **visual context**.
+
+This shared context is what enables the AI to feel proactive rather than reactive. Today we use it for vocabulary. But it extends to conversational AI ("Is that your cat? What's its name?"), storytelling ("A cat once climbed the tallest tree in the park..."), and science exploration ("Cats can see in the dark because..."). The camera as a disguised prompt mechanism is the platform.
 
 ---
 
@@ -96,12 +110,13 @@ For the hackathon, we demonstrate this with vocabulary. But the platform can ext
 
 | Cut Feature | Why Cut | Future Value |
 |-------------|---------|--------------|
-| Chinese language | Halves the work, English demos the concept | HSK 1-2 vocabulary ready to add |
-| Missions system | Complex backend, not needed for core loop | Daily/weekly quests drive retention |
-| Parent dashboard | Different user, not demo-able in 3 min | Learning insights, time controls |
-| Card evolution (5-level mastery) | Simplified to pass/fail | Spaced repetition via "power-ups" |
-| Multiple leaderboards | One global view shows motivation | Class, friends, category views |
-| Conversational AI | Beyond hackathon scope | "Is that your cat?" — the vision |
+| Chinese language | Halves the work, English demos the concept | Backend already returns trilingual data (EN/VI/ZH) — weeks not months to enable |
+| Missions system | Complex backend, not needed for core loop | Daily/weekly quests drive retention ("Find 5 kitchen items!") |
+| Parent dashboard | Different user, not demo-able in 3 min | Learning insights, time controls, progress sharing |
+| Spaced repetition | Simplified to pass/fail for hackathon | Resurface weak words at increasing intervals (Leitner box) |
+| AI Storytelling | Beyond hackathon scope | Generate personalized stories from captured words ("The cat climbed the tree...") |
+| Classroom mode | B2B feature, different distribution | Teacher assigns missions, class leaderboards, 30 kids per teacher |
+| Conversational AI | Beyond hackathon scope | "Is that your cat? What's its name?" — 2-3 turn micro-conversations |
 
 ---
 
@@ -149,23 +164,25 @@ For the hackathon, we demonstrate this with vocabulary. But the platform can ext
 | **Styling** | Tailwind CSS | Rapid iteration, good Vietnamese typography |
 | **Backend** | FastAPI (Python) | AI orchestration, async support |
 | **AI Orchestration** | BAML (Boundary AI Markup Language) | Type-safe structured LLM outputs, automatic fallback chains |
-| **Vision AI** | GPT-4o → Gemini Flash → Claude Sonnet (fallback chain) | Object identification + translation, triple redundancy |
-| **TTS** | OpenAI TTS | Natural-sounding Vietnamese + English voices |
-| **ASR** | OpenAI Whisper | Pronunciation checking — our "ASR-as-judge" |
+| **Vision AI** | GPT → Gemini → Claude (fallback chain) | Object identification + translation, triple redundancy |
+| **TTS** | ElevenLabs | Natural-sounding Vietnamese + English voices |
+| **ASR** | OpenAI ASR | Pronunciation checking — our "ASR + LLM-as-judge" |
 | **Database** | Supabase (PostgreSQL) | Quick setup, built-in auth |
 | **Storage** | Supabase Storage | Photo storage (opt-in) |
 
 ### AI Pipeline
 
 ```
-Photo → BAML VisionFallback → {object_vi, object_en, category, rarity}
-         (GPT-4o → Gemini       ↓
-          Flash → Claude)   
-                           OpenAI TTS: "Đây là [Vietnamese]. In English: [English word]"
+Photo → BAML VisionFallback → {object_vi, object_en, object_zh, category, difficulty, ...}
+         (GPT → Gemini       ↓
+          → Claude)   
+                           ↓ Hybrid Semantic-Keyword Search (dedup check vs collection)
+                           ↓
+                           ElevenLabs TTS: "Đây là [Vietnamese]. In English: [English word]"
                                        ↓
-                              Child speaks → OpenAI Whisper transcribes
+                              Child speaks → OpenAI ASR → transcribed text
                                        ↓
-                              BAML PronunciationFeedback → Stars + points
+                              LLM-as-Judge → Stars + feedback_vi + points
 ```
 
 ### Vision API Response (JSON)
@@ -184,14 +201,36 @@ Photo → BAML VisionFallback → {object_vi, object_en, category, rarity}
 }
 ```
 
-### Pronunciation Check (Simplified for Hackathon)
+### Pronunciation Check (Two-Stage: ASR + LLM-as-Judge)
+
+Rather than a simple string match, we use a two-stage approach:
+
+1. **OpenAI ASR** transcribes the child's speech (fast, handles accents)
+2. **LLM-as-Judge** evaluates the transcription against the target word (handles partial matches, accent variations, childish mispronunciations)
 
 ```
-ASR output == target word → ⭐⭐⭐ PASS (full points)
-ASR output ~ target word  → ⭐⭐ CLOSE (partial points, "Almost! Try again!")
-ASR output != target     → ⭐ RETRY (TTS replays, max 3 attempts)
-After 3 attempts         → Encouraging move-on ("We'll practice later!")
+Child speaks → OpenAI ASR → transcribed text
+                                    ↓
+                          LLM-as-Judge evaluates:
+                          - Exact/contains match → ⭐⭐⭐ (3 stars, full points)
+                          - No match, attempt 1-2 → ⭐ (retry with encouragement)
+                          - No match, attempt 3   → Move on with praise for effort
 ```
+
+**Why this works:** The LLM judge handles "water bottle" vs "the water bottle" vs "wawa bottle" (childish pronunciation) gracefully — far better than rigid string matching. And OpenAI ASR's transcription speed keeps total latency under 2 seconds for the pronunciation step.
+
+**The principle:** If the speech model understands you, a native speaker would too. That's our pronunciation bar.
+
+### Duplicate Detection (Hybrid Semantic-Keyword Search)
+
+When a child captures a new object, we need to know: is this genuinely new, or a variation of something they already have? A child who photographs a "water bottle" and then a "thermos" has found semantically similar but linguistically distinct objects.
+
+We use **hybrid semantic-keyword search** — the same RAG technique used in enterprise search:
+- **Keyword matching** catches exact duplicates ("water bottle" → "water bottle")
+- **Semantic similarity** (OpenAI embeddings + ChromaDB) catches near-duplicates ("thermos" ≈ "water bottle")
+- **Reciprocal Rank Fusion** combines both signals for robust matching
+
+This ensures the collection stays meaningful — no flooding with duplicates, but genuinely new words are always rewarded.
 
 ### Latency & Fallback Plan
 
@@ -315,9 +354,9 @@ Target users are 6-10 year-olds who may not read fluently.
 - Flip to Leaderboard: "And they compete with friends."
 
 **Vision — The Platform (30 seconds)**
-> "This is just vocabulary. But the real innovation is the interaction model — the camera creates shared context between the child and AI. Imagine the AI sees the same cat your child does and asks: 'Is that your cat? What's its name?' Suddenly it's a conversation.
+> "This is just vocabulary. But the platform expands naturally — the child's captured words become sentences, then stories the AI generates and reads aloud. Teachers assign scavenger hunts: 'Find 5 things in the park.' And eventually, the AI sees the same cat your child sees and starts a conversation: 'Is that your cat? What's its name?'
 >
-> We see a future where every object is a learning moment. Screen-free hardware for younger kids. School deployments. But today, it starts with one thing: a parent who can hand their child a phone and feel proud instead of guilty."
+> We're targeting eight million Vietnamese kids learning English and a two-to-three-billion-dollar tutoring market. But today, it starts with one thing: a parent who can hand their child a phone and feel proud instead of guilty."
 
 ---
 
@@ -337,18 +376,22 @@ Target users are 6-10 year-olds who may not read fluently.
 
 ---
 
-## Pitch Deck Outline (5-8 Slides)
+## Pitch Deck Outline (10 Slides — Finals Only)
+
+See `pitch_deck_plan.md` for the full slide-by-slide plan with speaker notes and timing.
 
 | Slide | Title | Content | Visual |
 |-------|-------|---------|--------|
-| 1 | **The Guilt** | "My 2.5yo grabs my phone. Every parent knows this." | Photo: child with phone (or illustration) |
-| 2 | **The Problem** | Passive brainrot → Vietnam's 8M kids → $200/mo tutoring → 58th in English | Before: kid scrolling TikTok |
-| 3 | **The Flip** | "What if that phone became an exploration tool?" | After: kid pointing camera at the world |
-| 4 | **The Solution** | Pokémon Go for vocabulary. Snap → Learn → Pronounce → Collect | Core loop diagram |
-| 5 | **Live Demo** | 3 captures, rarity progression, pronunciation flow | Screen recording or live |
-| 6 | **The Innovation** | Shared visual context. Camera as disguised prompt. AI feels proactive. | "Is that your cat?" example |
-| 7 | **The Vision** | Hardware devices, school deployments, conversational AI, new languages | Roadmap visual |
-| 8 | **The Team** | 4 enterprise AI builders solving a consumer problem. Personal motivation. | Team photo |
+| 1 | **Title** | SnapLearn — Pokémon Go for Vocabulary | Logo |
+| 2 | **The Guilt** | "My 2.5yo grabs my phone. Every parent knows this." | Child with phone |
+| 3 | **The Problem** | Passive brainrot → Vietnam's 8M kids → $200/mo tutoring → 58th in English | Stats |
+| 4 | **The Flip** | "What if that phone became an exploration tool?" | Before/after |
+| 5 | **Demo** | Screen recording: 3 captures, rarity progression, pronunciation retry | Video |
+| 6 | **Under the Hood** | 3 AI models, BAML, ASR + LLM-as-Judge, hybrid RAG search | Architecture diagram |
+| 7 | **The Innovation** | Passive→Active · Gamified Learning · Audio-First UX | Three columns |
+| 8 | **vs Google Lens** | "Google Lens identifies. SnapLearn teaches." | Side-by-side |
+| 9 | **The Vision** | Sentences → Stories → Classroom mode → Conversational AI → 8M kids | Roadmap |
+| 10 | **The Team** | 4 AI engineers. 1 dad. 36 hours. | Team photo + tagline |
 
 ---
 
@@ -371,23 +414,48 @@ Target users are 6-10 year-olds who may not read fluently.
 
 ## Future Vision (Post-Hackathon)
 
-This hackathon validates the **core capture loop** and the **shared visual context** interaction model. The full vision includes:
+This hackathon validates the **core capture loop** and the three innovations (passive→active, gamification, audio-first UX). The full vision expands along four axes: content depth, activities, distribution, and interaction model.
 
-### Near-Term (3-6 months)
-- **Chinese language** (HSK 1-2 vocabulary)
-- **Missions** (daily/weekly quests for guided exploration)
-- **Parent dashboard** (learning insights, time controls, activity feed)
-- **Conversational AI** ("Is that your cat?") — extending shared context beyond vocab
+### Near-Term (3-6 months) — Low Hanging Fruit
 
-### Medium-Term (6-18 months)
-- **School deployments** (teacher view, class leaderboards, custom missions)
-- **Spaced repetition** (card evolution, mastery levels)
-- **Content expansion** (science, culture, storytelling through the camera)
+| Feature | Description | Why It's Easy |
+|---------|-------------|---------------|
+| **Chinese language** | Enable Mandarin alongside English | Backend already returns trilingual data (EN/VI/ZH with pinyin) — flip a switch |
+| **Spaced repetition** | Resurface weak words at increasing intervals | `practiceCount` already tracked per card; add Leitner box scheduling |
+| **Category badges** | "Animals Master" — capture 10 animals | 16 categories already defined; pure frontend + simple DB query |
+| **Sentence building** | "The ___ is sleeping" → fill in by speaking | `example_sentence_en/vi/zh` already returned by Vision API — surface it |
+| **Parent sharing** | Generate shareable card images for Zalo/Facebook | Canvas-rendered export; growth hack disguised as feature |
+| **Themed missions** | "Kitchen Safari," "Park Explorer," "Color Hunt" | Mission system already built; add curated mission templates |
 
-### Long-Term (18+ months)
-- **Hardware devices** (SnapBear plush toy for screen-free learning, SnapScope explorer tool)
-- **Vietnamese market launch** (8M kids, $2-3B tutoring spend, Tết gift positioning)
-- **Regional expansion** (Thailand, Indonesia — same parent psychology, same phone guilt)
+### Medium-Term (6-18 months) — Platform Expansion
+
+| Feature | Description | Strategic Value |
+|---------|-------------|-----------------|
+| **AI Storytelling** | Generate personalized micro-stories from captured words ("One sunny day, a cat climbed a tree and watched a bicycle go by...") | BAML prompt function, TTS reads aloud — turns collection into narrative |
+| **Classroom mode** | Teacher creates class → assigns missions → sees per-student progress, class leaderboard | B2B distribution: 1 teacher = 30 kids. Revenue via school licenses |
+| **Scavenger hunts** | Location-aware challenges: "Museum Hunt," "Market Adventure" with bonus XP | Venue partnerships (zoos, museums, botanical gardens) |
+| **Pronunciation journey** | Phonics drills, tongue twisters, per-word improvement tracking over time | Extends ASR + LLM-as-Judge into a genuine speech practice tool |
+| **Parent dashboard** | Learning insights, time controls, activity feed, progress reports | Already partially built (`parent.py`); high parent willingness-to-pay |
+
+### Long-Term (18+ months) — Moonshots
+
+| Feature | Description | Why It's Exciting |
+|---------|-------------|-------------------|
+| **Voice-first companion** | After capturing a cat, AI asks: "Is that your cat? What's its name?" — 2-3 turn micro-conversations | Transforms vocabulary tool into AI companion; shared visual context as platform |
+| **World Pokédex** | Collaborative encyclopedia built by kids — every capture contributes to global entries | User-generated content at scale; "You were the 47th person to discover 'armadillo!'" |
+| **Cultural discovery** | Capture cultural objects (áo dài, nón lá) → AI tells cultural stories in Vietnamese | Powerful for diaspora kids reconnecting with heritage |
+| **Card trading** | Gift duplicate cards to friends; special "Trade" cards only obtainable via exchange | Social virality without social media risk; Pokémon trading psychology |
+| **Hardware devices** | Camera device for children too young for phones (screen-free, squeeze-to-capture) | Long-term play; targeting Vietnam's 8M kids, $2-3B tutoring market |
+| **Regional expansion** | Thailand, Indonesia, Philippines — same parent psychology, same phone guilt | Same tech stack, new language models, massive TAM |
+
+### The Expansion Logic
+
+```
+Content Depth:     Vocabulary → Sentences → Stories → Science → Culture
+Activities:        Capture → Practice → Missions → Quizzes → Conversations
+Distribution:      Parent (B2C) → Teacher (B2B) → School (B2B2C) → Venue partnerships
+Interaction Model: Camera snap → Voice companion → AR overlay → Hardware device
+```
 
 See `product_vision.md` for the complete vision document with market research, unit economics, and hardware specifications.
 
@@ -401,24 +469,27 @@ See `product_vision.md` for the complete vision document with market research, u
 |----------|--------|--------|
 | Frontend | Next.js 14 PWA | Browser-native camera/mic APIs, Framer Motion for card animations, installable without app store |
 | AI orchestration | BAML | Type-safe structured LLM outputs, automatic fallback chains, no glue code |
-| Vision API | GPT-4o (primary) | Best object ID accuracy; Gemini Flash + Claude Sonnet as automatic fallbacks |
-| ASR-as-judge | OpenAI Whisper | If the speech model understands the child, a native speaker would too — that's our bar |
-| TTS | OpenAI TTS | Natural-sounding voices for Vietnamese + English |
+| Vision API | GPT (primary) | Best object ID accuracy; Gemini + Claude as automatic fallbacks |
+| Pronunciation scoring | ASR + LLM-as-Judge | OpenAI ASR for fast transcription, LLM for nuanced matching — handles accents, partial matches, childish speech |
+| Duplicate detection | Hybrid semantic-keyword search | RAG-style approach (OpenAI embeddings + ChromaDB + RRF) catches both exact and semantic duplicates |
+| TTS | ElevenLabs | Natural-sounding voices for Vietnamese + English |
 | Database | Supabase | Quick setup, built-in auth, PostgreSQL, realtime for leaderboard |
-| English-only | English | Halves scope while fully demonstrating the concept |
+| English-only (hackathon) | English | Halves scope while fully demonstrating the concept; backend already returns trilingual data |
 | Hard-coded fallbacks | 5 demo objects cached | Demo must work flawlessly regardless of WiFi |
 
 ---
 
 ## Judging Criteria Alignment
 
-| Criterion | Our Angle | Evidence |
-|-----------|-----------|----------|
-| **Technical Execution** | Multi-API orchestration (Vision + TTS + ASR) with graceful fallbacks. Real-time pipeline, not a mockup. | Live demo with real AI responses |
-| **Innovation** | Shared visual context as a new AI interaction paradigm. Camera as disguised prompt. AI feels proactive, not reactive. | "Is that your cat?" vision. No competitor does this. |
-| **Design/UX** | Audio-first, icon-driven for pre-literate children. Card reveal animations. Encouraging retry flow. | Demo shows a 6-year-old could use this |
-| **Impact/Relevance** | 8M Vietnamese kids. $2-3B tutoring market. Transforms passive screen time into active learning. Personal story. | Father building for his daughter |
+| Criterion | Weight | Our Angle | Evidence |
+|-----------|--------|-----------|----------|
+| **Technical Implementation & Complexity** | **25 pts** | Multi-model AI failover (GPT/Gemini/Claude) via BAML with type-safe outputs. ASR + LLM-as-judge for pronunciation scoring. Hybrid semantic-keyword search (RAG) for collection dedup. Real-time pipeline <5s. | Live demo with real AI, architecture diagram, GitHub repo |
+| **Innovation** | **20 pts** | Passive→Active (child creates curriculum). Gamified learning (Pokémon Go psychology). Audio-first UX for pre-literate children. Camera as disguised AI prompt. | Demo shows a 6yo could use this. No competitor does this. |
+| **Functionality & Reliability** | **20 pts** | Core loop works end-to-end. Graceful retry on pronunciation failure. 3-model fallback chain. Hard-coded demo object cache. | Live demo, fallback resilience |
+| **Design/UX** | **15 pts** | Audio-first, icon-driven for pre-literate children. Card reveal animations with rarity glow. Encouraging retry flow. | Demo UX speaks for itself |
+| **Presentation** | **10 pts** | Personal hook (dad building for daughter). Clear structure. Confident delivery. | Practice × 3 minimum |
+| **Impact/Relevance** | **10 pts** | 8M Vietnamese kids. $2-3B tutoring market. Transforms passive screen time into active learning. Personal story. | Father building for his daughter |
 
 ---
 
-*Last updated: March 21, 2026*
+*Last updated: March 22, 2026*

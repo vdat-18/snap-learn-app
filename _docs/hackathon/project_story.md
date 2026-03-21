@@ -18,9 +18,11 @@ The entire experience is audio-first and icon-driven. A child who cannot read ca
 
 - **Frontend:** Next.js 14 PWA with Tailwind CSS and Framer Motion for card reveal animations and rarity glow effects. Camera access via browser MediaDevices API. Push-to-talk audio recording via MediaRecorder API.
 - **Backend:** FastAPI (Python) for AI orchestration with async processing across multiple AI services.
-- **AI Pipeline:** We use BAML (Boundary AI Markup Language) to define structured LLM functions with type-safe outputs and automatic fallback chains. Our vision pipeline falls through GPT-4o → Gemini Flash → Claude Sonnet, ensuring reliability.
-- **Speech:** OpenAI Whisper for speech-to-text (our "ASR-as-pronunciation-judge" — if the speech model understands the child, a native speaker would too). OpenAI TTS for pronunciation playback.
+- **AI Pipeline:** We use BAML (Boundary AI Markup Language) to define structured LLM functions with type-safe outputs and automatic fallback chains. Our vision pipeline falls through GPT → Gemini → Claude, ensuring reliability.
+- **Pronunciation Scoring (ASR + LLM-as-Judge):** A two-stage approach. First, OpenAI ASR transcribes the child's speech. Then an LLM-as-judge evaluates the transcription against the target word — handling accent variations, partial matches, and childish mispronunciations far better than rigid string matching. Low latency because ASR is fast and the judge call is lightweight. Our principle: if the speech model understands you, a native speaker would too.
+- **Duplicate Detection (Hybrid Semantic-Keyword Search):** When a child captures a new object, we check against their existing collection using the same RAG technique found in enterprise search — keyword matching for exact duplicates plus semantic similarity (OpenAI embeddings + ChromaDB) for near-duplicates like "thermos" ≈ "water bottle." Reciprocal Rank Fusion combines both signals.
 - **Rarity Engine:** A separate BAML function classifies each object's rarity based on linguistic difficulty and capture frequency, making every snap feel like opening a loot box.
+- **TTS:** ElevenLabs for natural-sounding Vietnamese + English pronunciation playback.
 - **Database:** Supabase (PostgreSQL) for user profiles, vocabulary collections, and leaderboard rankings.
 
 ## Challenges we ran into
@@ -56,14 +58,16 @@ The entire experience is audio-first and icon-driven. A child who cannot read ca
 
 ## What's next for SnapLearn
 
-The vocabulary app is just the beginning. The real innovation is the interaction model: the camera creates **shared visual context** between the child and the AI. The snap is a disguised prompt — the child doesn't feel like they're talking to a chatbot. The AI feels like a companion responding to a shared moment in the real world.
+The vocabulary camera is just the starting point. The platform expands naturally along four axes:
 
-Imagine the AI sees the same cat your child does and asks: *"Is that your cat? What's its name?"* Suddenly it's a conversation — seemingly initiated by the AI, triggered by a real-world discovery. That's where this goes.
+**Content depth:** The child's captured words become sentences ("The ___ is sleeping"), then personalized stories the AI generates and reads aloud ("One sunny day, a cat climbed a tree and watched a bicycle go by..."). Every word they capture enriches their story world.
 
-**Near-term:** Chinese language support (HSK 1–2 vocabulary), daily missions and guided exploration quests, parent dashboard with learning insights and screen time controls.
+**Activities:** Beyond capture and pronunciation, we add spaced repetition (resurface weak words at increasing intervals), category completion badges ("Animals Master!"), and themed scavenger hunts ("Find 5 things in the kitchen").
 
-**Medium-term:** School deployments with teacher dashboards and class leaderboards, conversational AI that goes beyond vocabulary into storytelling and science exploration.
+**Distribution:** Today it's parent-to-child (B2C). Next, classroom mode — a teacher creates a class, assigns missions, sees per-student progress on a dashboard. One teacher equals thirty kids. This is the B2B play that scales.
 
-**Long-term:** Dedicated hardware devices — a SnapBear plush toy for completely screen-free learning (camera in the eye, speaker in the belly, squeeze-to-capture), targeting Vietnam's 8 million kids aged 6–10 and the $2–3 billion annual tutoring market.
+**Interaction model:** The camera creates **shared visual context** between child and AI. Today the AI names what the child sees. Tomorrow it starts a conversation: the AI sees the same cat your child does and asks *"Is that your cat? What's its name?"* That's a conversational AI interaction triggered by a physical moment, not a text prompt. The AI becomes a companion, not a tool.
+
+**Chinese language** is weeks away — the backend already returns trilingual data (English, Vietnamese, Mandarin with pinyin). The same core loop works for any language, any subject, any age.
 
 We started this project because one dad wanted to hand his daughter a phone without guilt. We're continuing because every parent deserves that feeling.
