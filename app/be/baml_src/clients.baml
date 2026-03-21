@@ -29,7 +29,7 @@ client<llm> GPT4oMini {
 
 // ── OpenRouter Fallback: Gemini Flash 2.5 ─────────────────────
 client<llm> GeminiFlash {
-  provider openai
+  provider "openai-generic"
   options {
     model "google/gemini-flash-2.5"
     api_key env.OPENROUTER_API_KEY
@@ -41,7 +41,7 @@ client<llm> GeminiFlash {
 
 // ── OpenRouter Fallback: Claude Sonnet ────────────────────────
 client<llm> ClaudeSonnet {
-  provider openai
+  provider "openai-generic"
   options {
     model "anthropic/claude-sonnet-4"
     api_key env.OPENROUTER_API_KEY

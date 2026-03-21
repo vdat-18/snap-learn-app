@@ -6,6 +6,11 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
+from dotenv import load_dotenv
+
+# Load .env into os.environ BEFORE any module reads env vars (e.g. BAML clients).
+load_dotenv()
+
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
