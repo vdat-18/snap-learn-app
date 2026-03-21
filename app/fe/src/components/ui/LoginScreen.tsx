@@ -34,7 +34,6 @@ const LoginScreen: React.FC = () => {
     // Child creation fields
     const [childName, setChildName] = useState('');
     const [selectedAvatar, setSelectedAvatar] = useState(avatars[0]);
-    const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'zh'>('en');
     const [nameError, setNameError] = useState(false);
 
     const { playPop } = useSoundEffects();
@@ -111,7 +110,7 @@ const LoginScreen: React.FC = () => {
             const child = await authApi.createChild(
                 childName.trim(),
                 selectedAvatar.id,
-                selectedLanguage
+                'en' // Defaulting to en for child creation since they choose language in LanguageSelectScreen later. Alternatively we can rely on what language they select later.
             );
             setChild(child.id, child);
             mascotSpeak(`Xin chào ${childName}! Chúng mình cùng bắt đầu khám phá nào!`);
@@ -175,28 +174,6 @@ const LoginScreen: React.FC = () => {
                                 {a.emoji}
                             </motion.button>
                         ))}
-                    </motion.div>
-
-                    {/* Language selection */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex gap-3 mb-6 w-full">
-                        <button
-                            onClick={() => { setSelectedLanguage('en'); playPop(); }}
-                            className={`flex-1 h-14 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all ${selectedLanguage === 'en'
-                                ? 'bg-white text-deepNavy shadow-[0_4px_0_rgba(0,0,0,0.1)]'
-                                : 'bg-white/30 text-white/80'
-                                }`}
-                        >
-                            <Globe className="w-4 h-4" /> 🇺🇸 English
-                        </button>
-                        <button
-                            onClick={() => { setSelectedLanguage('zh'); playPop(); }}
-                            className={`flex-1 h-14 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all ${selectedLanguage === 'zh'
-                                ? 'bg-white text-deepNavy shadow-[0_4px_0_rgba(0,0,0,0.1)]'
-                                : 'bg-white/30 text-white/80'
-                                }`}
-                        >
-                            <Globe className="w-4 h-4" /> 🇨🇳 中文
-                        </button>
                     </motion.div>
 
                     {/* Child name input */}

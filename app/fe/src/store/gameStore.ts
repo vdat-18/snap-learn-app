@@ -127,6 +127,8 @@ interface GameState {
     setSecondaryLanguage: (lang: 'en' | 'zh' | null) => void;
 
     // Local-only UI state
+    hasSelectedLanguage: boolean;
+    setLanguageSelected: (selected: boolean) => void;
     hasSeenOnboarding: boolean;
     setOnboardingSeen: () => void;
     clearLevelUpMessage: () => void;
@@ -173,6 +175,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     childProfile: null,
 
     // Local UI state
+    hasSelectedLanguage: false,
     hasSeenOnboarding: false,
     dailyLimitMinutes: 30,
     todayUsageSeconds: 0,
@@ -304,6 +307,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
 
     // --- Local UI Actions ---
 
+    setLanguageSelected: (selected: boolean) => set({ hasSelectedLanguage: selected }),
     setOnboardingSeen: () => set({ hasSeenOnboarding: true }),
     clearLevelUpMessage: () => set({ levelUpMessage: null }),
 
@@ -394,6 +398,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
             level: 1,
             lastCapturedAt: null,
             capturedCount: 0,
+            hasSelectedLanguage: false,
             hasSeenOnboarding: false,
             collections: [],
             quests: [],

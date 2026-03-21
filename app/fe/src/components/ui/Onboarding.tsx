@@ -52,16 +52,9 @@ const slides = [
 ];
 
 const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
-    const { setTargetLanguage, setSecondaryLanguage } = useGameStore();
     const [currentSlide, setCurrentSlide] = useState(0);
     const [dragX, setDragX] = useState(0);
     const { playPop } = useSoundEffects();
-
-    // Set default language to English on mount
-    useEffect(() => {
-        setTargetLanguage('en');
-        setSecondaryLanguage(null);
-    }, [setTargetLanguage, setSecondaryLanguage]);
 
     // Auto-play TTS on slide change
     useEffect(() => {

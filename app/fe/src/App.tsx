@@ -5,6 +5,7 @@ import CollectionBook from './components/ui/CollectionBook';
 import QuestScreen from './components/ui/QuestScreen';
 import ProfileScreen from './components/ui/ProfileScreen';
 import LeaderboardScreen from './components/ui/LeaderboardScreen';
+import LanguageSelectScreen from './components/ui/LanguageSelectScreen';
 import LoginScreen from './components/ui/LoginScreen';
 import LevelUpCelebration from './components/ui/LevelUpCelebration';
 import ErrorOverlay from './components/ui/ErrorOverlay';
@@ -17,6 +18,7 @@ import { captureApi } from './services/captureApi';
 import { fetchManifest, preloadCriticalAudio } from './services/mascotAudioApi';
 import { Scan, WifiOff, RefreshCw, Image } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatedNumber } from './components/ui/AnimatedNumber';
 
 const App: React.FC = () => {
   // UI States
@@ -32,14 +34,7 @@ const App: React.FC = () => {
     category: string;
     vocabId: string;
     tts_urls: { en: string; vi: string; zh: string };
-    description_en: string | null;
-    description_vi: string | null;
-    description_zh: string | null;
-    description_tts_urls: { en: string | null; vi: string | null; zh: string | null } | null;
-    fun_fact_vi: string | null;
-    example_sentence_en: string | null;
-    example_sentence_vi: string | null;
-    example_sentence_zh: string | null;
+    xp_earned: number;
   } | null>(null);
 
   const [isAIProcessing, setIsAIProcessing] = useState(false);
@@ -67,8 +62,10 @@ const App: React.FC = () => {
     userName,
     userAvatar,
     level,
+    xp,
     accessToken,
     childId,
+    hasSelectedLanguage,
     hasSeenOnboarding,
     setOnboardingSeen,
     setFromCaptureResponse,
@@ -224,14 +221,7 @@ const App: React.FC = () => {
         category: categoryMap[vc.category] || vc.category,
         vocabId: vc.id,
         tts_urls: response.tts_urls || { en: '', vi: '', zh: '' },
-        description_en: vc.description_en || null,
-        description_vi: vc.description_vi || null,
-        description_zh: vc.description_zh || null,
-        description_tts_urls: response.description_tts_urls || null,
-        fun_fact_vi: vc.fun_fact_vi || null,
-        example_sentence_en: vc.example_sentence_en || null,
-        example_sentence_vi: vc.example_sentence_vi || null,
-        example_sentence_zh: vc.example_sentence_zh || null,
+        xp_earned: response.xp_earned || 0,
       };
 
       setCapturedResult(result);
@@ -348,6 +338,10 @@ const App: React.FC = () => {
     return <LoginScreen />;
   }
 
+  if (!hasSelectedLanguage) {
+    return <LanguageSelectScreen />;
+  }
+
   if (!hasSeenOnboarding) {
     return <Onboarding onFinish={() => setOnboardingSeen()} />;
   }
@@ -365,29 +359,38 @@ const App: React.FC = () => {
               <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-3xl shadow-level-2 border-t-2 border-slate-100">
                 {userAvatar}
               </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1 bg-skyBlue/90 backdrop-blur px-2 py-0.5 rounded-full w-fit mb-0.5 shadow-sm">
-                  <span className="text-[12px]">⭐</span>
-                  <span className="text-[10px] font-black text-white leading-none uppercase">Cấp {level}</span>
+              <div className="flex flex-col flex-1 pl-1">
+                <span className="text-xs font-black text-white drop-shadow-md leading-none mb-1.5 truncate">{userName}</span>
+                <div className="relative w-full min-w-[120px] max-w-[150px] bg-black/50 backdrop-blur rounded-full h-[18px] border border-white/20 overflow-hidden flex items-center justify-between px-2 shadow-inner">
+                  <motion.div
+                    className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-skyBlue to-mintGreen rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(100, Math.max(5, (xp % 1000) / 10))}%` }}
+                    transition={{ type: 'spring', bounce: 0.2, duration: 1 }}
+                  />
+                  <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-white/30 to-transparent skew-x-12 animate-pulse" />
+                  <span className="relative z-10 text-[9px] font-black text-white leading-none tracking-wide drop-shadow-md">CẤP {level}</span>
+                  <span className="relative z-10 text-[10px] font-black text-white leading-none flex gap-1 items-center drop-shadow-md">
+                    ⭐ <AnimatedNumber value={xp} />
+                  </span>
                 </div>
-                <span className="text-xs font-black text-white drop-shadow-md leading-none">{userName}</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2 pointer-events-auto">
             <motion.div
-              animate={{
-                scale: [1, 1.1, 1],
-                filter: ["drop-shadow(0 0 2px rgba(239,68,68,0.2))", "drop-shadow(0 0 8px rgba(239,68,68,0.6))", "drop-shadow(0 0 2px rgba(239,68,68,0.2))"]
-              }}
-              transition={{ duration: 1, repeat: Infinity }}
+              animate={streak > 0 ? {
+                scale: [1, 1.05, 1],
+                filter: ["drop-shadow(0 0 2px rgba(239,68,68,0.2))", "drop-shadow(0 0 8px rgba(239,68,68,0.8))", "drop-shadow(0 0 2px rgba(239,68,68,0.2))"]
+              } : {}}
+              transition={streak > 0 ? { duration: 1.5, repeat: Infinity } : {}}
               className="flex items-center gap-2 bg-black/40 backdrop-blur-lg pl-1.5 pr-3 py-1.5 rounded-full border border-white/20 shadow-xl"
             >
-              <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center shadow-[0_3px_0_rgb(154,52,18)] border-t border-white/30">
-                <span className="text-sm">🔥</span>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-lg border-t border-white/30 ${streak > 0 ? 'bg-orange-500 shadow-[0_3px_0_rgb(154,52,18)]' : 'bg-slate-500 shadow-[0_3px_0_rgb(71,85,105)]'}`}>
+                <span className={`text-sm ${streak === 0 ? 'grayscale opacity-50' : ''}`}>🔥</span>
               </div>
-              <span className="text-sm font-black text-white leading-none">{streak}</span>
+              <span className={`text-sm font-black leading-none ${streak > 0 ? 'text-white' : 'text-slate-300'}`}>{streak}</span>
             </motion.div>
 
             <button
@@ -519,14 +522,7 @@ const App: React.FC = () => {
           phonetic_en={capturedResult.phonetic_en}
           vocabId={capturedResult.vocabId}
           tts_urls={capturedResult.tts_urls}
-          description_en={capturedResult.description_en}
-          description_vi={capturedResult.description_vi}
-          description_zh={capturedResult.description_zh}
-          description_tts_urls={capturedResult.description_tts_urls}
-          fun_fact_vi={capturedResult.fun_fact_vi}
-          example_sentence_en={capturedResult.example_sentence_en}
-          example_sentence_vi={capturedResult.example_sentence_vi}
-          example_sentence_zh={capturedResult.example_sentence_zh}
+          xpEarned={capturedResult.xp_earned}
           onCardFlyToCollection={() => { setIsBookOpen(true); playPop(); }}
         />
       )}

@@ -209,8 +209,8 @@ const QuestCard: React.FC<{ quest: DisplayQuest; onClaim: () => void }> = ({ que
     return (
         <motion.div
             whileTap={{ scale: 0.98 }}
-            className={`rounded-[32px] p-6 shadow-level-2 border-b-8 transition-all relative overflow-hidden ${isCompleted
-                ? 'bg-mintGreen/10 border-mintGreen/30 scale-[1.02]'
+            className={`rounded-[32px] p-6 shadow-level-2 border-b-8 transition-all duration-300 relative overflow-hidden ${isCompleted
+                ? 'bg-gradient-to-b from-white to-mintGreen/10 border-mintGreen/40 ring-4 ring-mintGreen/20 shadow-[0_10px_30px_rgba(52,211,153,0.4)] scale-[1.02] z-10'
                 : isClaimed
                     ? 'bg-slate-50 border-slate-100 opacity-60'
                     : 'bg-white border-slate-100 active:border-b-4'
@@ -244,22 +244,57 @@ const QuestCard: React.FC<{ quest: DisplayQuest; onClaim: () => void }> = ({ que
                     </span>
                 </div>
 
-                <div className="relative pt-2">
-                    <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden p-1 shadow-inner">
+                <div className="relative pt-3 pb-1 mt-2">
+                    {/* The 3D Progress Bar */}
+                    <div className="h-5 w-full bg-slate-100/80 backdrop-blur-sm rounded-full overflow-hidden p-[3px] shadow-inner border border-slate-200/50">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${progressPercent}%` }}
-                            className={`h-full rounded-full relative ${isCompleted ? 'bg-gradient-to-r from-mintGreen to-emerald-500 shadow-[0_0_12px_rgba(52,211,153,0.6)]' : 'bg-gradient-to-r from-skyBlue to-blue-500'}`}
-                        />
+                            transition={{ type: 'spring', bounce: 0.4, duration: 1.5 }}
+                            className={`h-full rounded-full relative overflow-hidden ${isCompleted ? 'bg-gradient-to-r from-mintGreen via-emerald-400 to-emerald-500 shadow-[0_0_15px_rgba(52,211,153,0.8)]' : 'bg-gradient-to-r from-sky-400 via-skyBlue to-blue-500 shadow-sm'}`}
+                        >
+                            {/* Animated Shine/Glare inside the bar */}
+                            <motion.div
+                                animate={{ x: ['-100%', '300%'] }}
+                                transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+                                className="absolute top-0 bottom-0 w-16 bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-[-20deg]"
+                            />
+                            {/* Top highlight to make it look 3D/Glossy */}
+                            <div className="absolute top-0 left-0 right-0 h-1/2 bg-white/25 rounded-t-full" />
+                        </motion.div>
                     </div>
-                    <motion.span
-                        animate={{ left: `${Math.max(0, progressPercent - 5)}%` }}
-                        className="absolute -top-1.5 text-2xl transition-all duration-500 pointer-events-none"
+
+                    {/* The Runner / Trophy Emoji tracking the progress */}
+                    <motion.div
+                        animate={{ left: `calc(${progressPercent}% - 14px)` }}
+                        transition={{ type: 'spring', bounce: 0.4, duration: 1.5 }}
+                        className="absolute -top-2 transition-all duration-500 pointer-events-none drop-shadow-md z-10"
                     >
-                        <span className={isCompleted ? '' : 'inline-block scale-x-[-1]'}>
-                            {isCompleted ? '🚩' : '🏃'}
-                        </span>
-                    </motion.span>
+                        {isCompleted ? (
+                            <motion.div
+                                animate={{ y: [0, -6, 0], scale: [1, 1.2, 1] }}
+                                transition={{ repeat: Infinity, duration: 0.6 }}
+                                className="text-[28px]"
+                            >
+                                🏆
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                animate={{ y: [0, -4, 0], rotate: [0, -10, 10, 0] }}
+                                transition={{ repeat: Infinity, duration: 0.4 }}
+                                className="text-2xl inline-block scale-x-[-1]"
+                            >
+                                🏃
+                            </motion.div>
+                        )}
+                    </motion.div>
+
+                    {/* The flag at 100% mark (target) */}
+                    {!isCompleted && !isClaimed && (
+                        <div className="absolute right-0 -top-2 text-xl opacity-50 drop-shadow-sm grayscale">
+                            🚩
+                        </div>
+                    )}
                 </div>
 
                 {isCompleted && (
