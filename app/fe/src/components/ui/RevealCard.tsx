@@ -373,27 +373,14 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             playChime();
                         }
 
-                        // If all 3 attempts used and not 3-star
-                        if (newAttemptCount >= 3 && scoredStars < 3) {
-                            setShowAutoCloseMessage(true);
-                            setTimeout(() => {
-                                handleSaveCollection(scoredStars, newAttemptCount);
-                                onClose();
-                            }, 2000);
-                        }
-                        // If got 3 stars
-                        else if (scoredStars === 3) {
+                        // If got 3 stars (match)
+                        if (scoredStars === 3) {
                             handleSaveCollection(scoredStars, newAttemptCount);
                             setTimeout(() => {
-                                setIsFlyingToCollection(true);
-                                playChime();
-                                triggerSparkles(window.innerWidth / 2, window.innerHeight / 2);
-                                setTimeout(() => {
-                                    if (onCardFlyToCollection) onCardFlyToCollection();
-                                    onClose();
-                                }, 1200);
+                                setShowPostRevealOptions(true);
                             }, 1500);
                         }
+                        // Not match -> Let them try again (do not show post reveal options yet)
                     } catch (err) {
                         console.error('Pronunciation API error:', err);
                         setIsListening(false);
@@ -794,7 +781,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             ) : (
                                 <>
                                     <span className={`block text-center text-xs font-bold mb-4 uppercase tracking-wider ${stars === 3 ? 'text-mintGreen' : stars ? 'text-skyBlue' : isListening ? 'text-coralRed' : 'text-skyBlue'}`}>
-                                        {stars === 3 ? 'Tuyệt vời! Bạn nói đúng rồi.' : stars === 2 ? 'Gần đúng rồi! 👍' : stars === 1 ? 'Cùng tớ tập nói nhé! 🎯' : isListening ? 'Push to stop' : `Nói thật to để bắt bài nhé! (Lần ${attemptCount}/3)`}
+                                        {stars === 3 ? 'Tuyệt vời! Bạn nói đúng rồi.' : stars === 2 ? 'Gần đúng rồi! 👍' : stars === 1 ? 'Cùng tớ tập nói nhé! 🎯' : isListening ? 'Push to stop' : `Nói thật to để bắt bài nhé!`}
                                     </span>
 
                                     {/* Feedback from server */}
@@ -810,7 +797,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                                 startSpeechRecognition();
                                             }}
                                             disabled={isListening}
-                                            className={`w-20 h-20 rounded-full shadow-level-2 flex items-center justify-center text-3xl transition-all ${stars === 3 ? 'bg-mintGreen text-white' : stars === 2 ? 'bg-skyBlue text-white' : isListening ? 'bg-coralRed text-white animate-pulse' : attemptCount >= 3 ? 'bg-slate-300 text-white cursor-not-allowed' : 'bg-skyBlue text-white hover:bg-skyBlue/90'}`}
+                                            className={`w-20 h-20 rounded-full shadow-level-2 flex items-center justify-center text-3xl transition-all ${stars === 3 ? 'bg-mintGreen text-white' : stars === 2 ? 'bg-skyBlue text-white' : isListening ? 'bg-coralRed text-white animate-pulse' : 'bg-skyBlue text-white hover:bg-skyBlue/90'}`}
                                         >
                                             {stars === 3 ? '✅' : isListening ? '🎤' : '🎤'}
                                         </motion.button>
