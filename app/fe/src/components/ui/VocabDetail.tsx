@@ -17,6 +17,8 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
     const [isPracticing, setIsPracticing] = useState(false);
     const [justEvolved, setJustEvolved] = useState(false);
 
+    const [practiceStatus, setPracticeStatus] = useState<'idle' | 'listening' | 'success' | 'fail'>('idle');
+
     if (!word) return null;
 
     const wordEnLower = (word.word_en || '').toLowerCase();
@@ -25,30 +27,50 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
     );
 
     const handlePractice = () => {
+        if (isPracticing) return;
+
         setIsPracticing(true);
+        setPracticeStatus('listening');
         const wasEvolved = word.isEvolved;
 
         mascotSpeak(word.word_en, 'en-US');
 
+        // Simulate AI Processing (1.5s)
         setTimeout(() => {
-            try {
-                practiceWord(word.id, 1);
-                addXP(10);
+            // Randomly determine stars (1, 2, or 3)
+            // 80% chance for success (2-3 stars), 20% for 1 star
+            const rand = Math.random();
+            const scoredStars = rand > 0.4 ? 3 : rand > 0.2 ? 2 : 1;
+            const isCorrect = scoredStars >= 2;
 
-                if (!wasEvolved && word.practiceCount >= 2) {
-                    setJustEvolved(true);
-                    playChime();
-                    triggerHaptic(200);
-                } else {
-                    playPop();
-                    triggerHaptic(50);
+            if (isCorrect) {
+                setPracticeStatus('success');
+                try {
+                    practiceWord(word.id, scoredStars);
+                    addXP(20);
+
+                    if (!wasEvolved && word.practiceCount >= 2) {
+                        setJustEvolved(true);
+                        playChime();
+                        triggerHaptic(200);
+                    } else {
+                        playPop();
+                        triggerHaptic(50);
+                    }
+                } catch (err) {
+                    console.error('Practice error:', err);
                 }
-            } catch (err) {
-                console.error('Practice error:', err);
-            } finally {
-                setIsPracticing(false);
+            } else {
+                setPracticeStatus('fail');
+                triggerHaptic(100);
             }
-        }, 1200);
+
+            // Reset UI status after 1.5s reward/feedback display
+            setTimeout(() => {
+                setIsPracticing(false);
+                setPracticeStatus('idle');
+            }, 1500);
+        }, 1500);
     };
 
     const progressPercent = Math.min((word.practiceCount / 3) * 100, 100);
@@ -88,6 +110,30 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                     >
                         <img src={word.image} alt={word.word_en} className="w-full h-full object-cover" />
                         {word.isEvolved && <div className="absolute inset-0 bg-gradient-to-t from-sunshineYellow/20 to-transparent" />}
+
+                        {/* Status Overlay */}
+                        <AnimatePresence>
+                            {(practiceStatus === 'success' || practiceStatus === 'fail') && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.5 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 1.2 }}
+                                    className={`absolute inset-0 flex flex-col items-center justify-center p-6 text-center ${practiceStatus === 'success' ? 'bg-mintGreen/60' : 'bg-coralRed/60'}`}
+                                >
+                                    <div className="bg-white/90 backdrop-blur px-8 py-6 rounded-[32px] shadow-2xl">
+                                        <span className="text-5xl block mb-4">
+                                            {practiceStatus === 'success' ? '🎯' : '💪'}
+                                        </span>
+                                        <h4 className={`text-xl font-black ${practiceStatus === 'success' ? 'text-mintGreen' : 'text-coralRed'}`}>
+                                            {practiceStatus === 'success' ? 'TUYỆT VỜI!' : 'GẦN ĐÚNG RỒI!'}
+                                        </h4>
+                                        <p className="text-sm font-bold text-slate-600 mt-2">
+                                            {practiceStatus === 'success' ? '+20 XP Thưởng' : 'Hãy nói to hơn xíu nhé!'}
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </motion.div>
                 </div>
 
@@ -157,9 +203,13 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                 <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={handlePractice}
-                    className={`w-full flex items-center justify-center gap-3 py-5 rounded-[32px] font-black text-white shadow-level-2 transition-all ${isPracticing ? 'bg-coralRed animate-pulse' : 'bg-skyBlue active:shadow-none'}`}
+                    disabled={isPracticing}
+                    className={`w-full flex items-center justify-center gap-3 py-5 rounded-[32px] font-black text-white shadow-level-2 transition-all ${practiceStatus === 'listening' ? 'bg-coralRed animate-pulse' :
+                        practiceStatus === 'success' ? 'bg-mintGreen' :
+                            practiceStatus === 'fail' ? 'bg-coralRed' : 'bg-skyBlue active:shadow-none'
+                        }`}
                 >
-                    {isPracticing ? (
+                    {practiceStatus === 'listening' ? (
                         <>
                             <div className="flex gap-1.5 h-6 items-center translate-y-[-1px]">
                                 {[1, 2, 3].map(i => (
@@ -173,10 +223,14 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                             </div>
                             <span>ĐANG NGHE...</span>
                         </>
+                    ) : practiceStatus === 'success' ? (
+                        <><span>✅ ĐÚNG RỒI!</span></>
+                    ) : practiceStatus === 'fail' ? (
+                        <><span>❌ THỬ LẠI NHÉ!</span></>
                     ) : (
                         <>
                             <Mic className="w-6 h-6" />
-                            <span>LUYỆN TẬP LẠI</span>
+                            <span>{word.practiceCount >= 3 ? 'LUYỆN TẬP THÊM' : 'LUYỆN TẬP ĐỂ TIẾN HÓA'}</span>
                         </>
                     )}
                 </motion.button>

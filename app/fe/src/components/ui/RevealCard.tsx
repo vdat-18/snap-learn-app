@@ -176,17 +176,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
             const newAttemptCount = attemptCount + 1;
             setAttemptCount(newAttemptCount);
 
-            // If all 3 attempts used and not yet 3-star, show auto-close message
-            if (newAttemptCount >= 3 && scoredStars < 3) {
-                setShowAutoCloseMessage(true);
-                // Auto-close after 2 seconds
-                setTimeout(() => {
-                    handleSaveCollection(scoredStars, newAttemptCount);
-                    onClose();
-                }, 2000);
-            }
-            // If got 3 stars, save and allow card to stay for celebration
-            else if (scoredStars === 3) {
+            // If got 2 or 3 stars, save and allow card to stay for celebration
+            if (scoredStars >= 2) {
                 handleSaveCollection(scoredStars, newAttemptCount);
 
                 // Trigger card fly-to-collection animation after 1.5 seconds
@@ -204,6 +195,17 @@ const RevealCard: React.FC<RevealCardProps> = ({
                     }, 1200);
                 }, 1500);
             }
+            // If only 1 star and still have attempts, we stay and wait for retry
+            // If all 3 attempts used and still only 1 star, show auto-close message
+            else if (newAttemptCount >= 3) {
+                setShowAutoCloseMessage(true);
+                // Auto-close after 2 seconds
+                setTimeout(() => {
+                    handleSaveCollection(scoredStars, newAttemptCount);
+                    onClose();
+                }, 2000);
+            }
+            // Otherwise, we just stay here and the UI shows a "Retry" prompt (implicitly by not closing)
         }, 1500); // Simulate 1.5s recording/processing time
     };
 

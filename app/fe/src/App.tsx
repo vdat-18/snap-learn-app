@@ -66,22 +66,22 @@ const App: React.FC = () => {
     checkAndResetDailyUsage();
   }, [checkAndResetDailyUsage]);
 
-  // Screen Voice Guidance Narration with Child-Friendly "Buddy" Scripts
+  // Screen Voice Guidance Narration - Shortened
   useEffect(() => {
     if (!userName || !hasSeenOnboarding || showSplash) return;
 
     const timer = setTimeout(() => {
       if (isBookOpen) {
-        mascotSpeak("Kho báu thẻ bài của bạn ở đây nè! Nhiều từ thú vị quá!", 'vi-VN');
+        mascotSpeak("Kho báu của bạn ở đây nè!", 'vi-VN', true);
       } else if (isQuestOpen) {
-        mascotSpeak("Làm nhiệm vụ để nhận thêm quà xịn bạn nhé!", 'vi-VN');
+        mascotSpeak("Nhiệm vụ nhận quà xịn nha!", 'vi-VN', true);
       } else if (isRankOpen) {
-        mascotSpeak("Cùng xem bạn nào đang dẫn đầu cuộc đua nào!", 'vi-VN');
+        mascotSpeak("Ai đang đứng đầu bảng thế nhỉ?", 'vi-VN', true);
       } else if (isProfileOpen) {
-        mascotSpeak("Đây là góc bí mật của riêng bạn đó!", 'vi-VN');
+        mascotSpeak("Góc bí mật của riêng bạn đó!", 'vi-VN', true);
       } else {
         // Camera / Main Screen
-        mascotSpeak("Bạn hãy dùng máy ảnh tìm thêm những từ vựng mới nhé!", 'vi-VN');
+        mascotSpeak("Tìm từ mới bằng camera ngay nha!", 'vi-VN', true);
       }
     }, 800);
     return () => clearTimeout(timer);
@@ -350,20 +350,20 @@ const App: React.FC = () => {
               <defs>
                 <mask id="vignette-mask">
                   <rect width="100%" height="100%" fill="white" />
-                  <rect x="50%" y="50%" width="280" height="280" rx="44" fill="black" transform="translate(-140, -180)" />
+                  <rect x="50%" y="50%" width="320" height="320" rx="44" fill="black" transform="translate(-160, -200)" />
                 </mask>
               </defs>
               <rect width="100%" height="100%" fill="rgba(15, 23, 42, 0.6)" mask="url(#vignette-mask)" />
             </svg>
 
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-[280px] h-[280px] rounded-[44px] relative -translate-y-[40px]">
+              <div className="w-[320px] h-[320px] rounded-[44px] relative -translate-y-[40px]">
                 <div className="absolute inset-0 backdrop-brightness-110 backdrop-saturate-150 rounded-[44px] border-2 border-white/10" />
               </div>
             </div>
 
             {/* 2. KHUNG BAO SỐNG & FLOATING CORNERS */}
-            <div className="absolute w-[280px] h-[280px] -translate-y-[40px] pointer-events-none">
+            <div className="absolute w-[320px] h-[320px] -translate-y-[40px] pointer-events-none">
               <motion.div
                 animate={{ scale: [1, 1.04, 1] }}
                 transition={{ repeat: Infinity, duration: 2.5 }}

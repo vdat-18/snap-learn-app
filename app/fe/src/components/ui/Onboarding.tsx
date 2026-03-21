@@ -77,23 +77,16 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
     const [dragX, setDragX] = useState(0);
     const { playPop } = useSoundEffects();
 
-    // Auto-play TTS on slide change (Mascot Narration)
+    // Auto-play TTS on slide change
     useEffect(() => {
         const activeSlide = slides[currentSlide];
         const timer = setTimeout(() => {
-            if (activeSlide.id === 'welcome') {
-                mascotSpeak("Chào mừng bạn đến với vương quốc SnapLearn! Tụi mình cùng đi thám hiểm nhé!", 'vi-VN');
-            } else if (activeSlide.id === 'language') {
-                mascotSpeak("Bạn thích học tiếng gì nhất nào? Chọn một cái nhé!", 'vi-VN');
-            } else if (activeSlide.id === 'secondary-language') {
-                mascotSpeak("Học thêm một ngôn ngữ nữa sẽ siêu cấp hay ho luôn đó! Bạn thấy sao?", 'vi-VN');
-            } else if (activeSlide.id === 'camera') {
-                mascotSpeak("Dùng máy ảnh để săn tìm những đồ vật bí ẩn xung quanh bạn nhé!", 'vi-VN');
-            } else if (activeSlide.id === 'pronunciation') {
-                mascotSpeak("Tập đọc thật chuẩn để giúp những thẻ bài của bạn tiến hóa mạnh mẽ hơn nha!", 'vi-VN');
-            } else if (activeSlide.id === 'collection') {
-                mascotSpeak("Kho báu thẻ bài đang đợi bạn đó. Chúng mình bắt đầu thôi!", 'vi-VN');
-            }
+            if (activeSlide.id === 'welcome') mascotSpeak("Chào bạn! Khám phá thế giới cùng tớ nhé!", 'vi-VN', true);
+            else if (activeSlide.id === 'language') mascotSpeak("Chọn tiếng bạn muốn học!", 'vi-VN', true);
+            else if (activeSlide.id === 'secondary-language') mascotSpeak("Học song ngữ ngầu hơn đó!", 'vi-VN', true);
+            else if (activeSlide.id === 'camera') mascotSpeak("Dùng camera tìm đồ vật nha!", 'vi-VN', true);
+            else if (activeSlide.id === 'pronunciation') mascotSpeak("Phát âm chuẩn để thẻ tiến hóa!", 'vi-VN', true);
+            else if (activeSlide.id === 'collection') mascotSpeak("Kho báu đang chờ. Bắt đầu thôi!", 'vi-VN', true);
         }, 500);
         return () => clearTimeout(timer);
     }, [currentSlide]);
@@ -156,47 +149,52 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                 </button>
             </div>
 
-            {/* Content - Swipe-enabled */}
+            {/* Content - Swipe-enabled (fixed: use refs to prevent duplicate handlers) */}
             <div
-                className="flex-1 flex flex-col items-center justify-center px-6 cursor-grab active:cursor-grabbing"
+                className="flex-1 flex flex-col items-center justify-center px-6"
                 onMouseDown={(e) => {
+                    // Only handle if the target is not a button
+                    if ((e.target as HTMLElement).closest('button')) return;
                     const startX = e.clientX;
+                    let moved = false;
                     const handleMouseMove = (moveEvent: MouseEvent) => {
-                        setDragX(moveEvent.clientX - startX);
+                        const dx = moveEvent.clientX - startX;
+                        if (Math.abs(dx) > 10) moved = true;
+                        setDragX(dx);
                     };
                     const handleMouseUp = (upEvent: MouseEvent) => {
-                        const endX = upEvent.clientX;
-                        const distance = endX - startX;
-                        if (distance > 50) {
-                            previousSlide(); // Swiped right
-                        } else if (distance < -50) {
-                            nextSlide(); // Swiped left
-                        }
-                        setDragX(0);
                         document.removeEventListener('mousemove', handleMouseMove);
                         document.removeEventListener('mouseup', handleMouseUp);
+                        if (!moved) { setDragX(0); return; }
+                        const distance = upEvent.clientX - startX;
+                        if (distance > 60) previousSlide();
+                        else if (distance < -60) nextSlide();
+                        setDragX(0);
                     };
                     document.addEventListener('mousemove', handleMouseMove);
                     document.addEventListener('mouseup', handleMouseUp);
                 }}
                 onTouchStart={(e) => {
+                    // Only handle if the target is not a button
+                    if ((e.target as HTMLElement).closest('button')) return;
                     const startX = e.touches[0].clientX;
-                    const handleTouchMove = (moveEvent: React.TouchEvent) => {
-                        setDragX(moveEvent.touches[0].clientX - startX);
+                    let moved = false;
+                    const handleTouchMove = (moveEvent: TouchEvent) => {
+                        const dx = moveEvent.touches[0].clientX - startX;
+                        if (Math.abs(dx) > 10) moved = true;
+                        setDragX(dx);
                     };
-                    const handleTouchEnd = (upEvent: React.TouchEvent) => {
-                        const endX = upEvent.changedTouches[0].clientX;
-                        const distance = endX - startX;
-                        if (distance > 50) {
-                            previousSlide(); // Swiped right
-                        } else if (distance < -50) {
-                            nextSlide(); // Swiped left
-                        }
+                    const handleTouchEnd = (upEvent: TouchEvent) => {
+                        e.currentTarget.removeEventListener('touchmove', handleTouchMove);
+                        e.currentTarget.removeEventListener('touchend', handleTouchEnd);
+                        if (!moved) { setDragX(0); return; }
+                        const distance = upEvent.changedTouches[0].clientX - startX;
+                        if (distance > 60) previousSlide();
+                        else if (distance < -60) nextSlide();
                         setDragX(0);
                     };
-                    const element = e.currentTarget;
-                    element.addEventListener('touchmove', handleTouchMove as any);
-                    element.addEventListener('touchend', handleTouchEnd as any);
+                    e.currentTarget.addEventListener('touchmove', handleTouchMove);
+                    e.currentTarget.addEventListener('touchend', handleTouchEnd);
                 }}
             >
                 <AnimatePresence mode="wait">

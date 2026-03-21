@@ -13,29 +13,31 @@ export const triggerHaptic = (pattern: number | number[] = 50) => {
 };
 
 /**
- * Mascot motivational phrases in Vietnamese
+ * Mascot motivational phrases in Vietnamese (Short & Sweet)
  */
 const MOTIVATIONAL_PHRASES = [
-    "Oa! Bạn giỏi quá đi, tìm được từ mới rồi nè!",
-    "Tuyệt vời ông mặt trời! Tụi mình cùng tìm thêm nhé!",
-    "Bạn thật là tinh mắt đó, phần thưởng đây rồi!",
-    "Một từ vựng siêu thú vị luôn! Bạn nhớ tập đọc theo nhé!",
-    "Đi thám hiểm vui quá xá! Bạn đúng là nhà thám hiểm tài ba!",
-    "Cố lên nào bạn ơi, bộ sưu tập sắp đầy ắp rồi nè!"
+    "Oa! Quà xịn đây rồi nè!",
+    "Tuyệt quá! Tìm thêm từ nữa đi!",
+    "Bạn tinh mắt thật! Tiếp thôi!",
+    "Từ này hay quá! Tập nói nha!",
+    "Bạn nhạy bén thật! Sâu ơi!",
+    "Sắp đầy kho báu rồi! Cố lên!"
 ];
 
 /**
  * Speak text using Web Speech API (TTS)
  */
-export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = 'vi-VN') => {
+export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = 'vi-VN', forceInterrupt = false) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
     const startSpeak = () => {
         // Force engine to resume 
         window.speechSynthesis.resume();
 
-        // Reset previous speech
-        window.speechSynthesis.cancel();
+        // Optional interrupt (can cause skipping if triggered too fast)
+        if (forceInterrupt) {
+            window.speechSynthesis.cancel();
+        }
 
         const phrase = text || MOTIVATIONAL_PHRASES[Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)];
         console.log(`[TTS] Speaking: ${phrase} (${lang})`);
@@ -44,12 +46,7 @@ export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = '
         utterance.lang = lang;
         utterance.rate = 1.0;
 
-        // --- ADVANCED VOICE HUNTING STRATEGY ---
         const voices = window.speechSynthesis.getVoices();
-
-        // Priority 1: Google High-Quality AI voices (Best for VN)
-        // Priority 2: Natural/Native voices of the OS
-        // Priority 3: Fallback lang match
         let selectedVoice = voices.find(v =>
             v.lang.replace('_', '-').includes(lang) &&
             (v.name.includes('Google') || v.name.includes('Natural'))
@@ -58,23 +55,23 @@ export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = '
 
         if (selectedVoice) {
             utterance.voice = selectedVoice;
-            // console.log(`[Mascot] Using Voice: ${selectedVoice.name}`);
         }
 
-        // Slightly higher pitch for a friendly, energetic "buddy" voice (not too childish)
         utterance.pitch = 1.1;
 
-        window.speechSynthesis.speak(utterance);
+        // Small delay for stability before calling speak
+        setTimeout(() => {
+            window.speechSynthesis.speak(utterance);
+        }, 50);
 
         // Extra insurance for Desktop Chrome
         setTimeout(() => {
             if (window.speechSynthesis.paused) {
                 window.speechSynthesis.resume();
             }
-        }, 100);
+        }, 150);
     };
 
-    // Chrome workaround for voice loading
     if (window.speechSynthesis.getVoices().length === 0) {
         window.speechSynthesis.addEventListener('voiceschanged', () => {
             startSpeak();
