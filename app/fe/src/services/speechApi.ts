@@ -11,6 +11,7 @@ export interface PronunciationResponse {
     evolved: boolean;
     xp_earned: number;
     total_xp: number;
+    image_url: string | null;
 }
 
 // --- Helpers ---
