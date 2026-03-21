@@ -31,25 +31,25 @@ function ClassifyRarity(input: RarityInput) -> RarityResult {
     RARITY RULES:
 
     1. DIFFICULTY-BASED RARITY (use max difficulty across all languages):
-       - Difficulty 1 → common (10 XP)
-       - Difficulty 2 → uncommon (25 XP)
-       - Difficulty 3 → rare (50 XP)
-       - Difficulty 4 → epic (100 XP)
-       - Difficulty 5 → legendary (250 XP)
+       - Difficulty 1 → Common (10 XP)
+       - Difficulty 2 → Uncommon (25 XP)
+       - Difficulty 3 → Rare (50 XP)
+       - Difficulty 4 → Epic (100 XP)
+       - Difficulty 5 → Legendary (250 XP)
 
     2. FREQUENCY-BASED RARITY (if capture_pct is provided):
-       - >50% users → common
-       - 20–50% users → uncommon
-       - 5–20% users → rare
-       - 1–5% users → epic
-       - <1% users → legendary
+       - >50% users → Common
+       - 20–50% users → Uncommon
+       - 5–20% users → Rare
+       - 1–5% users → Epic
+       - <1% users → Legendary
 
     3. FINAL RARITY = whichever method gives the HIGHER rarity tier.
-       (e.g. difficulty says "rare" but frequency says "epic" → use "epic")
+       (e.g. difficulty says "Rare" but frequency says "Epic" → use "Epic")
 
     4. If capture_pct is null, use difficulty-based rarity only.
 
-    Set base_xp: common=10, uncommon=25, rare=50, epic=100, legendary=250
+    Set base_xp: Common=10, Uncommon=25, Rare=50, Epic=100, Legendary=250
 
     Provide brief reasoning (1 sentence) explaining the classification.
 

@@ -27,11 +27,11 @@ enum ObjectCategory {
 
 // ── Rarity Tiers ──────────────────────────────────────────────
 enum RarityTier {
-  Common       @alias("common")       @description("White ⚪ — very common, >50% of users captured, 10 XP")
-  Uncommon     @alias("uncommon")     @description("Green 🟢 — somewhat common, 20-50% of users, 25 XP")
-  Rare         @alias("rare")         @description("Blue 🔵 — infrequent, 5-20% of users, 50 XP")
-  Epic         @alias("epic")         @description("Purple 🟣 — hard to find, 1-5% of users, 100 XP")
-  Legendary    @alias("legendary")    @description("Gold 🟡 — extremely rare, <1% of users, 250 XP")
+  Common       @alias("common")       @description("Very common, captured by >50% of users, worth 10 XP")
+  Uncommon     @alias("uncommon")     @description("Somewhat common, captured by 20-50% of users, worth 25 XP")
+  Rare         @alias("rare")         @description("Infrequent, captured by 5-20% of users, worth 50 XP")
+  Epic         @alias("epic")         @description("Hard to find, captured by 1-5% of users, worth 100 XP")
+  Legendary    @alias("legendary")    @description("Extremely rare, captured by <1% of users, worth 250 XP")
 }
 
 // ── Supported Languages ───────────────────────────────────────
