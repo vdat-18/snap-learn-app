@@ -330,10 +330,10 @@ const App: React.FC = () => {
     <div className="relative w-full h-screen bg-black overflow-hidden select-none">
       <AnimatePresence>
         {isFlashing && (
-          <div className="fixed inset-0 z-[100] bg-white pointer-events-none animate-out fade-out duration-150" />
+          <div key="flash-overlay" className="fixed inset-0 z-[100] bg-white pointer-events-none animate-out fade-out duration-150" />
         )}
 
-        <div className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 pt-12 pb-4 pointer-events-none">
+        <div key="top-bar" className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 pt-12 pb-4 pointer-events-none">
           <div className="flex-1 flex flex-col pointer-events-auto">
             <div className="flex items-center gap-2.5">
               <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-3xl shadow-level-2 border-t-2 border-slate-100">
@@ -380,7 +380,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <main className="relative w-full h-full pt-20">
+        <main key="main-camera" className="relative w-full h-full pt-20">
           <div className="absolute inset-0 z-0">
             {cameraError ? (
               <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center p-8 text-center">
@@ -426,7 +426,7 @@ const App: React.FC = () => {
           </div>
         </main>
 
-        <div className="fixed bottom-12 left-0 w-full z-50 px-8 flex items-center justify-between pointer-events-none">
+        <div key="bottom-controls" className="fixed bottom-12 left-0 w-full z-50 px-8 flex items-center justify-between pointer-events-none">
           <div className="flex-1 flex justify-center items-center gap-12">
             <motion.button
               whileTap={{ scale: 0.8, rotate: 180 }}
@@ -461,7 +461,7 @@ const App: React.FC = () => {
         </div>
 
         {!showSplash && hasSeenOnboarding && userName && (isBookOpen || isQuestOpen || isRankOpen || isProfileOpen) && !isCategoryViewOpen && (
-          <nav className="fixed bottom-0 left-0 right-0 p-4 pb-8 flex justify-center z-[200] pointer-events-none">
+          <nav key="bottom-nav" className="fixed bottom-0 left-0 right-0 p-4 pb-8 flex justify-center z-[200] pointer-events-none">
             <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none h-40 bottom-0" />
             <div className="bg-white/90 backdrop-blur-2xl rounded-[32px] shadow-[0_15px_35px_rgba(0,0,0,0.15)] border-2 border-white/60 px-2 py-3 flex items-center justify-around pointer-events-auto w-[92%] max-w-md mx-auto relative ring-1 ring-black/5">
               <NavItem image="/icon-book.png" label="Kho báu" bounce={bookBounce} onClick={() => { setIsBookOpen(true); setIsQuestOpen(false); setIsRankOpen(false); setIsProfileOpen(false); setIsRevealOpen(false); playPop(); setBookBounce(false); }} />

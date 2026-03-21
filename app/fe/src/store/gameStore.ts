@@ -83,6 +83,11 @@ interface GameState {
     quests: Quest[];
     levelUpMessage: { newLevel: number; xpGained: number } | null;
 
+    // Mascot UI state
+    mascotMessage: { text: string; state: 'talking' | 'idle' } | null;
+    setMascotMessage: (msg: { text: string; state: 'talking' | 'idle' }) => void;
+    clearMascotMessage: () => void;
+
     // Auth state
     accessToken: string | null;
     refreshToken: string | null;
@@ -163,6 +168,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     todayUsageSeconds: 0,
     lastUsageDate: null,
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+    mascotMessage: null,
 
     // --- Auth Actions ---
 
@@ -321,6 +327,11 @@ export const useGameStore = create<GameState>()((set, get) => ({
     // --- Online Status ---
 
     setIsOnline: (online: boolean) => set({ isOnline: online }),
+
+    // --- Mascot UI ---
+
+    setMascotMessage: (msg) => set({ mascotMessage: msg }),
+    clearMascotMessage: () => set({ mascotMessage: null }),
 
     // --- Local Cache Helpers ---
     // These update the local collections cache after the server has confirmed.
