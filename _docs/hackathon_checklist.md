@@ -7,15 +7,15 @@
 
 ## Submission Requirements (Devpost)
 
-| # | Deliverable | Status | Owner | Notes |
-|---|-------------|--------|-------|-------|
-| 1 | Project title | ✅ Done | - | "SnapLearn — AI-Powered Vocabulary Camera" |
-| 2 | Tagline (one sentence) | ✅ Done | - | "Turn passive screen time into active vocabulary building — Pokémon Go for English words" |
-| 3 | The Story (why, how, challenges) | 🔴 Not started | | 300-500 words, lead with personal story |
-| 4 | Built With tags | 🔴 Not started | | Flutter, Python, Claude API, Google Cloud STT/TTS, Supabase |
-| 5 | Demo video (2-3 min) | 🔴 Not started | | YouTube/Vimeo link |
-| 6 | GitHub repo link | 🟡 Exists | | README updated |
-| 7 | Track selection | ✅ Done | - | Edtech (by Etest) |
+| # | Deliverable                      | Status         | Owner | Notes                                                                                       |
+| - | -------------------------------- | -------------- | ----- | ------------------------------------------------------------------------------------------- |
+| 1 | Project title                    | ✅ Done        | -     | "SnapLearn — AI-Powered Vocabulary Camera"                                                 |
+| 2 | Tagline (one sentence)           | ✅ Done        | -     | "Turn passive screen time into active vocabulary building — Pokémon Go for English words" |
+| 3 | The Story (why, how, challenges) | 🔴 Not started |       | 300-500 words, lead with personal story                                                     |
+| 4 | Built With tags                  | 🔴 Not started |       | Flutter, Python, Claude API, Google Cloud STT/TTS, Supabase                                 |
+| 5 | Demo video (2-3 min)             | 🔴 Not started |       | YouTube/Vimeo link                                                                          |
+| 6 | GitHub repo link                 | 🟡 Exists      |       | README updated                                                                              |
+| 7 | Track selection                  | ✅ Done        | -     | Edtech (by Etest)                                                                           |
 
 ---
 
@@ -23,15 +23,15 @@
 
 ### Structure (180 seconds total)
 
-| Section | Duration | Content |
-|---------|----------|---------|
+| Section                 | Duration  | Content                                                                                                                                           |
+| ----------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Personal hook** | 0:00-0:15 | "My daughter is 2.5. She grabs my phone and demands YouTube. I wanted to build something where handing over the phone feels like good parenting." |
-| **Problem** | 0:15-0:30 | "Every parent knows this guilt. Kids absorb brainrot. In Vietnam, parents spend $200/mo on tutoring but kids have no daily practice." |
-| **Solution** | 0:30-0:45 | "SnapLearn turns that phone into an exploration tool. Pokémon Go for vocabulary." |
-| **Demo** | 0:45-2:15 | 3 captures: water bottle (Common) → headphones with deliberate mispronunciation + retry (Uncommon) → nón lá (Epic). Show vault + leaderboard. |
-| **Innovation** | 2:15-2:30 | "The real innovation is shared visual context. The camera is a disguised prompt. The AI sees what the child sees." |
-| **Vision** | 2:30-2:50 | "Imagine the AI sees a cat and asks 'Is that your cat?' Hardware devices. School deployments." |
-| **Close** | 2:50-3:00 | "SnapLearn — so parents can hand over the phone and feel proud, not guilty." |
+| **Problem**       | 0:15-0:30 | "Every parent knows this guilt. Kids absorb brainrot. Meanwhile, in Vietnam, parents spend $200/mo on tutoring but kids have no daily practice."  |
+| **Solution**      | 0:30-0:45 | "SnapLearn turns that phone into a tool for exploration and learning language. Pokémon Go for vocabulary."                                       |
+| **Demo**          | 0:45-2:15 | 3 captures: water bottle (Common) → headphones with deliberate mispronunciation + retry (Uncommon) → nón lá (Epic). Show vault + leaderboard. |
+| **Innovation**    | 2:15-2:30 | "The real innovation is shared visual context. The camera is a disguised prompt. The AI sees what the child sees."                                |
+| **Vision**        | 2:30-2:50 | "Imagine the AI sees a cat and asks 'Is that your cat?' Hardware devices. School deployments."                                                    |
+| **Close**         | 2:50-3:00 | "SnapLearn — so parents can hand over the phone and feel proud, not guilty."                                                                     |
 
 ### Demo Scenes to Capture
 
@@ -48,13 +48,13 @@
 
 ### Objects to Bring (Pre-Tested)
 
-| # | Object | Expected Rarity | Pre-tested? | Fallback cached? |
-|---|--------|----------------|-------------|------------------|
-| 1 | Water bottle | ⚪ Common | ☐ | ☐ |
-| 2 | Headphones | 🟢 Uncommon | ☐ | ☐ |
-| 3 | Rubik's cube | 🔵 Rare | ☐ | ☐ |
-| 4 | Nón lá (conical hat) | 🟣 Epic | ☐ | ☐ |
-| 5 | Potted plant (spare) | 🟢 Uncommon | ☐ | ☐ |
+| # | Object                 | Expected Rarity | Pre-tested? | Fallback cached? |
+| - | ---------------------- | --------------- | ----------- | ---------------- |
+| 1 | Water bottle           | ⚪ Common       | ☐          | ☐               |
+| 2 | Headphones             | 🟢 Uncommon     | ☐          | ☐               |
+| 3 | Rubik's cube           | 🔵 Rare         | ☐          | ☐               |
+| 4 | Nón lá (conical hat) | 🟣 Epic         | ☐          | ☐               |
+| 5 | Potted plant (spare)   | 🟢 Uncommon     | ☐          | ☐               |
 
 ### Backup Plans
 
@@ -68,16 +68,16 @@
 
 ## Pitch Deck (8 Slides)
 
-| Slide | Title | Status | Content |
-|-------|-------|--------|---------|
-| 1 | The Guilt | 🔴 | "My 2.5yo grabs my phone..." + before image |
-| 2 | The Problem | 🔴 | Brainrot + Vietnam stats + tutoring gap |
-| 3 | The Flip | 🔴 | "What if that phone became an exploration tool?" + after image |
-| 4 | The Solution | 🔴 | Pokémon Go for vocabulary, core loop diagram |
-| 5 | Live Demo | 🔴 | Screen recording or screenshots |
-| 6 | The Innovation | 🔴 | Shared visual context, "Is that your cat?", AI as companion |
-| 7 | The Vision | 🔴 | Hardware, schools, languages, conversational AI |
-| 8 | The Team | 🔴 | 4 AI engineers, personal motivation |
+| Slide | Title          | Status | Content                                                        |
+| ----- | -------------- | ------ | -------------------------------------------------------------- |
+| 1     | The Guilt      | 🔴     | "My 2.5yo grabs my phone..." + before image                    |
+| 2     | The Problem    | 🔴     | Brainrot + Vietnam stats + tutoring gap                        |
+| 3     | The Flip       | 🔴     | "What if that phone became an exploration tool?" + after image |
+| 4     | The Solution   | 🔴     | Pokémon Go for vocabulary, core loop diagram                  |
+| 5     | Live Demo      | 🔴     | Screen recording or screenshots                                |
+| 6     | The Innovation | 🔴     | Shared visual context, "Is that your cat?", AI as companion    |
+| 7     | The Vision     | 🔴     | Hardware, schools, languages, conversational AI                |
+| 8     | The Team       | 🔴     | 4 AI engineers, personal motivation                            |
 
 ---
 
@@ -91,7 +91,7 @@ to watch YouTube. Every time I hand it over, I feel a pang of guilt — she's
 absorbing passive content when she should be exploring the world.
 
 I'm not alone. Smartphones are ubiquitous in children's lives. Most kids use them 
-to consume low-value content on TikTok and YouTube. In Vietnam specifically, 
+to consume low-value content on TikTok and YouTube. Meanwhile in Vietnam, 
 parents spend $50-200 per month on English tutoring, yet between classes, their 
 kids have zero engaging practice. The result: Vietnam ranks 58th globally in 
 English proficiency despite massive education spending.
@@ -115,11 +115,11 @@ motivating kids to explore beyond their living room.
 
 - **Frontend**: Flutter for cross-platform mobile with camera and microphone access
 - **Backend**: FastAPI (Python) for AI orchestration
-- **Vision**: Claude Sonnet 3.5 for real-time object identification and translation
-- **Speech**: Google Cloud TTS for pronunciation playback, Google Cloud STT for 
+- **Vision**: large Vision Language Model for real-time object identification and translation
+- **Speech**: Text-to-Speech technology for pronunciation playback, Speech-to-Text technology for 
   pronunciation checking (our "ASR-as-judge" approach — if the speech recognition 
   understands you, a native speaker would too)
-- **Database**: Supabase for user data and leaderboards
+- **Database**: PostgresDB for user data and leaderboards
 
 ## Challenges we ran into
 
@@ -193,12 +193,12 @@ Vietnamese market launch targeting 8 million kids.
 
 ## Judging Criteria Alignment
 
-| Criterion | Our Angle | Evidence |
-|-----------|-----------|----------|
-| **Technical Execution** | Real-time multi-API pipeline (Vision + TTS + ASR) with graceful fallbacks | Live demo with real AI |
-| **Innovation** | Shared visual context — new AI interaction paradigm. Camera as disguised prompt. | "Is that your cat?" |
-| **Design/UX** | Audio-first, icon-driven for pre-literate children. Encouraging retry. | Demo shows a 6yo could use this |
-| **Impact/Relevance** | 8M Vietnamese kids. Transforms passive screen time. Personal story. | Father building for his daughter |
+| Criterion                     | Our Angle                                                                         | Evidence                         |
+| ----------------------------- | --------------------------------------------------------------------------------- | -------------------------------- |
+| **Technical Execution** | Real-time multi-API pipeline (Vision + TTS + ASR) with graceful fallbacks         | Live demo with real AI           |
+| **Innovation**          | Shared visual context — new AI interaction paradigm. Camera as disguised prompt. | "Is that your cat?"              |
+| **Design/UX**           | Audio-first, icon-driven for pre-literate children. Encouraging retry.            | Demo shows a 6yo could use this  |
+| **Impact/Relevance**    | 8M Vietnamese kids. Transforms passive screen time. Personal story.               | Father building for his daughter |
 
 ---
 
