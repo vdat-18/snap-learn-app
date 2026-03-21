@@ -18,7 +18,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
     const { playPop, playChime } = useSoundEffects();
     const [isPracticing, setIsPracticing] = useState(false);
     const [justEvolved, setJustEvolved] = useState(false);
-    const [practiceStatus] = useState<'idle' | 'listening' | 'success' | 'fail'>('idle');
+    const [practiceStatus, setPracticeStatus] = useState<'idle' | 'listening' | 'success' | 'fail'>('idle');
 
     const [vocab, setVocab] = useState<VocabDetailData | null>(null);
     const [isLoadingDetail, setIsLoadingDetail] = useState(true);
@@ -68,6 +68,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
 
     const handlePractice = async () => {
         setIsPracticing(true);
+        setPracticeStatus('listening');
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -92,20 +93,40 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
 
                         practiceWord(vocab.id, result.stars);
 
+                        if (result.stars >= 2) {
+                            setPracticeStatus('success');
+                        } else {
+                            setPracticeStatus('fail');
+                        }
+
+                        // Update local mastery
+                        setVocab(prev => {
+                            if (!prev) return prev;
+                            const newVocab = { ...prev };
+                            if (language === 'en') newVocab.mastery_en = result.mastery;
+                            if (language === 'zh') newVocab.mastery_zh = result.mastery;
+                            if (result.evolved) newVocab.evolved = true;
+                            return newVocab;
+                        });
+
                         if (result.evolved) {
                             setJustEvolved(true);
-                            setVocab(prev => prev ? { ...prev, evolved: true } : prev);
                             playChime();
                             triggerHaptic(200);
                         } else {
-                            playPop();
+                            if (result.stars >= 2) playPop();
                             triggerHaptic(50);
                         }
+
+                        // Reset status after a delay
+                        setTimeout(() => setPracticeStatus('idle'), 3000);
                     } catch (err) {
                         console.error('Practice API error:', err);
+                        setPracticeStatus('fail');
                         practiceWord(vocab.id, 1);
                         playPop();
                         triggerHaptic(50);
+                        setTimeout(() => setPracticeStatus('idle'), 3000);
                     } finally {
                         setIsPracticing(false);
                     }
@@ -157,9 +178,8 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
                 <button onClick={onClose} className="p-2 -ml-2">
                     <X className="w-8 h-8 text-deepNavy" />
                 </button>
-                <div className={`px-4 py-1.5 rounded-full border-2 text-[9px] font-black uppercase tracking-widest ${
-                    tier === 'legendary' ? 'bg-amber-100 border-amber-400 text-amber-600' : 'bg-slate-100 border-slate-300 text-slate-500'
-                }`}>
+                <div className={`px-4 py-1.5 rounded-full border-2 text-[9px] font-black uppercase tracking-widest ${tier === 'legendary' ? 'bg-amber-100 border-amber-400 text-amber-600' : 'bg-slate-100 border-slate-300 text-slate-500'
+                    }`}>
                     {rarityLabels[tier] || 'Thường'} {vocab.evolved && '• TIẾN HÓA ✨'}
                 </div>
                 <div className="w-12 h-12" />
@@ -226,14 +246,64 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
                         </div>
                     </section>
 
-                    <section className={`rounded-[32px] p-6 ${vocab.evolved ? 'bg-lavenderPurple/10' : 'bg-slate-50 opacity-60'}`}>
-                        <h3 className="font-black uppercase text-sm mb-4">Bí mật thẻ bài {vocab.evolved ? '✨' : '🔒'}</h3>
+                    <section className={`rounded-[32px] p-6 ${vocab.evolved ? 'bg-lavenderPurple/10' : 'bg-slate-50 relative overflow-hidden transition-all duration-500'}`}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-black uppercase text-sm">Bí mật thẻ bài {vocab.evolved ? '✨' : '🔒'}</h3>
+                        </div>
+
                         {vocab.evolved ? (
-                            <div className="space-y-4">
-                                <p className="font-bold text-indigo-900/80">Thẻ đã tiến hoá!</p>
-                            </div>
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-4"
+                            >
+                                <p className="font-bold text-indigo-900/80 leading-relaxed">
+                                    {vocab.description_vi || `Thẻ đã tiến hoá! Bạn đã khám phá ra sức mạnht thật sự của ${vocab.word_en}.`}
+                                </p>
+                                <div className="flex items-center gap-2 text-indigo-400 text-xs font-black uppercase tracking-widest">
+                                    <div className="h-1 flex-1 bg-indigo-100 rounded-full" />
+                                    <span>Hoàn thành 100%</span>
+                                    <div className="h-1 flex-1 bg-indigo-100 rounded-full" />
+                                </div>
+                            </motion.div>
                         ) : (
-                            <div className="flex justify-center py-4 text-slate-300"><BookOpen /></div>
+                            <div className="relative">
+                                <div className="space-y-2">
+                                    {vocab.description_vi ? (
+                                        <>
+                                            <p className="text-sm font-bold text-slate-500 leading-relaxed">
+                                                {vocab.description_vi.slice(0, 35)}...
+                                            </p>
+                                            <p className="text-sm font-bold text-slate-300 blur-[4.5px] select-none leading-relaxed line-clamp-2">
+                                                {vocab.description_vi}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="text-sm font-bold text-slate-500 leading-relaxed">
+                                                Bạn có biết rằng <span className="text-slate-600 font-black">{vocab.word_en}</span> là...
+                                            </p>
+                                            <p className="text-sm font-bold text-slate-300 blur-[4.5px] select-none leading-relaxed">
+                                                một từ rất đặc biệt trong tiếng Anh? Nó có nguồn gốc từ rất lâu đời và mang một ý nghĩa vô cùng thú vị mà chỉ những nhà thám hiểm ngôn ngữ mới biết được...
+                                            </p>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Gradient Overlay for Fade Out */}
+                                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-50 via-slate-50/80 to-transparent pointer-events-none" />
+
+                                <div className="mt-4 flex flex-col items-center gap-2 relative z-10">
+                                    <motion.div
+                                        animate={{ y: [0, -4, 0], scale: [1, 1.1, 1] }}
+                                        transition={{ repeat: Infinity, duration: 2 }}
+                                        className="text-slate-300 opacity-60"
+                                    >
+                                        <BookOpen className="w-8 h-8" />
+                                    </motion.div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Luyện tập để giải mã</p>
+                                </div>
+                            </div>
                         )}
                     </section>
                 </div>

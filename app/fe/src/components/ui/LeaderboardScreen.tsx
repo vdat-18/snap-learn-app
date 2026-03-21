@@ -238,7 +238,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="font-black text-sunshineYellow text-base">⭐ {leaderboard?.my_score || xp}</p>
+                                <p className="font-black text-sunshineYellow text-base">{leaderboard?.my_score || xp} XP</p>
                             </div>
                         </div>
                     </div>

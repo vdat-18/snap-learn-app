@@ -182,6 +182,7 @@ async def get_vocab_detail(
         mastery_zh=vocab.mastery_zh,
         evolved=vocab.evolved,
         photo_url=lookup_vocab_image(vocab.word_en),
+        description_vi=vocab.description_vi,
         confidence=vocab.confidence,
         captured_at=vocab.created_at,
         last_practiced_at=None,
