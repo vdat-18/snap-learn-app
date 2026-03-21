@@ -221,3 +221,4 @@ baml_client/
 
 ignore/
 chromadb_disk/
+chromadb_data/

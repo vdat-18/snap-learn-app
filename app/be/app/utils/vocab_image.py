@@ -1,47 +1,37 @@
-"""Vocab image lookup — fuzzy-match a word against vocab.json to find its image."""
+"""Vocab image lookup — semantic search against the ChromaDB vector store."""
 
 from __future__ import annotations
 
-import json
-from difflib import get_close_matches
-from functools import lru_cache
-from pathlib import Path
+import structlog
+from urllib.parse import quote
 
-# vocab.json lives at <project>/app/be/data/vocab.json
-_VOCAB_JSON = Path(__file__).resolve().parent.parent.parent / "data" / "vocab.json"
+logger = structlog.get_logger(__name__)
 
 
-@lru_cache(maxsize=1)
-def _load_vocab_words() -> dict[str, str]:
-    """Return {word_en_lower: word_en_original} from vocab.json (cached)."""
-    with _VOCAB_JSON.open(encoding="utf-8") as f:
-        entries: list[dict] = json.load(f)
-    return {entry["word_en"].lower(): entry["word_en"] for entry in entries}
-
-
-def lookup_vocab_image(word: str, *, cutoff: float = 0.6) -> str | None:
-    """Fuzzy-match *word* against vocab.json keys and return a static image URL.
+def lookup_vocab_image(word: str) -> str | None:
+    """Search for *word* via the HybridSearch engine and return a static image URL.
 
     Returns ``/static_images/<matched_word>.png`` on match, or ``None``.
 
     Parameters
     ----------
     word:
-        The word to look up (case-insensitive).
-    cutoff:
-        Minimum similarity ratio for fuzzy matching (0-1).  Default 0.6.
+        The word to look up (matched via embedding similarity).
     """
-    vocab = _load_vocab_words()
-    normalised = word.strip().lower()
+    from app.services.search_service import get_search_engine
 
-    # 1. Try exact match first
-    if normalised in vocab:
-        return f"/static_images/{vocab[normalised]}.png"
+    try:
+        engine = get_search_engine()
+        results = engine.search(word, n_results=1)
 
-    # 2. Fuzzy match — pick the best candidate
-    matches = get_close_matches(normalised, vocab.keys(), n=1, cutoff=cutoff)
-    if matches:
-        matched_key = matches[0]
-        return f"/static_images/{vocab[matched_key]}.png"
+        if not results:
+            logger.warning("vocab_image_no_results", word=word)
+            return None
 
-    return None
+        matched_name = results[0].page_content
+        safe_name = quote(matched_name)
+        return f"/static_images/{safe_name}.png"
+
+    except Exception:
+        logger.exception("vocab_image_lookup_failed", word=word)
+        return None
