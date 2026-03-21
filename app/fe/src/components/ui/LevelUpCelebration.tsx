@@ -3,18 +3,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from '../../utils/feedbackUtils';
+import { triggerLegendaryBurst, triggerPerfectBurst } from '../../utils/confetti';
 
 const LevelUpCelebration: React.FC = () => {
     const { levelUpMessage, clearLevelUpMessage } = useGameStore();
-    const { playChime, playPop } = useSoundEffects();
+    const { playEpicLevelUp, playPop } = useSoundEffects();
 
     useEffect(() => {
         if (levelUpMessage) {
-            playChime();
-            triggerHaptic(200);
-            mascotSpeak(`Chúc mừng bạn đã lên cấp ${levelUpMessage.newLevel}!`, "vi-VN");
+            playEpicLevelUp();
+            triggerHaptic([100, 50, 100, 50, 200]); // Epic haptic pattern
+            setTimeout(() => {
+                triggerLegendaryBurst();
+                triggerPerfectBurst();
+            }, 300);
+            mascotSpeak(`Tuyệt vời! Chúc mừng bạn đã lên cấp ${levelUpMessage.newLevel}!`, "vi-VN");
         }
-    }, [levelUpMessage, playChime]);
+    }, [levelUpMessage, playEpicLevelUp]);
 
     const handleClose = () => {
         playPop();
@@ -44,9 +49,9 @@ const LevelUpCelebration: React.FC = () => {
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-deepNavy/90 backdrop-blur-xl"
                 >
-                    {/* Confetti effect background */}
-                    <div className="absolute inset-0">
-                        {Array.from({ length: 12 }).map((_, i) => (
+                    {/* Star particle effect background */}
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                        {Array.from({ length: 24 }).map((_, i) => (
                             <motion.div
                                 key={i}
                                 initial={{ y: -50, x: Math.random() * window.innerWidth - window.innerWidth / 2 }}
@@ -59,10 +64,13 @@ const LevelUpCelebration: React.FC = () => {
                                     duration: 2 + Math.random() * 1,
                                     ease: 'easeIn',
                                 }}
-                                className="absolute w-4 h-4 pointer-events-none"
+                                className="absolute"
+                                style={{
+                                    filter: `drop-shadow(0 0 10px ${['#FFD700', '#FFFFFF', '#FFB400'][i % 3]})`
+                                }}
                             >
-                                <div className="text-2xl">
-                                    {['🎉', '⭐', '✨', '🌟'][i % 4]}
+                                <div className={`text-${i % 2 === 0 ? '4xl' : '2xl'} opacity-80`}>
+                                    {['⭐', '✨', '🌟'][i % 3]}
                                 </div>
                             </motion.div>
                         ))}
@@ -116,13 +124,17 @@ const LevelUpCelebration: React.FC = () => {
 
                         {/* XP gained */}
                         <motion.div
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.5 }}
-                            className="bg-white/10 backdrop-blur-sm rounded-3xl px-8 py-4 mb-8 border-2 border-white/20"
+                            initial={{ y: 20, opacity: 0, scale: 0.8 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.5, type: 'spring' }}
+                            className="bg-gradient-to-b from-white/20 to-white/5 backdrop-blur-md rounded-3xl px-10 py-5 mb-8 border border-white/30 shadow-[0_0_30px_rgba(255,214,52,0.3)] relative overflow-hidden"
                         >
-                            <p className="text-white text-sm font-bold uppercase tracking-widest mb-1">XP Nhận được</p>
-                            <p className="text-sunshineYellow text-4xl font-black">+{levelUpMessage.xpGained} XP</p>
+                            <div className="absolute inset-0 bg-white/20 skew-x-12 translate-x-[-100%] animate-[shimmer_2s_infinite]" />
+                            <p className="text-white/90 text-sm font-black uppercase tracking-widest mb-1 drop-shadow-md">Thưởng thăng cấp</p>
+                            <div className="flex items-center justify-center gap-2">
+                                <span className="text-4xl">⭐</span>
+                                <p className="text-sunshineYellow text-5xl font-black drop-shadow-[0_2px_10px_rgba(255,214,52,0.6)]">+{levelUpMessage.xpGained}</p>
+                            </div>
                         </motion.div>
 
                         {/* Close button */}

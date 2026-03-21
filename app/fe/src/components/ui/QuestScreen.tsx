@@ -64,21 +64,41 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
         }
     }, [isOpen]);
 
-    const handleClaim = async (questId: string) => {
+    const handleClaim = async (questId: string, event: React.MouseEvent, rewardXP: number) => {
         try {
             const result = await missionApi.claimMission(questId);
-            // Update local quest state
+            
+            // Trigger XP Fly Animation from the button click position
+            const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+            window.dispatchEvent(new CustomEvent('trigger-xp-fly', {
+                detail: {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2,
+                    count: Math.min(10, Math.max(3, Math.floor(rewardXP / 10)))
+                }
+            }));
+
+            // Play sound and haptic
+            playPop();
+            triggerHaptic([50, 100, 50]);
+
+            // Update local quest state immediately to show claimed state
             setQuests(prev => prev.map(q =>
                 q.id === questId ? { ...q, status: 'claimed' as const } : q
             ));
-            // Update gameStore with new XP/level from server
-            useGameStore.setState({
-                xp: result.total_xp,
-                level: result.level,
-                levelUpMessage: result.level_up ? { newLevel: result.level, xpGained: result.xp_earned } : null,
-            });
+
+            // Wait for particles to somewhat finish before updating state to allow animation
+            setTimeout(() => {
+                useGameStore.setState({
+                    xp: result.total_xp,
+                    level: result.level,
+                    levelUpMessage: result.level_up ? { newLevel: result.level, xpGained: result.xp_earned } : null,
+                });
+            }, 1500);
+
         } catch (err) {
             console.error('Failed to claim mission:', err);
+            mascotSpeak("Ui cha, có lỗi mạng rồi. Bạn thử lại nhé!", "vi-VN");
         }
     };
 
@@ -186,7 +206,7 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                                             <QuestCard
                                                 key={quest.id}
                                                 quest={quest}
-                                                onClaim={() => handleClaim(quest.id)}
+                                                onClaim={(e) => handleClaim(quest.id, e, quest.rewardXP)}
                                             />
                                         ))}
                                     </div>
@@ -200,7 +220,8 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
     );
 };
 
-const QuestCard: React.FC<{ quest: DisplayQuest; onClaim: () => void }> = ({ quest, onClaim }) => {
+const QuestCard: React.FC<{ quest: DisplayQuest; onClaim: (e: React.MouseEvent) => void }> = ({ quest, onClaim }) => {
+    const [isClaiming, setIsClaiming] = useState(false);
     const isCompleted = quest.status === 'completed';
     const isClaimed = quest.status === 'claimed';
     const progressPercent = (quest.progress / quest.total) * 100;
@@ -297,27 +318,43 @@ const QuestCard: React.FC<{ quest: DisplayQuest; onClaim: () => void }> = ({ que
                     )}
                 </div>
 
-                {isCompleted && (
-                    <motion.button
-                        initial={{ scale: 0.9 }}
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{ repeat: Infinity, duration: 1.5 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            playChime();
-                            triggerHaptic(100);
-                            onClaim();
-                        }}
-                        className="w-full mt-4 bg-sunshineYellow text-deepNavy font-black py-4 rounded-[32px] shadow-[0_10px_0_rgb(161,98,7)] active:shadow-none active:translate-y-[10px] transition-all flex items-center justify-center gap-2 border-t-2 border-white/40 group overflow-hidden"
-                    >
-                        <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="text-2xl">
-                            🎁
-                        </motion.span>
-                        NHẬN QUÀ NGAY!
-                        <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-[-20deg]" />
-                    </motion.button>
-                )}
+                <AnimatePresence mode="popLayout">
+                    {isCompleted && !isClaiming && (
+                        <motion.button
+                            key="claim-btn"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: [1, 1.05, 1], opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            transition={{ repeat: Infinity, duration: 1.5 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsClaiming(true);
+                                playChime();
+                                onClaim(e);
+                            }}
+                            className="w-full mt-4 bg-sunshineYellow text-deepNavy font-black py-4 rounded-[32px] shadow-[0_10px_0_rgb(161,98,7)] active:shadow-none active:translate-y-[10px] transition-all flex items-center justify-center gap-2 border-t-2 border-white/40 group overflow-hidden"
+                        >
+                            <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="text-2xl">
+                                🎁
+                            </motion.span>
+                            NHẬN QUÀ NGAY!
+                            <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-[-20deg]" />
+                        </motion.button>
+                    )}
+
+                    {isClaiming && !isClaimed && (
+                         <motion.div
+                            key="claiming-btn"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="w-full mt-4 bg-mintGreen text-white font-black py-4 rounded-[32px] flex items-center justify-center gap-2 shadow-inner"
+                         >
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                            ĐANG NHẬN...
+                         </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </motion.div>
     );

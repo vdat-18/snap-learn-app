@@ -67,6 +67,44 @@ export const useSoundEffects = () => {
   }, []);
 
   /**
+   * Play an 'Epic Level Up' Fanfare
+   */
+  const playEpicLevelUp = useCallback(() => {
+    try {
+      initAudioContext();
+      const ctx = audioContext.current!;
+
+      const playNote = (freq: number, time: number, duration: number, type: OscillatorType = 'square') => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + time);
+        
+        gain.gain.setValueAtTime(0, ctx.currentTime + time);
+        gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + time + duration * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + time + duration);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + time);
+        osc.stop(ctx.currentTime + time + duration);
+      };
+
+      // Triumphant arpeggio
+      playNote(392.00, 0, 0.2);     // G4
+      playNote(523.25, 0.15, 0.2);  // C5
+      playNote(659.25, 0.3, 0.2);   // E5
+      playNote(783.99, 0.45, 0.8);  // G5 (held)
+      
+      // Counter harmony
+      playNote(261.63, 0.45, 0.8, 'sine'); // C4 underneath
+      
+    } catch (e) {
+      console.warn('Audio context failed', e);
+    }
+  }, []);
+
+  /**
    * Play a 'Quest Complete' or 'Level Up' chime
    */
   const playChime = useCallback(() => {
@@ -96,5 +134,5 @@ export const useSoundEffects = () => {
     }
   }, []);
 
-  return { playPop, playShutter, playChime };
+  return { playPop, playShutter, playChime, playEpicLevelUp };
 };

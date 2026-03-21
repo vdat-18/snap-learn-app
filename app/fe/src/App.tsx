@@ -59,11 +59,13 @@ const App: React.FC = () => {
 
   // Connect to global state
   const {
-    userName,
-    userAvatar,
-    level,
-    xp,
-    accessToken,
+      userName,
+      userAvatar,
+      level,
+      xp,
+      displayXP,
+      setDisplayXP,
+      accessToken,
     childId,
     hasSelectedLanguage,
     hasSeenOnboarding,
@@ -77,6 +79,17 @@ const App: React.FC = () => {
   } = useGameStore();
 
   const { playPop, playShutter, playChime } = useSoundEffects();
+
+  // Reference to the XP target for particles
+  const xpTargetRef = useRef<HTMLDivElement>(null);
+  const [xpTargetPos, setXpTargetPos] = useState({ x: window.innerWidth / 2, y: 50 });
+
+  useEffect(() => {
+    if (xpTargetRef.current) {
+      const rect = xpTargetRef.current.getBoundingClientRect();
+      setXpTargetPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    }
+  }, [xp, level]); // Recalculate if UI shifts
 
   // Hydrate auth from localStorage on mount
   useEffect(() => {
@@ -108,8 +121,28 @@ const App: React.FC = () => {
 
   // Initialization
   useEffect(() => {
-    checkAndResetDailyUsage();
+      checkAndResetDailyUsage();
   }, [checkAndResetDailyUsage]);
+
+  // Handle particles arriving to increment XP
+  useEffect(() => {
+      const handleParticleArrived = () => {
+          setDisplayXP(Math.min(displayXP + 1, xp)); // Increment towards real XP
+          playPop(); // small tick sound
+      };
+      window.addEventListener('xp-particle-arrived', handleParticleArrived);
+      return () => window.removeEventListener('xp-particle-arrived', handleParticleArrived);
+  }, [displayXP, xp, setDisplayXP, playPop]);
+
+  // Fallback sync for displayXP in case particles fail or don't spawn
+  useEffect(() => {
+      if (displayXP !== xp) {
+          const timeout = setTimeout(() => {
+              setDisplayXP(xp);
+          }, 3000); // Wait 3s max for particles to finish
+          return () => clearTimeout(timeout);
+      }
+  }, [xp, displayXP, setDisplayXP]);
 
   // Screen Voice Guidance Narration
   useEffect(() => {
@@ -361,17 +394,17 @@ const App: React.FC = () => {
               </div>
               <div className="flex flex-col flex-1 pl-1">
                 <span className="text-xs font-black text-white drop-shadow-md leading-none mb-1.5 truncate">{userName}</span>
-                <div className="relative w-full min-w-[120px] max-w-[150px] bg-black/50 backdrop-blur rounded-full h-[18px] border border-white/20 overflow-hidden flex items-center justify-between px-2 shadow-inner">
+                <div ref={xpTargetRef} className="relative w-full min-w-[120px] max-w-[150px] bg-black/50 backdrop-blur rounded-full h-[18px] border border-white/20 overflow-hidden flex items-center justify-between px-2 shadow-inner">
                   <motion.div
-                    className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-skyBlue to-mintGreen rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(100, Math.max(5, (xp % 1000) / 10))}%` }}
-                    transition={{ type: 'spring', bounce: 0.2, duration: 1 }}
+                      className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-skyBlue to-mintGreen rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, Math.max(5, (displayXP % 1000) / 10))}%` }}
+                      transition={{ type: 'spring', bounce: 0.2, duration: 1 }}
                   />
                   <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-white/30 to-transparent skew-x-12 animate-pulse" />
                   <span className="relative z-10 text-[9px] font-black text-white leading-none tracking-wide drop-shadow-md">CẤP {level}</span>
                   <span className="relative z-10 text-[10px] font-black text-white leading-none flex gap-1 items-center drop-shadow-md">
-                    ⭐ <AnimatedNumber value={xp} />
+                      ⭐ <AnimatedNumber value={displayXP} />
                   </span>
                 </div>
               </div>
@@ -488,6 +521,8 @@ const App: React.FC = () => {
             <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
           </div>
         </div>
+
+        <XPFlyManager targetX={xpTargetPos.x} targetY={xpTargetPos.y} />
 
         {!showSplash && hasSeenOnboarding && userName && (isBookOpen || isQuestOpen || isRankOpen || isProfileOpen) && !isCategoryViewOpen && (
           <nav key="bottom-nav" className="fixed bottom-0 left-0 right-0 p-4 pb-8 flex justify-center z-[200] pointer-events-none">

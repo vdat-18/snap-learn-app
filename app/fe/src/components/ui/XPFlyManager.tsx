@@ -38,6 +38,18 @@ const XPFlyManager: React.FC<XPFlyManagerProps> = ({ targetX, targetY }) => {
         setParticles(prev => prev.filter(p => p.id !== id));
     };
 
+    const handleAnimationComplete = (id: number) => {
+        removeParticle(id);
+        
+        // Dispatch event to increment display XP
+        window.dispatchEvent(new CustomEvent('xp-particle-arrived'));
+
+        // Haptic feedback on impact
+        if (window.navigator && window.navigator.vibrate) {
+            window.navigator.vibrate(10); // Very light tick
+        }
+    };
+
     return (
         <div className="fixed inset-0 pointer-events-none z-[999]">
             <AnimatePresence>
@@ -51,18 +63,19 @@ const XPFlyManager: React.FC<XPFlyManagerProps> = ({ targetX, targetY }) => {
                             opacity: 1
                         }}
                         animate={{
-                            x: [p.startX, p.startX + (Math.random() * 100 - 50), targetX],
-                            y: [p.startY, p.startY - (Math.random() * 100 + 50), targetY],
+                            x: [p.startX, p.startX + (Math.random() * 150 - 75), targetX],
+                            y: [p.startY, p.startY - (Math.random() * 150 + 50), targetY],
                             scale: [0, 1.5, 0.8],
                             opacity: [1, 1, 0.8],
                             rotate: 360
                         }}
                         transition={{
                             duration: 0.8 + Math.random() * 0.4,
-                            ease: "backOut"
+                            ease: "easeInOut",
+                            times: [0, 0.4, 1]
                         }}
-                        onAnimationComplete={() => removeParticle(p.id)}
-                        className="absolute text-2xl"
+                        onAnimationComplete={() => handleAnimationComplete(p.id)}
+                        className="absolute text-3xl drop-shadow-[0_0_8px_rgba(255,210,52,0.8)] filter"
                     >
                         ⭐
                     </motion.div>
