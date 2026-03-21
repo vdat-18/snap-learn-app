@@ -444,64 +444,62 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                         </div>
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
                     </section>
-                </div>
-                    </BackgroundParallax>
 
-                    {/* Parent Gate Modal */ }
-    <AnimatePresence>
-        {showParentGate && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
-                <motion.div
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-deepNavy/80 backdrop-blur-md"
-                />
-                <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.9, opacity: 0 }}
-                    className="bg-white rounded-[40px] p-10 w-full max-w-sm relative z-10 shadow-level-3 text-center"
-                >
-                    <div className="text-7xl mb-6">🛡️</div>
-                    <h3 className="text-xl font-black text-deepNavy mb-4">Phụ Huynh</h3>
-                    <p className="text-slate-500 font-medium mb-8 leading-relaxed">Hãy giúp bạn giải phép tính này để vào phần cài đặt nhé!</p>
-                    <div className="bg-slate-50 rounded-3xl p-8 mb-8">
-                        <span className="text-3xl font-black text-sky-500 tracking-widest">
-                            {gateChallenge?.question || '7 + 8 = ?'}
-                        </span>
-                    </div>
-                    <input
-                        type="number"
-                        placeholder="Kết quả là..."
-                        value={gateAnswer}
-                        onChange={(e) => { setGateAnswer(e.target.value); setGateError(''); }}
-                        onKeyDown={(e) => e.key === 'Enter' && handleVerifyGate()}
-                        className="w-full bg-slate-100 rounded-2xl py-5 px-6 text-center text-2xl font-black text-deepNavy focus:outline-none focus:ring-4 focus:ring-sky-200 mb-4"
-                    />
-                    {gateError && (
-                        <p className="text-coralRed font-bold text-sm mb-4">{gateError}</p>
-                    )}
-                    <div className="flex gap-4">
-                        <button
-                            onClick={() => { playPop(); setShowParentGate(false); }}
-                            className="flex-1 py-4 font-black uppercase tracking-widest text-slate-400 hover:text-slate-600"
-                        >
-                            Hủy
-                        </button>
-                        <button
-                            onClick={handleVerifyGate}
-                            disabled={isVerifying}
-                            className="flex-1 bg-sky-500 text-white py-4 rounded-2xl font-black shadow-[0_6px_0_rgba(14,165,233,0.3)] disabled:opacity-70"
-                        >
-                            {isVerifying ? 'Đang kiểm...' : 'OK'}
-                        </button>
-                    </div>
+                    {/* Parent Gate Modal */}
+                    <AnimatePresence>
+                        {showParentGate && (
+                            <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+                                <motion.div
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    className="absolute inset-0 bg-deepNavy/80 backdrop-blur-md"
+                                />
+                                <motion.div
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.9, opacity: 0 }}
+                                    className="bg-white rounded-[40px] p-10 w-full max-w-sm relative z-10 shadow-level-3 text-center"
+                                >
+                                    <div className="text-7xl mb-6">🛡️</div>
+                                    <h3 className="text-xl font-black text-deepNavy mb-4">Phụ Huynh</h3>
+                                    <p className="text-slate-500 font-medium mb-8 leading-relaxed">Hãy giúp bạn giải phép tính này để vào phần cài đặt nhé!</p>
+                                    <div className="bg-slate-50 rounded-3xl p-8 mb-8">
+                                        <span className="text-3xl font-black text-sky-500 tracking-widest">
+                                            {gateChallenge?.question || '7 + 8 = ?'}
+                                        </span>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        placeholder="Kết quả là..."
+                                        value={gateAnswer}
+                                        onChange={(e) => { setGateAnswer(e.target.value); setGateError(''); }}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleVerifyGate()}
+                                        className="w-full bg-slate-100 rounded-2xl py-5 px-6 text-center text-2xl font-black text-deepNavy focus:outline-none focus:ring-4 focus:ring-sky-200 mb-4"
+                                    />
+                                    {gateError && (
+                                        <p className="text-coralRed font-bold text-sm mb-4">{gateError}</p>
+                                    )}
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={() => { playPop(); setShowParentGate(false); }}
+                                            className="flex-1 py-4 font-black uppercase tracking-widest text-slate-400 hover:text-slate-600"
+                                        >
+                                            Hủy
+                                        </button>
+                                        <button
+                                            onClick={handleVerifyGate}
+                                            disabled={isVerifying}
+                                            className="flex-1 bg-sky-500 text-white py-4 rounded-2xl font-black shadow-[0_6px_0_rgba(14,165,233,0.3)] disabled:opacity-70"
+                                        >
+                                            {isVerifying ? 'Đang kiểm...' : 'OK'}
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>
                 </motion.div>
-            </div>
-        )}
-    </AnimatePresence>
-                </motion.div >
             )}
-        </AnimatePresence >
+        </AnimatePresence>
     );
 };
 

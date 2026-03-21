@@ -9,7 +9,6 @@ import { CollectionSkeleton } from './Skeleton';
 import { MOCK_REFERENCE_VOCAB } from '../../store/mockData';
 import VocabDetail from './VocabDetail';
 import TradingCard from './TradingCard';
-import BackgroundParallax from './BackgroundParallax';
 
 interface CollectionBookProps {
     isOpen: boolean;
@@ -206,9 +205,9 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                         )}
 
                         {!isLoading && !fetchError && selectedCategory && (
-                            /* Vocab Word Grid */
+                            /* Vocab Word Grid - Trading Card Style */
                             <div className="grid grid-cols-3 gap-4 pb-24">
-                                {MOCK_REFERENCE_VOCAB.filter(w => w.category === selectedCategory).map((refWord, i) => {
+                                {(MOCK_REFERENCE_VOCAB.filter(w => w.category === selectedCategory) as any[]).map((refWord) => {
                                     const word = collections.find(w => w.word_en === refWord.word_en);
                                     const isCaptured = !!word;
                                     const isEvolved = word?.isEvolved;
@@ -229,129 +228,70 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
 
                                     if (!isCaptured) {
                                         return (
-                                            <motion.button
-                                                key={cat.id}
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: i * 0.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                onClick={() => { playPop(); setSelectedCategory(cat.id); }}
-                                                className="bg-white rounded-[32px] p-5 shadow-level-2 border-b-[6px] border-slate-100 flex flex-col items-center text-center group relative overflow-hidden"
+                                            <div
+                                                key={refWord.id}
+                                                className="relative aspect-[3/4] rounded-[24px] bg-slate-100 border-[3px] border-slate-200 shadow-inner overflow-hidden flex flex-col items-center justify-center opacity-60"
                                             >
-                                                <div className="w-24 h-24 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
-                                                    {cat.icon.startsWith('/') ? (
-                                                        <img src={cat.icon} alt={cat.name} className="w-full h-full object-contain mix-blend-multiply" />
-                                                    ) : (
-                                                        <span className="text-5xl drop-shadow-lg">{cat.icon}</span>
-                                                    )}
+                                                <Lock className="w-6 h-6 text-slate-400 mb-2" />
+                                                <span className="text-[10px] font-black text-slate-400 tracking-wider">BÍ MẬT</span>
+                                                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[8px] font-black bg-slate-300 text-white shadow-md uppercase">
+                                                    {rarityLabels[refWord.rarity_tier] || 'Thường'}
                                                 </div>
-                                                <h3 className="font-black text-deepNavy text-base mb-1">{cat.name}</h3>
-                                                <div className="w-full mt-2">
-                                                    <div className="flex justify-between text-[10px] font-black text-slate-400 mb-1.5 px-1">
-                                                        <span>{count}/{total}</span>
-                                                        <span>{Math.round(progressPercent)}%</span>
-                                                    </div>
-                                                    <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
-                                                        <motion.div
-                                                            initial={{ width: 0 }}
-                                                            animate={{ width: `${progressPercent}%` }}
-                                                            className="h-full bg-sunshineYellow rounded-full shadow-[0_0_8px_rgba(255,210,52,0.6)]"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </motion.button>
+                                            </div>
                                         );
-                                    })}
-                            </div>
-                        ) : (
-                        /* Vocab Word Grid - Trading Card Style */
-                        <div className="grid grid-cols-3 gap-4 pb-24">
-                            {(MOCK_REFERENCE_VOCAB.filter(w => w.category === selectedCategory) as any[]).map((refWord) => {
-                                const word = collections.find(w => w.word_en === refWord.word_en);
-                                const isCaptured = !!word;
-                                const isEvolved = word?.isEvolved;
+                                    }
 
-                                const rarityColors: any = {
-                                    'Common': 'from-mintGreen/20 to-mintGreen/5',
-                                    'Uncommon': 'from-skyBlue/20 to-skyBlue/5',
-                                    'Rare': 'from-sunshineYellow/20 to-sunshineYellow/5',
-                                    'Legendary': 'from-coralRed/20 to-coralRed/5'
-                                };
-
-                                const rarityLabels: any = {
-                                    'Common': 'Thường nè',
-                                    'Uncommon': 'Đặc biệt đó',
-                                    'Rare': 'Hiếm quá đi',
-                                    'Legendary': 'Huyền thoại luôn'
-                                };
-
-                                if (!isCaptured) {
                                     return (
-                                        <div
-                                            key={refWord.id}
-                                            className="relative aspect-[3/4] rounded-[24px] bg-slate-100 border-[3px] border-slate-200 shadow-inner overflow-hidden flex flex-col items-center justify-center opacity-60"
+                                        <TradingCard
+                                            key={word.id}
+                                            onClick={() => { playChime(); setSelectedWordId(word.id); }}
+                                            className={`relative aspect-[3/4] rounded-[24px] bg-gradient-to-br ${rarityColors[word.rarity] || 'bg-white'} border-[3px] border-white shadow-level-2 overflow-hidden flex flex-col`}
                                         >
-                                            <Lock className="w-6 h-6 text-slate-400 mb-2" />
-                                            <span className="text-[10px] font-black text-slate-400 tracking-wider">BÍ MẬT</span>
-                                            <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[8px] font-black bg-slate-300 text-white shadow-md uppercase">
-                                                {rarityLabels[refWord.rarity_tier] || 'Thường'}
-                                            </div>
-                                        </div>
-                                    );
-                                }
-
-                                return (
-                                    <TradingCard
-                                        key={word.id}
-                                        onClick={() => { playChime(); setSelectedWordId(word.id); }}
-                                        className={`relative aspect-[3/4] rounded-[24px] bg-gradient-to-br ${rarityColors[word.rarity] || 'bg-white'} border-[3px] border-white shadow-level-2 overflow-hidden flex flex-col`}
-                                    >
-                                        <div className="flex-1 w-full relative p-2">
-                                            <div className="w-full h-full rounded-[18px] overflow-hidden bg-white/50 backdrop-blur-sm shadow-inner">
-                                                <img src={word.image} alt={word.word_en} className="w-full h-full object-cover" />
-                                            </div>
-                                            {isEvolved && (
-                                                <div className="absolute top-3 left-3 bg-sunshineYellow p-1 rounded-full shadow-lg">
-                                                    <Sparkles className="w-4 h-4 text-deepNavy" />
+                                            <div className="flex-1 w-full relative p-2">
+                                                <div className="w-full h-full rounded-[18px] overflow-hidden bg-white/50 backdrop-blur-sm shadow-inner">
+                                                    <img src={word.image} alt={word.word_en} className="w-full h-full object-cover" />
                                                 </div>
-                                            )}
-                                            <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[8px] font-black text-white shadow-md uppercase tracking-wide ${word.rarity === 'Legendary' ? 'bg-coralRed' :
-                                                word.rarity === 'Rare' ? 'bg-sunshineYellow text-deepNavy' :
-                                                    word.rarity === 'Uncommon' ? 'bg-skyBlue' : 'bg-mintGreen'
-                                                }`}>
-                                                {rarityLabels[word.rarity]}
+                                                {isEvolved && (
+                                                    <div className="absolute top-3 left-3 bg-sunshineYellow p-1 rounded-full shadow-lg">
+                                                        <Sparkles className="w-4 h-4 text-deepNavy" />
+                                                    </div>
+                                                )}
+                                                <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[8px] font-black text-white shadow-md uppercase tracking-wide ${word.rarity === 'Legendary' ? 'bg-coralRed' :
+                                                    word.rarity === 'Rare' ? 'bg-sunshineYellow text-deepNavy' :
+                                                        word.rarity === 'Uncommon' ? 'bg-skyBlue' : 'bg-mintGreen'
+                                                    }`}>
+                                                    {rarityLabels[word.rarity]}
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="px-2 pb-3 pt-1 text-center bg-white/40 backdrop-blur">
-                                            <h4 className="font-black text-deepNavy leading-tight text-[10px] truncate mb-0.5">{word.word_vi}</h4>
-                                            <p className="text-[8px] font-bold text-sky-500 leading-none">{word.word_en}</p>
-                                            <div className="flex justify-center mt-1.5 gap-0.5">
-                                                {[1, 2, 3].map(s => (
-                                                    <Star
-                                                        key={s}
-                                                        className={`w-2.5 h-2.5 ${s <= word.stars ? 'text-sunshineYellow fill-sunshineYellow' : 'text-slate-200 fill-slate-200'}`}
-                                                    />
-                                                ))}
+                                            <div className="px-2 pb-3 pt-1 text-center bg-white/40 backdrop-blur">
+                                                <h4 className="font-black text-deepNavy leading-tight text-[10px] truncate mb-0.5">{word.word_vi}</h4>
+                                                <p className="text-[8px] font-bold text-sky-500 leading-none">{word.word_en}</p>
+                                                <div className="flex justify-center mt-1.5 gap-0.5">
+                                                    {[1, 2, 3].map(s => (
+                                                        <Star
+                                                            key={s}
+                                                            className={`w-2.5 h-2.5 ${s <= word.stars ? 'text-sunshineYellow fill-sunshineYellow' : 'text-slate-200 fill-slate-200'}`}
+                                                        />
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </TradingCard>
-                                );
-                            })}
-                        </div>
-                            )}
+                                        </TradingCard>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
-                </BackgroundParallax>
 
                     {selectedWord && (
-                <VocabDetail
-                    key={selectedWord.id}
-                    word={selectedWord}
-                    onClose={() => setSelectedWordId(null)}
-                />
-            )}
-        </motion.div>
-    )
-}
+                        <VocabDetail
+                            key={selectedWord.id}
+                            word={selectedWord}
+                            onClose={() => setSelectedWordId(null)}
+                        />
+                    )}
+                </motion.div>
+            )
+            }
         </AnimatePresence >
     );
 };

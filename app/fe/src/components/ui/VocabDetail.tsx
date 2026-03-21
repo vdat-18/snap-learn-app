@@ -168,39 +168,16 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                         </motion.div>
                     </div>
 
-                    {target_language === 'en' && (
-                        <div className="flex items-center justify-center gap-3">
-                            <span className="text-xl">🇻🇳</span>
-                            <span className="text-2xl font-black text-deepNavy">{word.word_vi || ''}</span>
-                            <button onClick={() => mascotSpeak(word.word_vi, 'vi-VN')} className="p-3 rounded-full bg-deepNavy/5 text-deepNavy active:scale-95 transition-all">
-                                <Volume2 className="w-6 h-6" />
-                            </button>
-                        </div>
 
-                        {target_language === 'zh' && (
-                        <div className="flex items-center justify-center gap-3">
-                            <span className="text-xl">🇨🇳</span>
-                            <span className="text-2xl font-black text-lang-zh">{word.word_zh}</span>
-                            <button onClick={() => mascotSpeak(word.word_zh, 'zh-CN')} className="p-3 rounded-full bg-lang-zh/10 text-lang-zh active:scale-95 transition-all">
-                                <Volume2 className="w-6 h-6" />
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
+                    <div className="flex items-center justify-center gap-3 mb-6">
+                        <span className="text-xl">🇻🇳</span>
+                        <span className="text-2xl font-black text-deepNavy">{word.word_vi || ''}</span>
+                        <button onClick={() => mascotSpeak(word.word_vi, 'vi-VN')} className="p-3 rounded-full bg-deepNavy/5 text-deepNavy active:scale-95 transition-all">
+                            <Volume2 className="w-6 h-6" />
+                        </button>
+                    </div>
 
-            {/* If Chinese is chosen */}
-            {target_language === 'zh' && (
-                <div className="flex items-center justify-center gap-3">
-                    <span className="text-xl">🇨🇳</span>
-                    <span className="text-2xl font-black text-lang-zh">{word.word_zh}</span>
-                    <button onClick={() => mascotSpeak(word.word_zh, 'zh-CN')} className="p-3 rounded-full bg-lang-zh/10 text-lang-zh active:scale-95 transition-all">
-                        <Volume2 className="w-6 h-6" />
-                    </button>
-                </div>
-            )}
-        </div>
-                    </div >
+
 
                     <section className="bg-white rounded-[32px] p-6 shadow-level-2 mb-6 border-b-4 border-slate-100">
                         <div className="flex items-center justify-between mb-4">

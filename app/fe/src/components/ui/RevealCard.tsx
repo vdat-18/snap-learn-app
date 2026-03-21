@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { triggerSparkles, triggerLegendaryBurst } from '../../utils/confetti';
 import { mascotSpeak } from '../../utils/feedbackUtils';
 import { speechApi } from '../../services/speechApi';
+import { triggerXPFly } from './XPFlyManager';
 
 export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
 
@@ -453,7 +454,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                             className="w-10 h-10 rounded-full bg-skyBlue/10 flex items-center justify-center text-skyBlue text-base"
                                         >
                                             🔊
-                                        </motion.button>
+                                        </button>
                                     </motion.div>
                                 )}
                                 {target_language === 'zh' && (
@@ -471,7 +472,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                             className="w-10 h-10 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-base"
                                         >
                                             🔊
-                                        </motion.button>
+                                        </button>
                                     </motion.div>
                                 )}
 
@@ -492,7 +493,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                                     className="w-7 h-7 rounded-full bg-skyBlue/10 flex items-center justify-center text-skyBlue text-xs"
                                                 >
                                                     🔊
-                                                </motion.button>
+                                                </button>
                                             </div>
                                         )}
                                         {secondary_language === 'zh' && (
@@ -504,7 +505,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                                     className="w-7 h-7 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-xs"
                                                 >
                                                     🔊
-                                                </motion.button>
+                                                </button>
                                             </div>
                                         )}
                                     </motion.div>
