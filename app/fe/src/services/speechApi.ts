@@ -116,4 +116,56 @@ export const speechApi = {
     ): Promise<string> => {
         return fetchAudioStream(`/tts/description/${vocab_id}/${language}`, signal);
     },
+
+    /**
+     * Synthesize TTS audio for arbitrary text via ElevenLabs.
+     * POST /tts/synthesize with { text, language }.
+     * Returns a blob URL for audio playback.
+     * Uses server-side cache — repeated calls for the same text are instant.
+     */
+    synthesizeTTS: async (
+        text: string,
+        language: string,
+        signal?: AbortSignal
+    ): Promise<string> => {
+        const response = await fetch(`${BASE_URL}/tts/synthesize`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders(),
+            },
+            body: JSON.stringify({ text, language }),
+            signal,
+        });
+
+        if (!response.ok) {
+            throw new Error(`TTS synthesize failed: ${response.status}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+            const blob = await response.blob();
+            return URL.createObjectURL(blob);
+        }
+
+        const chunks: Uint8Array[] = [];
+        let totalLength = 0;
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            totalLength += value.length;
+        }
+
+        const combined = new Uint8Array(totalLength);
+        let offset = 0;
+        for (const chunk of chunks) {
+            combined.set(chunk, offset);
+            offset += chunk.length;
+        }
+
+        const blob = new Blob([combined], { type: 'audio/mpeg' });
+        return URL.createObjectURL(blob);
+    },
 };

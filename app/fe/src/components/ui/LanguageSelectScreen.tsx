@@ -73,21 +73,21 @@ const LanguageSelectScreen: React.FC = () => {
                             </div>
                         </motion.button>
 
-                        {/* Chinese Option - Frozen */}
+                        {/* Chinese Option - Frozen (Greyed out) */}
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleSelectChinese}
-                            className="w-full relative group bg-gradient-to-r from-red-500 to-rose-600 rounded-2xl p-4 flex items-center gap-4 shadow-[0_6px_0_rgb(159,18,57)] active:shadow-none active:translate-y-[6px] transition-all border-t-2 border-white/20"
+                            className="w-full relative group bg-slate-300 rounded-2xl p-4 flex items-center gap-4 shadow-[0_6px_0_rgb(148,163,184)] active:shadow-none active:translate-y-[6px] transition-all border-t-2 border-white/20 grayscale opacity-70 cursor-not-allowed"
                         >
-                            <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-3xl shadow-sm">
+                            <div className="w-14 h-14 bg-white/50 rounded-full flex items-center justify-center text-3xl shadow-sm">
                                 🇨🇳
                             </div>
                             <div className="flex-1 text-left">
-                                <h2 className="text-white font-black text-xl">Tiếng Trung</h2>
-                                <p className="text-red-100 font-medium text-sm">中文</p>
+                                <h2 className="text-slate-600 font-black text-xl">Tiếng Trung</h2>
+                                <p className="text-slate-500 font-medium text-sm">中文</p>
                             </div>
-                            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white">
+                            <div className="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center text-slate-500">
                                 ➜
                             </div>
                         </motion.button>
