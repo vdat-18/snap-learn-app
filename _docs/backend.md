@@ -7,12 +7,13 @@ Version 1.0 | March 2026
 
 ## 1. Overview
 
-The SnapLearn backend is a **Python FastAPI** application that serves as the orchestration layer between the Next.js PWA frontend and all external services (AI vision, speech). It owns all business logic — gamification, missions, leaderboards, safety filtering — ensuring the client is a thin display layer.
+The SnapLearn backend is a **Python FastAPI** application that serves as the orchestration layer between the Next.js PWA frontend and all external services (AI vision, speech). It owns all business logic — gamification, missions, leaderboards — ensuring the client is a thin display layer.
 
 **Design principles:**
-- **Server-authoritative:** XP, levels, rarity, and mission progress are calculated server-side only. The client never computes game state.
+- **Server-authoritative:** XP, levels, and mission progress are calculated server-side only. The client never computes game state.
 - **Async-first:** All I/O-bound operations (AI calls, DB queries) use `async/await`. No blocking threads.
-- **Cache-heavy:** Reference vocab, TTS audio files, and leaderboard ranks are cached in Redis to minimize latency and AI costs.
+- **BAML-orchestrated AI:** All LLM inference (vision, rarity, safety, pronunciation feedback) is defined in BAML `.baml` files and called via the auto-generated `baml_client`. No raw OpenAI SDK calls for LLM inference. See [ai.md § 2](./ai.md) for full details.
+- **Cache-heavy:** TTS audio files and leaderboard ranks are cached in Redis to minimize latency and AI costs.
 - **Language-agnostic storage:** Every captured vocab stores translations for ALL supported languages (EN, VI, ZH). The frontend filters by the child's selected language.
 - **Local-first:** All file storage (photos, TTS audio, logs) uses the local filesystem. No cloud storage dependencies.
 
@@ -22,6 +23,21 @@ The SnapLearn backend is a **Python FastAPI** application that serves as the orc
 
 ```
 backend/
+├── baml_src/                     # BAML source files (LLM function definitions)
+│   ├── generators.baml           #   Code gen config (Python/Pydantic, async, v0.76.2)
+│   ├── types.baml                #   Shared types (enums + classes → Pydantic models)
+│   ├── clients.baml              #   LLM providers + fallback chains
+│   ├── vision.baml               #   IdentifyObject, IdentifyObjectFiltered
+│   ├── speech.baml               #   GeneratePronunciationFeedback, GeneratePronunciationHint
+│   ├── rarity.baml               #   ClassifyRarity
+│   ├── safety.baml               #   CheckImageSafety, CheckWordSafety
+│   └── tests.baml                #   Test cases for all BAML functions
+│
+├── baml_client/                  # Auto-generated (DO NOT EDIT — run `baml-cli generate`)
+│   ├── __init__.py               #   Typed async functions: b.IdentifyObject(), etc.
+│   ├── types.py                  #   Pydantic v2 models: VisionResult, BlockedResult, etc.
+│   └── ...
+│
 ├── app/
 │   ├── main.py                    # FastAPI app creation, middleware, lifespan
 │   ├── config.py                  # Settings (env vars, Pydantic BaseSettings)
@@ -43,13 +59,10 @@ backend/
 │   │
 │   ├── services/
 │   │   ├── __init__.py
-│   │   ├── vision_service.py      # OpenAI GPT-4o / OpenRouter orchestration for object recognition
-│   │   ├── speech_service.py      # ASR (OpenAI Whisper) + pronunciation matching
-│   │   ├── tts_service.py         # TTS generation + local file caching (OpenAI TTS)
-│   │   ├── capture_service.py     # Capture orchestration (vision + rarity + dedup + save)
-│   │   ├── rarity_service.py      # Rarity calculation (frequency + difficulty)
-│   │   ├── safety_service.py      # Content filtering (stop-list + AI confidence)
-│   │   ├── dedup_service.py       # Duplicate detection (perceptual hashing)
+│   │   ├── vision_service.py      # BAML-orchestrated object recognition (b.IdentifyObject)
+│   │   ├── speech_service.py      # ASR (OpenAI Whisper direct) + BAML pronunciation feedback
+│   │   ├── tts_service.py         # TTS generation (OpenAI direct) + local file caching
+│   │   ├── capture_service.py     # Capture orchestration (BAML vision + safety + rarity + save)
 │   │   ├── game_service.py        # XP, levels, streaks, evolution
 │   │   ├── mission_service.py     # Mission generation, progress tracking, expiry
 │   │   ├── leaderboard_service.py # Redis sorted sets, ranking, monthly reset
@@ -62,7 +75,6 @@ backend/
 │   │   ├── parent_account.py      # ParentAccount model
 │   │   ├── child_profile.py       # ChildProfile model
 │   │   ├── captured_vocab.py      # CapturedVocab model
-│   │   ├── reference_vocab.py     # ReferenceVocab model
 │   │   ├── mission.py             # Mission model
 │   │   ├── badge.py               # Badge model
 │   │   └── leaderboard_entry.py   # LeaderboardEntry model
@@ -91,8 +103,7 @@ backend/
 │       ├── image.py               # Image validation, compression, hashing
 │       ├── audio.py               # Audio format validation, conversion
 │       ├── security.py            # Password hashing (bcrypt), JWT encode/decode
-│       ├── stop_list.py           # Content blocklist loader
-│       └── constants.py           # Rarity tiers, XP values, level thresholds
+│       └── constants.py           # XP values, level thresholds
 │
 ├── tests/
 │   ├── conftest.py                # Test fixtures (DB, Redis, mocked AI)
@@ -101,18 +112,10 @@ backend/
 │   ├── test_game.py
 │   ├── test_missions.py
 │   ├── test_leaderboard.py
-│   └── test_safety.py
 │
 ├── scripts/
-│   ├── seed_reference_vocab.py    # Load initial 200 verified vocab entries
 │   ├── seed_test_data.py          # Generate test users, captures, missions
 │   └── reset_leaderboard.py       # Monthly leaderboard reset script
-│
-├── data/
-│   ├── reference_vocab.csv        # 200+ verified EN ↔ VI ↔ ZH entries
-│   ├── stop_list_en.txt           # English blocked words
-│   ├── stop_list_vi.txt           # Vietnamese blocked words
-│   └── stop_list_zh.txt           # Chinese blocked words
 │
 ├── uploads/                       # Local photo storage (opt-in)
 │   └── photos/
@@ -138,47 +141,63 @@ backend/
 The most critical service. Orchestrates the entire photo → vocab card pipeline.
 
 ```python
+from baml_client import b
+from baml_client.types import VisionResult, BlockedResult, RarityInput
+
 class CaptureService:
     """
-    Orchestrates: image validation → reference cache check → AI vision
-    → safety filter → duplicate detection → rarity calculation → save → XP update.
+    Orchestrates: image validation → BAML safety check → BAML vision
+    → BAML rarity → save → XP update.
     """
 
     async def process_capture(
-        self, child_id: UUID, image_data: bytes
+        self, child_id: UUID, image_data: bytes, filter_level: str = "standard"
     ) -> CaptureResult:
         # 1. Validate & process image
         image = await self._validate_and_compress(image_data)
-        photo_hash = compute_perceptual_hash(image)
 
-        # 2. Check for exact duplicate (same child, same object)
-        existing = await self.dedup_service.find_duplicate(child_id, photo_hash)
-        if existing:
-            return await self._handle_duplicate(child_id, existing)
+        # 2. Pre-flight safety check (BAML)
+        safety = await b.CheckImageSafety(photo=image, filter_level=filter_level)
+        if safety.status == "blocked":
+            return CaptureResult(status="blocked", reason=safety.reason)
 
-        # 3. Check reference vocab cache (fast, free, verified)
-        cached_vocab = await self.reference_cache.lookup(image)
-        if cached_vocab:
-            return await self._create_vocab_card(child_id, cached_vocab, image, photo_hash, source="cache")
+        # 3. Call AI vision (BAML — fallback chain handled automatically)
+        ai_result = await b.IdentifyObjectFiltered(photo=image, filter_level=filter_level)
 
-        # 4. Call AI vision (OpenAI GPT-4o)
-        ai_result = await self.vision_service.identify(image)
-
-        # 5. Safety check
-        if not await self.safety_service.is_safe(ai_result):
-            return CaptureResult(status="blocked", message_vi="Chụp thứ khác vui hơn nhé!")
-
-        # 6. Confidence check
+        # 4. Handle blocked or low-confidence results
+        if isinstance(ai_result, BlockedResult):
+            return CaptureResult(status="blocked", reason=ai_result.reason)
         if ai_result.confidence < 0.7:
             return CaptureResult(status="low_confidence", message_vi="Hmm, mình chưa nhìn rõ lắm. Lại gần hơn nha!")
 
-        # 7. Create vocab card with rarity
-        return await self._create_vocab_card(child_id, ai_result, image, photo_hash, source="llm")
+        # 5. Post-flight word safety (BAML)
+        word_safety = await b.CheckWordSafety(
+            word_en=ai_result.object_en,
+            word_vi=ai_result.object_vi,
+            word_zh=ai_result.object_zh,
+            category=ai_result.category,
+            filter_level=filter_level,
+        )
+        if word_safety.status == "blocked":
+            return CaptureResult(status="blocked", reason=word_safety.reason)
 
-    async def _create_vocab_card(self, child_id, vocab_data, image, photo_hash, source):
-        # Calculate rarity
-        rarity = await self.rarity_service.calculate(vocab_data)
+        # 6. Classify rarity (BAML)
+        rarity = await b.ClassifyRarity(RarityInput(
+            object_en=ai_result.object_en,
+            category=ai_result.category,
+            difficulty_en=ai_result.difficulty_en,
+            difficulty_vi=ai_result.difficulty_vi,
+            difficulty_zh=ai_result.difficulty_zh,
+            capture_pct=None,  # TODO: wire up global frequency from Redis
+        ))
 
+        # 7. Create vocab card with rarity-based XP
+        return await self._create_vocab_card(
+            child_id, ai_result, image, source="llm",
+            rarity_tier=rarity.rarity, points_earned=rarity.base_xp,
+        )
+
+    async def _create_vocab_card(self, child_id, vocab_data, image, source, rarity_tier, points_earned):
         # Save photo to local filesystem (if parent opted in)
         photo_url = await self._maybe_save_photo(child_id, image)
 
@@ -191,10 +210,9 @@ class CaptureService:
             word_zh=vocab_data.object_zh,
             pinyin=vocab_data.pinyin,
             category=vocab_data.category,
-            rarity_tier=rarity.tier,
-            points_earned=rarity.points,
+            rarity_tier=rarity_tier,
+            points_earned=points_earned,
             photo_url=photo_url,
-            photo_hash=photo_hash,
             confidence=vocab_data.confidence,
             fun_fact_vi=vocab_data.fun_fact_vi,
             source=source,
@@ -202,9 +220,6 @@ class CaptureService:
 
         # Update game state (XP, streak, mission progress)
         game_update = await self.game_service.on_capture(child_id, captured)
-
-        # Update global capture frequency (for rarity calculation)
-        await self.rarity_service.increment_frequency(vocab_data.object_en)
 
         # Pre-generate TTS audio (async, don't block response)
         asyncio.create_task(self.tts_service.ensure_cached(vocab_data))
@@ -218,63 +233,9 @@ class CaptureService:
             mission_update=game_update.mission_update,
             tts_urls=await self.tts_service.get_urls(vocab_data),
         )
-
-    async def _handle_duplicate(self, child_id, existing):
-        # Duplicate = 25% XP, but opportunity to practice pronunciation
-        xp = existing.points_earned // 4
-        game_update = await self.game_service.on_duplicate(child_id, existing, xp)
-        return CaptureResult(
-            status="duplicate",
-            vocab_card=existing,
-            xp_earned=xp,
-            total_xp=game_update.total_xp,
-        )
 ```
 
-### 3.2 Rarity Service — `rarity_service.py`
-
-Dynamic rarity based on global capture frequency + linguistic difficulty.
-
-```python
-class RarityService:
-    """
-    Rarity tiers:
-      Common (⚪ 10pts)    — captured by >50% of users OR difficulty 1
-      Uncommon (🟢 25pts)  — captured by 20-50% OR difficulty 2
-      Rare (🔵 50pts)      — captured by 5-20% OR difficulty 3
-      Epic (🟣 100pts)     — captured by 1-5% OR difficulty 4
-      Legendary (🟡 250pts)— captured by <1% OR difficulty 5
-    """
-
-    async def calculate(self, vocab_data: VisionResult) -> RarityResult:
-        # 1. Get global capture frequency from Redis
-        frequency_rank = await self._get_frequency_percentile(vocab_data.object_en)
-
-        # 2. Get linguistic difficulty from AI response
-        difficulty = max(vocab_data.difficulty_en, vocab_data.difficulty_vi, vocab_data.difficulty_zh)
-
-        # 3. Use the HIGHER rarity between frequency-based and difficulty-based
-        freq_rarity = self._frequency_to_rarity(frequency_rank)
-        diff_rarity = self._difficulty_to_rarity(difficulty)
-        final_rarity = max(freq_rarity, diff_rarity)  # higher = rarer
-
-        return RarityResult(
-            tier=final_rarity.name,
-            points=final_rarity.points,
-        )
-
-    async def increment_frequency(self, word_en: str):
-        """Track how many times a word has been captured globally."""
-        await self.redis.zincrby("capture_frequency:global", 1, word_en.lower())
-
-    async def _get_frequency_percentile(self, word_en: str) -> float:
-        """What % of total users have captured this word? Returns 0.0–1.0."""
-        count = await self.redis.zscore("capture_frequency:global", word_en.lower())
-        total_users = await self.redis.get("stats:total_active_users") or 1
-        return (count or 0) / int(total_users)
-```
-
-### 3.3 Game Service — `game_service.py`
+### 3.2 Game Service — `game_service.py`
 
 Server-authoritative gamification engine.
 
@@ -483,45 +444,7 @@ class LeaderboardService:
         # Redis keys auto-expire (TTL set on creation)
 ```
 
-### 3.6 Safety Service — `safety_service.py`
-
-Multi-layer content filtering.
-
-```python
-class SafetyService:
-    """
-    Content safety for 6-10 year-olds. Multiple filter layers.
-    """
-
-    def __init__(self):
-        self.stop_lists = {
-            "en": self._load_stop_list("data/stop_list_en.txt"),
-            "vi": self._load_stop_list("data/stop_list_vi.txt"),
-            "zh": self._load_stop_list("data/stop_list_zh.txt"),
-        }
-
-    async def is_safe(self, ai_result: VisionResult, filter_level: str = "standard") -> bool:
-        # Layer 1: AI confidence check
-        if ai_result.confidence < 0.7:
-            return False  # Uncertain = don't show
-
-        # Layer 2: Stop-list check (all languages)
-        for lang, stop_list in self.stop_lists.items():
-            word = getattr(ai_result, f"object_{lang}", "")
-            if word.lower() in stop_list:
-                return False
-
-        # Layer 3: Category-based filtering
-        blocked_categories = {"weapons", "alcohol", "tobacco", "adult", "violence"}
-        if filter_level == "strict":
-            blocked_categories |= {"insects", "medical", "scary"}
-        if ai_result.category in blocked_categories:
-            return False
-
-        return True
-```
-
-### 3.7 Auth Service — `auth_service.py`
+### 3.5 Auth Service — `auth_service.py`
 
 Simple email/password authentication with JWT tokens.
 
@@ -643,7 +566,6 @@ CREATE TABLE child_profile (
     streak_date DATE,
     daily_time_limit_minutes INTEGER DEFAULT 30,
     daily_capture_count INTEGER DEFAULT 0,
-    content_filter_level VARCHAR(10) DEFAULT 'standard',
     photo_storage_enabled BOOLEAN DEFAULT FALSE,
     leaderboard_visibility VARCHAR(20) DEFAULT 'class_friends',
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -660,10 +582,9 @@ CREATE TABLE captured_vocab (
     word_zh VARCHAR(50) NOT NULL,
     pinyin VARCHAR(50),
     category VARCHAR(50) NOT NULL,
-    rarity_tier VARCHAR(20) NOT NULL,  -- common, uncommon, rare, epic, legendary
+    rarity_tier VARCHAR(20),              -- common, uncommon, rare, epic, legendary (phase 2)
     points_earned INTEGER NOT NULL,
     photo_url TEXT,                     -- local file path (e.g., /uploads/photos/abc.jpg)
-    photo_hash VARCHAR(64),            -- perceptual hash for dedup
     mastery_en SMALLINT DEFAULT 0,     -- 0-5
     mastery_vi SMALLINT DEFAULT 0,     -- 0-5
     mastery_zh SMALLINT DEFAULT 0,     -- 0-5
@@ -673,33 +594,11 @@ CREATE TABLE captured_vocab (
     example_sentence_vi TEXT,
     example_sentence_zh TEXT,
     confidence REAL,
-    source VARCHAR(10) DEFAULT 'llm',  -- 'cache' or 'llm'
+    source VARCHAR(10) DEFAULT 'llm',  -- 'llm'
     captured_at TIMESTAMPTZ DEFAULT NOW(),
     last_practiced TIMESTAMPTZ,
 
     UNIQUE(child_id, word_en, word_vi)  -- One card per word per child
-);
-
--- Reference vocabulary (verification cache, ~1000 entries)
-CREATE TABLE reference_vocab (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    word_en VARCHAR(100) NOT NULL,
-    phonetic_en VARCHAR(50),
-    word_vi VARCHAR(100) NOT NULL,
-    word_zh VARCHAR(50) NOT NULL,
-    pinyin VARCHAR(50),
-    category VARCHAR(50) NOT NULL,
-    difficulty_en SMALLINT DEFAULT 1,   -- 1-5
-    difficulty_vi SMALLINT DEFAULT 1,   -- 1-5
-    difficulty_zh SMALLINT DEFAULT 1,   -- 1-5
-    fun_fact_vi TEXT,
-    example_sentence_en TEXT,
-    example_sentence_vi TEXT,
-    example_sentence_zh TEXT,
-    verified BOOLEAN DEFAULT FALSE,
-    source VARCHAR(20) DEFAULT 'curated',  -- curated, llm_verified
-    capture_count INTEGER DEFAULT 0,        -- global frequency
-    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Missions
@@ -754,10 +653,6 @@ CREATE TABLE activity_log (
 CREATE UNIQUE INDEX idx_parent_email ON parent_account(LOWER(email));
 CREATE INDEX idx_captured_vocab_child_word ON captured_vocab(child_id, word_en, word_vi);
 CREATE INDEX idx_captured_vocab_child_cat ON captured_vocab(child_id, category);
-CREATE INDEX idx_captured_vocab_hash ON captured_vocab(child_id, photo_hash);
-CREATE UNIQUE INDEX idx_ref_vocab_en ON reference_vocab(LOWER(word_en));
-CREATE UNIQUE INDEX idx_ref_vocab_vi ON reference_vocab(LOWER(word_vi));
-CREATE INDEX idx_ref_vocab_zh ON reference_vocab(word_zh);
 CREATE INDEX idx_mission_child_status ON mission(child_id, status, expires_at);
 CREATE INDEX idx_activity_child_time ON activity_log(child_id, created_at DESC);
 CREATE INDEX idx_leaderboard_scope ON leaderboard_snapshot(scope, period, total_points DESC);
@@ -812,7 +707,7 @@ POST /api/capture
 
   Returns (success):
     {
-      status: "new_capture" | "duplicate",
+      status: "new_capture",
       vocab_card: VocabCard,
       xp_earned: int,
       total_xp: int,
@@ -822,7 +717,7 @@ POST /api/capture
     }
 
   Returns (failure):
-    { status: "low_confidence" | "blocked", message_vi: str }
+    { status: "low_confidence", message_vi: str }
 ```
 
 ### 5.4 Speech (pronunciation)
@@ -962,7 +857,6 @@ GET /api/parent/dashboard
       words_trend: [{ date: str, count: int }],   # last 4 weeks
       language_breakdown: { en: int, vi: int, zh: int },
       category_diversity: [{ category: str, count: int }],
-      rarity_distribution: { common: int, uncommon: int, rare: int, epic: int, legendary: int },
       pronunciation_mastery: { level_0: int, level_1: int, ..., level_5: int, evolved: int },
       streak_info: { current: int, longest: int, days_active_this_month: int },
       mission_stats: { attempted: int, completed: int }
@@ -997,7 +891,6 @@ PATCH /api/parent/controls
     target_language?: str,
     secondary_language?: str | null,
     photo_storage_enabled?: bool,
-    content_filter_level?: "standard" | "strict",
     leaderboard_visibility?: "none" | "class_friends" | "all"
   }
   Returns: ChildProfile (updated)
@@ -1020,8 +913,6 @@ GET /api/parent/export
 | **Leaderboard snapshot** | 1st of month 00:00 | Snapshot Redis leaderboard to PostgreSQL |
 | **Leaderboard reset** | 1st of month 00:01 | Clear Redis sorted sets for new period |
 | **Streak reset check** | 00:00 UTC+7 daily | Reset streaks for children who didn't capture yesterday |
-| **TTS pre-cache** | On deploy | Pre-generate TTS audio for reference vocab (1000 words × 3 languages) |
-| **Reference vocab update** | Weekly | Promote high-confidence LLM results to verified reference vocab |
 
 **POC implementation:** Use FastAPI's built-in `BackgroundTasks` for simple async jobs. For scheduled tasks, use a lightweight scheduler like `APScheduler` running in the same process.
 
@@ -1049,7 +940,6 @@ All errors return consistent JSON:
 | Code | HTTP | When | Child-facing message (VI) |
 |---|---|---|---|
 | `CAPTURE_LOW_CONFIDENCE` | 200 | AI confidence < 0.7 | "Hmm, mình chưa nhìn rõ lắm. Lại gần hơn nha!" |
-| `CAPTURE_BLOCKED` | 200 | Content safety filter triggered | "Chụp thứ khác vui hơn nhé!" |
 | `CAPTURE_RATE_LIMITED` | 429 | Daily capture limit exceeded | "Hôm nay chụp nhiều rồi! Mai quay lại nha!" |
 | `AI_SERVICE_ERROR` | 502 | OpenAI/OpenRouter API down | "AI buồn ngủ một chút! Chụp lại nhé!" |
 | `AI_TIMEOUT` | 504 | AI call exceeds 10s timeout | "AI buồn ngủ một chút! Chụp lại nhé!" |
@@ -1063,22 +953,20 @@ All errors return consistent JSON:
 
 ### 7.3 AI service resilience
 
+BAML handles provider fallback automatically via declarative fallback chains. The Python service layer only needs to catch the final failure:
+
 ```python
+from baml_client import b
+from baml_client.errors import BamlError
+
 class VisionService:
     async def identify(self, image: bytes) -> VisionResult:
         try:
-            # Primary: OpenAI GPT-4o
-            result = await self._call_openai(image, timeout=8.0)
-            return result
-        except (TimeoutError, APIError) as e:
-            logger.warning(f"OpenAI failed: {e}, trying OpenRouter fallback")
-            try:
-                # Fallback: OpenRouter (Gemini Flash or Claude Sonnet)
-                result = await self._call_openrouter(image, timeout=6.0)
-                return result
-            except (TimeoutError, APIError) as e:
-                logger.error(f"All vision providers failed: {e}")
-                raise AIServiceError("Vision service unavailable")
+            # BAML automatically tries: GPT-4o → Gemini Flash → Claude Sonnet
+            return await b.IdentifyObject(photo=image)
+        except BamlError as e:
+            logger.error(f"All vision providers failed: {e}")
+            raise AIServiceError("Vision service unavailable")
 ```
 
 ---
@@ -1122,8 +1010,6 @@ logger.info(
     "capture_processed",
     child_id=str(child_id),
     word_en=result.word_en,
-    rarity=result.rarity_tier,
-    source=result.source,          # cache or llm
     ai_latency_ms=ai_latency,
     total_latency_ms=total_latency,
     confidence=result.confidence,
@@ -1135,7 +1021,6 @@ logger.info(
 | Metric | Type | Purpose |
 |---|---|---|
 | `capture.total` | Counter | Total captures processed |
-| `capture.cache_hit_rate` | Gauge | % of captures served from reference cache |
 | `capture.ai_latency_ms` | Histogram | OpenAI/OpenRouter response time |
 | `capture.e2e_latency_ms` | Histogram | Total capture endpoint latency |
 | `pronunciation.stars` | Histogram | Distribution of pronunciation scores |
@@ -1205,7 +1090,10 @@ cp .env.example .env
 # Fill in: OPENAI_API_KEY, OPENROUTER_API_KEY, JWT_SECRET_KEY
 docker compose up -d
 uv run alembic upgrade head
-uv run python scripts/seed_reference_vocab.py
+
+# Generate BAML client (required after any .baml file changes)
+cd app/be && baml-cli generate && cd ../..
+
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
@@ -1215,12 +1103,12 @@ uv run uvicorn app.main:app --reload --port 8000
 
 | Sprint | Weeks | Backend deliverables |
 |---|---|---|
-| **1** | 1-2 | FastAPI scaffold, DB schema + migrations, email/password auth (JWT), `POST /capture` (OpenAI GPT-4o integration), reference vocab seeding |
-| **2** | 3-4 | `POST /pronounce` (OpenAI Whisper integration), `GET /tts` (OpenAI TTS + local file caching), pronunciation exact-match logic, star rating system |
-| **3** | 5-6 | `GET /collection`, `GET /vocab/{id}`, mastery update logic, duplicate detection (pHash), card evolution logic |
+| **1** | 1-2 | FastAPI scaffold, DB schema + migrations, email/password auth (JWT), BAML setup (types, clients, generators), `POST /capture` (BAML `IdentifyObject` + `CheckImageSafety` + `CheckWordSafety` integration) |
+| **2** | 3-4 | `POST /pronounce` (OpenAI Whisper direct + BAML `GeneratePronunciationFeedback`), `GET /tts` (OpenAI TTS direct + local file caching), pronunciation exact-match logic, star rating system |
+| **3** | 5-6 | `GET /collection`, `GET /vocab/{id}`, mastery update logic, card evolution logic, BAML `ClassifyRarity` integration |
 | **4** | 7-8 | Mission service (daily/weekly generation), leaderboard service (Redis sorted sets), level progression, `GET /leaderboard`, `GET /missions`, `POST /missions/{id}/claim` |
 | **5** | 9-10 | Parent gate API, parent dashboard endpoints, activity feed, parental controls CRUD, CSV export |
-| **6** | 11-12 | Rate limiting, anti-gaming tuning, performance optimization, error handling hardening, log review and cleanup |
+| **6** | 11-12 | Rate limiting, anti-gaming tuning, performance optimization, BAML prompt iteration, error handling hardening, log review and cleanup |
 
 ---
 

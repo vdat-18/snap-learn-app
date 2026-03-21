@@ -6,13 +6,13 @@
 
 ## Overview
 
-The SnapLearn backend is a **Python FastAPI** application that serves as the orchestration layer between the Next.js PWA frontend and all external services (AI vision, speech). It owns all business logic — gamification, missions, leaderboards, safety filtering — ensuring the client is a thin display layer.
+The SnapLearn backend is a **Python FastAPI** application that serves as the orchestration layer between the Next.js PWA frontend and all external services (AI vision, speech). It owns all business logic — gamification, missions, leaderboards — ensuring the client is a thin display layer.
 
 ### Design Principles
 
-- **Server-authoritative:** XP, levels, rarity, and mission progress are calculated server-side only. The client never computes game state.
+- **Server-authoritative:** XP, levels, and mission progress are calculated server-side only. The client never computes game state.
 - **Async-first:** All I/O-bound operations (AI calls, DB queries) use `async/await`. No blocking threads.
-- **Cache-heavy:** Reference vocab, TTS audio files, and leaderboard ranks are cached in Redis to minimize latency and AI costs.
+- **Cache-heavy:** TTS audio files and leaderboard ranks are cached in Redis to minimize latency and AI costs.
 - **Language-agnostic storage:** Every captured vocab stores translations for ALL supported languages (EN, VI, ZH). The frontend filters by the child's selected language.
 - **Local-first:** All file storage (photos, TTS audio, logs) uses the local filesystem. No cloud storage dependencies.
 
@@ -37,7 +37,7 @@ The SnapLearn backend is a **Python FastAPI** application that serves as the orc
 ## Project Structure
 
 ```
-backend/
+be/
 ├── app/
 │   ├── main.py                    # FastAPI app creation, middleware, lifespan
 │   ├── config.py                  # Settings (env vars, Pydantic BaseSettings)
@@ -60,10 +60,7 @@ backend/
 │   │   ├── vision_service.py      # OpenAI GPT-4o / OpenRouter for object recognition
 │   │   ├── speech_service.py      # ASR (OpenAI Whisper) + pronunciation matching
 │   │   ├── tts_service.py         # TTS generation + local file caching (OpenAI TTS)
-│   │   ├── capture_service.py     # Capture orchestration (vision + rarity + dedup + save)
-│   │   ├── rarity_service.py      # Rarity calculation (frequency + difficulty)
-│   │   ├── safety_service.py      # Content filtering (stop-list + AI confidence)
-│   │   ├── dedup_service.py       # Duplicate detection (perceptual hashing)
+│   │   ├── capture_service.py     # Capture orchestration (vision + save)
 │   │   ├── game_service.py        # XP, levels, streaks, evolution
 │   │   ├── mission_service.py     # Mission generation, progress tracking, expiry
 │   │   ├── leaderboard_service.py # Redis sorted sets, ranking, monthly reset
@@ -74,7 +71,6 @@ backend/
 │   │   ├── parent_account.py
 │   │   ├── child_profile.py
 │   │   ├── captured_vocab.py
-│   │   ├── reference_vocab.py
 │   │   ├── mission.py
 │   │   ├── badge.py
 │   │   └── leaderboard_entry.py
@@ -98,8 +94,7 @@ backend/
 │       ├── image.py               # Image validation, compression, hashing
 │       ├── audio.py               # Audio format validation, conversion
 │       ├── security.py            # Password hashing (bcrypt), JWT encode/decode
-│       ├── stop_list.py           # Content blocklist loader
-│       └── constants.py           # Rarity tiers, XP values, level thresholds
+│       └── constants.py           # XP values, level thresholds
 │
 ├── tests/
 │   ├── conftest.py                # Test fixtures (DB, Redis, mocked AI)
@@ -108,18 +103,10 @@ backend/
 │   ├── test_game.py
 │   ├── test_missions.py
 │   ├── test_leaderboard.py
-│   └── test_safety.py
 │
 ├── scripts/
-│   ├── seed_reference_vocab.py    # Load initial 200 verified vocab entries
 │   ├── seed_test_data.py          # Generate test users, captures, missions
 │   └── reset_leaderboard.py       # Monthly leaderboard reset script
-│
-├── data/
-│   ├── reference_vocab.csv        # 200+ verified EN ↔ VI ↔ ZH entries
-│   ├── stop_list_en.txt           # English blocked words
-│   ├── stop_list_vi.txt           # Vietnamese blocked words
-│   └── stop_list_zh.txt           # Chinese blocked words
 │
 ├── uploads/                       # Local photo storage (opt-in)
 ├── tts_cache/                     # Local TTS audio cache (en/, vi/, zh/)
@@ -141,19 +128,15 @@ backend/
 The most critical service. Orchestrates the entire **photo → vocab card** pipeline:
 
 1. Validate & compress image
-2. Check for exact duplicate (perceptual hash)
-3. Check reference vocab cache (fast, free, verified)
-4. Call AI vision (OpenAI GPT-4o) if cache miss
-5. Safety filter (stop-list + confidence + category)
-6. Rarity calculation (global frequency + linguistic difficulty)
-7. Save vocab card + update XP + check mission progress
-8. Pre-generate TTS audio (async, non-blocking)
+2. Call AI vision (OpenAI GPT-4o)
+3. Save vocab card + update XP + check mission progress
+4. Pre-generate TTS audio (async, non-blocking)
 
 ### Game Service
 
 Server-authoritative gamification engine managing:
 
-- **XP system:** Points per rarity tier (Common 10pts → Legendary 250pts), duplicate penalty (25%), pronunciation bonus (+5)
+- **XP system:** Points per capture, pronunciation bonus (+5)
 - **Level progression:** 6 levels from Beginner Explorer (0 XP) to Polyglot Champion (60,000 XP)
 - **Streaks:** Daily capture tracking, milestone multipliers (7, 14, 30 days)
 - **Card evolution:** 5 perfect pronunciations across different sessions → evolved card with fun fact & example sentences
@@ -173,16 +156,6 @@ Real-time rankings using Redis sorted sets:
 - Scopes: global, class, friends
 - Monthly reset with PostgreSQL snapshots for historical records
 - Automatic rank calculation
-
-### Safety Service
-
-Multi-layer content filtering for 6-10 year-olds:
-
-1. AI prompt-level filtering (built into vision prompt)
-2. Confidence gate (reject < 0.7)
-3. Stop-list filter (curated blocklists in EN, VI, ZH)
-4. Category filter (weapons, alcohol, adult content, etc.)
-5. Human review flag for borderline results
 
 ---
 
@@ -227,14 +200,14 @@ Multi-layer content filtering for 6-10 year-olds:
 
 ## Database Schema
 
-Key tables: `parent_account`, `child_profile`, `captured_vocab`, `reference_vocab`, `mission`, `badge`, `leaderboard_snapshot`, `activity_log`.
+Key tables: `parent_account`, `child_profile`, `captured_vocab`, `mission`, `badge`, `leaderboard_snapshot`, `activity_log`.
 
 See [`_docs/backend.md`](../../_docs/backend.md) for full SQL schema and index definitions.
 
 ### Redis Data Structures
 
 - **Leaderboards:** Sorted sets (`leaderboard:global:{period}`)
-- **Capture frequency:** Sorted set for rarity calculation (`capture_frequency:global`)
+- **Capture frequency:** Sorted set for future rarity calculation (`capture_frequency:global`)
 - **Rate limiting:** Per-child daily counters with TTL
 - **TTS cache keys:** Local file path mappings
 - **JWT refresh tokens:** Per-parent hash with expiry
@@ -263,7 +236,6 @@ See [`_docs/backend.md`](../../_docs/backend.md) for full SQL schema and index d
 | Leaderboard snapshot | 1st of month | Snapshot Redis to PostgreSQL |
 | Leaderboard reset | 1st of month | Clear Redis sorted sets |
 | Streak reset check | 00:00 UTC+7 daily | Reset streaks for inactive children |
-| TTS pre-cache | On deploy | Pre-generate TTS for reference vocab |
 
 ---
 
@@ -284,7 +256,6 @@ cp .env.example .env
 
 docker compose up -d           # Start Postgres + Redis
 uv run alembic upgrade head    # Run migrations
-uv run python scripts/seed_reference_vocab.py  # Seed 200 verified vocab entries
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
@@ -300,9 +271,9 @@ GET /health → { "status": "healthy", "db": "ok", "redis": "ok" }
 
 | Sprint | Weeks | Deliverables |
 |---|---|---|
-| **1** | 1-2 | FastAPI scaffold, DB schema + migrations, auth (JWT), `POST /capture` (GPT-4o), reference vocab seeding |
+| **1** | 1-2 | FastAPI scaffold, DB schema + migrations, auth (JWT), `POST /capture` (GPT-4o) |
 | **2** | 3-4 | `POST /pronounce` (Whisper), `GET /tts` (OpenAI TTS + caching), pronunciation matching, star rating |
-| **3** | 5-6 | Collection endpoints, mastery system, duplicate detection (pHash), card evolution |
+| **3** | 5-6 | Collection endpoints, mastery system, card evolution |
 | **4** | 7-8 | Mission service, leaderboard (Redis), level progression, XP system |
 | **5** | 9-10 | Parent gate, parent dashboard, activity feed, parental controls, CSV export |
 | **6** | 11-12 | Rate limiting, anti-gaming, performance optimization, error handling, logging |
