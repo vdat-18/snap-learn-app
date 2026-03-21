@@ -44,18 +44,21 @@ async def identify_object(
     image_bytes: bytes,
     filter_level: FilterLevel = FilterLevel.Standard,
     *,
-    run_safety_preflight: bool = True,
+    run_safety_preflight: bool = False,
+    run_word_safety: bool = False,
 ) -> Union[VisionResult, BlockedResult]:
     """
     Full capture pipeline:
     1. (Optional) Pre-flight safety check via fast model
     2. Object identification via vision model with fallback chain
-    3. Post-flight word safety check
+    3. Confidence gate
+    4. (Optional) Post-flight word safety check
 
     Args:
         image_bytes: JPEG image bytes (max 1024px, already resized)
         filter_level: Parent-configured content filter level
         run_safety_preflight: Whether to run the fast safety gate first
+        run_word_safety: Whether to run the post-flight word safety check
 
     Returns:
         VisionResult on success, BlockedResult if content is unsafe
@@ -119,21 +122,22 @@ async def identify_object(
         )
 
     # ── Step 4: Post-flight word safety ───────────────────────
-    try:
-        word_safety: SafetyCheckResult = await b.CheckWordSafety(
-            word_en=result.object_en,
-            word_vi=result.object_vi,
-            word_zh=result.object_zh,
-            category=result.category,
-            filter_level=filter_level,
-        )
-        if word_safety.status.value == "blocked":
-            logger.info("Word safety blocked: %s", word_safety.reason)
-            return BlockedResult(
-                status="blocked",
-                reason=word_safety.reason,
+    if run_word_safety:
+        try:
+            word_safety: SafetyCheckResult = await b.CheckWordSafety(
+                word_en=result.object_en,
+                word_vi=result.object_vi,
+                word_zh=result.object_zh,
+                category=result.category,
+                filter_level=filter_level,
             )
-    except Exception:
-        logger.warning("Word safety check failed, allowing result", exc_info=True)
+            if word_safety.status.value == "blocked":
+                logger.info("Word safety blocked: %s", word_safety.reason)
+                return BlockedResult(
+                    status="blocked",
+                    reason=word_safety.reason,
+                )
+        except Exception:
+            logger.warning("Word safety check failed, allowing result", exc_info=True)
 
     return result
