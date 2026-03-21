@@ -230,13 +230,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
                         <h3 className="font-black uppercase text-sm mb-4">Bí mật thẻ bài {vocab.evolved ? '✨' : '🔒'}</h3>
                         {vocab.evolved ? (
                             <div className="space-y-4">
-                                <p className="font-bold text-indigo-900/80">{vocab.fun_fact_vi || "Bí ẩn..."}</p>
-                                {vocab.example_sentence_en && (
-                                    <div className="bg-white/50 p-4 rounded-2xl border border-white">
-                                        <p className="font-black text-skyBlue text-sm">{vocab.example_sentence_en}</p>
-                                        <p className="text-xs text-slate-500">{vocab.example_sentence_vi}</p>
-                                    </div>
-                                )}
+                                <p className="font-bold text-indigo-900/80">Thẻ đã tiến hoá!</p>
                             </div>
                         ) : (
                             <div className="flex justify-center py-4 text-slate-300"><BookOpen /></div>

@@ -50,9 +50,7 @@ def get_diversity_multiplier(category_capture_count: int) -> float:
 async def classify_rarity(
     object_en: str,
     category: ObjectCategory,
-    difficulty_en: int,
     difficulty_vi: int,
-    difficulty_zh: int,
     capture_pct: Optional[float] = None,
 ) -> RarityResult:
     """
@@ -61,7 +59,7 @@ async def classify_rarity(
     Args:
         object_en: English name of the object
         category: Object category
-        difficulty_en/vi/zh: Difficulty per language (1-5)
+        difficulty_vi: Vietnamese difficulty (1-5)
         capture_pct: % of users who captured this (from Redis), None if unknown
 
     Returns:
@@ -70,9 +68,7 @@ async def classify_rarity(
     rarity_input = RarityInput(
         object_en=object_en,
         category=category,
-        difficulty_en=difficulty_en,
         difficulty_vi=difficulty_vi,
-        difficulty_zh=difficulty_zh,
         capture_pct=capture_pct,
     )
 

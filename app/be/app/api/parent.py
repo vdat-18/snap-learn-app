@@ -285,12 +285,12 @@ async def export_csv(
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "word_en", "word_vi", "word_zh", "pinyin", "category",
+        "word_en", "word_vi", "word_zh", "category",
         "mastery_en", "mastery_vi", "mastery_zh", "captured_at",
     ])
     for v in vocabs:
         writer.writerow([
-            v.word_en, v.word_vi, v.word_zh, v.pinyin, v.category,
+            v.word_en, v.word_vi, v.word_zh, v.category,
             v.mastery_en, v.mastery_vi, v.mastery_zh,
             v.created_at.isoformat() if v.created_at else "",
         ])

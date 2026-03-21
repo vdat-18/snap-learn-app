@@ -105,9 +105,7 @@ async def process_capture(
         rarity_result = await classify_rarity(
             object_en=vision_result.object_en,
             category=vision_result.category,
-            difficulty_en=getattr(vision_result, "difficulty_en", 1),
             difficulty_vi=getattr(vision_result, "difficulty_vi", 1),
-            difficulty_zh=getattr(vision_result, "difficulty_zh", 1),
         )
     except Exception as e:
         logger.warning("rarity_classification_failed", error=str(e))
@@ -179,18 +177,11 @@ async def process_capture(
         word_en=vision_result.object_en,
         word_vi=vision_result.object_vi,
         word_zh=vision_result.object_zh,
-        pinyin=getattr(vision_result, "pinyin", None),
         phonetic_en=getattr(vision_result, "phonetic_en", None),
         category=cat_value,
         rarity_tier=rarity_value,
         confidence=vision_result.confidence,
-        description_en=getattr(vision_result, "description_en", None),
         description_vi=getattr(vision_result, "description_vi", None),
-        description_zh=getattr(vision_result, "description_zh", None),
-        fun_fact_vi=getattr(vision_result, "fun_fact_vi", None),
-        example_sentence_en=getattr(vision_result, "example_sentence_en", None),
-        example_sentence_vi=getattr(vision_result, "example_sentence_vi", None),
-        example_sentence_zh=getattr(vision_result, "example_sentence_zh", None),
         points_earned=xp_earned,
         photo_url=photo_url,
         photo_hash=photo_hash,
@@ -220,9 +211,7 @@ async def process_capture(
             word_vi=vision_result.object_vi,
             word_zh=vision_result.object_zh,
             cache_dir=settings.TTS_CACHE_DIR,
-            description_en=getattr(vision_result, "description_en", None),
             description_vi=getattr(vision_result, "description_vi", None),
-            description_zh=getattr(vision_result, "description_zh", None),
         )
     )
 
@@ -254,17 +243,10 @@ def _vocab_to_response(vocab: CapturedVocab) -> VocabCardResponse:
         word_en=vocab.word_en,
         word_vi=vocab.word_vi,
         word_zh=vocab.word_zh,
-        pinyin=vocab.pinyin,
         phonetic_en=vocab.phonetic_en,
         category=vocab.category,
         rarity_tier=vocab.rarity_tier,
-        description_en=vocab.description_en,
         description_vi=vocab.description_vi,
-        description_zh=vocab.description_zh,
-        fun_fact_vi=vocab.fun_fact_vi,
-        example_sentence_en=vocab.example_sentence_en,
-        example_sentence_vi=vocab.example_sentence_vi,
-        example_sentence_zh=vocab.example_sentence_zh,
         confidence=vocab.confidence,
         photo_url=vocab.photo_url,
     )

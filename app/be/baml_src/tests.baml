@@ -113,9 +113,7 @@ test RarityCommonCat {
     input {
       object_en "cat"
       category Animals
-      difficulty_en 1
       difficulty_vi 1
-      difficulty_zh 2
       capture_pct 65.0
     }
   }
@@ -127,9 +125,7 @@ test RarityRareTelescope {
     input {
       object_en "telescope"
       category Technology
-      difficulty_en 4
       difficulty_vi 4
-      difficulty_zh 5
       capture_pct 3.2
     }
   }
@@ -141,9 +137,7 @@ test RarityLegendaryAccordion {
     input {
       object_en "accordion"
       category Instruments
-      difficulty_en 5
       difficulty_vi 5
-      difficulty_zh 5
       capture_pct null
     }
   }
@@ -155,9 +149,7 @@ test RarityUncommonBicycle {
     input {
       object_en "bicycle"
       category Vehicles
-      difficulty_en 2
       difficulty_vi 2
-      difficulty_zh 3
       capture_pct 35.0
     }
   }
@@ -281,7 +273,7 @@ test IdentifyEarbudsInCase {
   @@assert(identifies_earbuds, {{ "earbuds" in this.object_en|lower or "headphones" in this.object_en|lower }})
   @@assert(correct_category, {{ this.category == "Technology" }})
   @@assert(high_confidence, {{ this.confidence >= 0.8 }})
-  @@assert(not_trivially_common, {{ this.difficulty_en >= 2 }})
+  @@assert(not_trivially_common, {{ this.difficulty_vi >= 2 }})
 }
 
 test IdentifyEarbudsOnMattress {
@@ -327,7 +319,7 @@ test IdentifyExcavatorOnSand {
   @@assert(identifies_excavator, {{ "excavator" in this.object_en|lower or "digger" in this.object_en|lower }})
   @@assert(correct_category, {{ this.category == "Vehicles" or this.category == "Toys" }})
   @@assert(high_confidence, {{ this.confidence >= 0.8 }})
-  @@assert(appropriately_rare, {{ this.difficulty_en >= 3 }})
+  @@assert(appropriately_rare, {{ this.difficulty_vi >= 3 }})
 }
 
 test IdentifyExcavatorOnCanvas {
@@ -341,7 +333,7 @@ test IdentifyExcavatorOnCanvas {
   @@assert(identifies_excavator, {{ "excavator" in this.object_en|lower or "digger" in this.object_en|lower }})
   @@assert(correct_category, {{ this.category == "Vehicles" or this.category == "Toys" }})
   @@assert(sufficient_confidence, {{ this.confidence >= 0.7 }})
-  @@assert(appropriately_rare, {{ this.difficulty_en >= 3 }})
+  @@assert(appropriately_rare, {{ this.difficulty_vi >= 3 }})
 }
 
 test IdentifyExcavatorHumanInFrame {
@@ -367,9 +359,7 @@ test RarityCommonCatAsserted {
     input {
       object_en "cat"
       category Animals
-      difficulty_en 1
       difficulty_vi 1
-      difficulty_zh 2
       capture_pct 65.0
     }
   }
@@ -383,9 +373,7 @@ test RarityEpicTelescopeAsserted {
     input {
       object_en "telescope"
       category Technology
-      difficulty_en 4
       difficulty_vi 4
-      difficulty_zh 5
       capture_pct 3.2
     }
   }
@@ -400,9 +388,7 @@ test RarityLegendaryAccordionAsserted {
     input {
       object_en "accordion"
       category Instruments
-      difficulty_en 5
       difficulty_vi 5
-      difficulty_zh 5
       capture_pct null
     }
   }
@@ -416,9 +402,7 @@ test RarityUncommonBicycleAsserted {
     input {
       object_en "bicycle"
       category Vehicles
-      difficulty_en 2
       difficulty_vi 2
-      difficulty_zh 3
       capture_pct 35.0
     }
   }
@@ -432,13 +416,11 @@ test RarityFrequencyOverridesDifficulty {
     input {
       object_en "sundial"
       category Tools
-      difficulty_en 2
       difficulty_vi 3
-      difficulty_zh 3
       capture_pct 0.4
     }
   }
-  // difficulty→uncommon, frequency(0.4%)→legendary — MAX should win
+  // difficulty→rare, frequency(0.4%)→legendary — MAX should win
   @@assert(frequency_wins_over_difficulty, {{ this.rarity == "Legendary" }})
   @@assert(correct_xp, {{ this.base_xp == 250 }})
 }
@@ -449,9 +431,7 @@ test RarityXpMatchesRarity {
     input {
       object_en "cactus"
       category Nature
-      difficulty_en 3
       difficulty_vi 3
-      difficulty_zh 4
       capture_pct 8.0
     }
   }

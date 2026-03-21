@@ -25,17 +25,10 @@ export interface CaptureResponse {
         word_en: string;
         word_vi: string;
         word_zh: string;
-        pinyin: string;
         phonetic_en: string;
         category: string;
         rarity_tier: string;
-        description_en: string | null;
         description_vi: string | null;
-        description_zh: string | null;
-        fun_fact_vi: string | null;
-        example_sentence_en: string | null;
-        example_sentence_vi: string | null;
-        example_sentence_zh: string | null;
         confidence: number;
         photo_url: string;
     };
@@ -67,9 +60,7 @@ export interface CapturedWord {
     capturedAt: string;
     practiceCount: number;
     isEvolved: boolean;
-    description_en?: string | null;
     description_vi?: string | null;
-    description_zh?: string | null;
 }
 
 export interface LeaderboardEntry {

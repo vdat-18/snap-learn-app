@@ -6,8 +6,8 @@
 // =============================================================
 
 // ── Identify Object from Photo ────────────────────────────────
-// Main function: receives a photo, returns trilingual vocabulary
-// with difficulty ratings, fun facts, and example sentences.
+// Main function: receives a photo, returns identified object
+// with English name, Vietnamese description, and difficulty.
 
 function IdentifyObject(
   photo: image
@@ -16,28 +16,21 @@ function IdentifyObject(
 
   prompt #"
     You are a friendly AI assistant for SnapLearn, an educational app
-    for Vietnamese children aged 6–10 learning English and Mandarin.
+    for Vietnamese children aged 6–10 learning English.
 
     TASK: Identify the SINGLE most prominent real-world object in the photo.
 
     RULES:
     - Identify only ONE concrete, physical object (not abstract concepts)
     - If multiple objects, pick the most central/prominent one
-    - Provide translations in all three languages simultaneously
-    - Use IPA format for English phonetics (e.g. /kæt/)
-    - Use pinyin WITH tone marks for Mandarin (e.g. māo, not mao)
-    - Difficulty 1–5 per language (1=very common like "cat", 5=very rare like "telescope")
-    - description_en: Write an excited, friendly English sentence as if
-      a child is showing you something (1–2 sentences max)
-      Example: "Wow! A fluffy brown dog lying on the floor!"
-    - description_vi: Write an excited, friendly Vietnamese sentence as if
-      a child is showing you something (1–2 sentences max)
-      Example: "Ồ hay quá! Có một chú chó lông nâu đang nằm trên sàn nhà kìa!"
-    - description_zh: Write an excited, friendly Mandarin sentence as if
-      a child is showing you something (1–2 sentences max, simplified Chinese)
-      Example: "哇！地板上躺着一只毛茸茸的棕色小狗！"
-    - fun_fact_vi: One fun, child-friendly fact in Vietnamese
-    - Example sentences should be simple, age-appropriate (6–10 year olds)
+    - object_en: The English name of the object
+    - phonetic_en: IPA pronunciation for the English word (e.g. /kæt/)
+    - category: Assign one of the predefined object categories
+    - difficulty_vi: Vietnamese difficulty 1–5 (1=very common like "mèo", 5=very rare like "kính viễn vọng")
+    - description_vi: Write a friendly, conversational Vietnamese sentence
+      that acknowledges what the child captured, teaches them the English word
+      for it, and invites them to repeat it together (2–3 sentences max).
+      Example: "Ố Ồ, tờ thấy cậu có 1 chiếc máy xúc đồ chơi đấy nhỉ. Máy xúc đồ chơi Tiếng Anh gọi là toy excavator đấy. Cậu lặp lại cùng mình nhé!"
     - Confidence: 0.0–1.0 reflecting how certain you are
 
     SAFETY — You MUST refuse and return a blocked response if you see:
@@ -69,7 +62,7 @@ function IdentifyObjectFiltered(
 
   prompt #"
     You are a friendly AI assistant for SnapLearn, an educational app
-    for Vietnamese children aged 6–10 learning English and Mandarin.
+    for Vietnamese children aged 6–10 learning English.
 
     TASK: Identify the SINGLE most prominent real-world object in the photo.
 
@@ -88,15 +81,13 @@ function IdentifyObjectFiltered(
 
     For safe objects:
     - Identify only ONE concrete, physical object
-    - Provide English, Vietnamese, Mandarin translations
-    - IPA phonetics for English (e.g. /kæt/)
-    - Pinyin with tone marks for Mandarin (e.g. māo)
-    - Difficulty 1–5 per language
-    - Excited description in English (1–2 sentences, e.g. "Wow! A fluffy brown dog lying on the floor!")
-    - Excited description in Vietnamese (1–2 sentences, e.g. "Ồ hay quá! Có một chú chó lông nâu đang nằm trên sàn nhà kìa!")
-    - Excited description in Mandarin (1–2 sentences, simplified Chinese, e.g. "哇！地板上躺着一只毛茸茸的棕色小狗！")
-    - Fun fact in Vietnamese
-    - Simple example sentences in all three languages
+    - object_en: The English name of the object
+    - phonetic_en: IPA pronunciation for the English word (e.g. /kæt/)
+    - category: Assign one of the predefined object categories
+    - difficulty_vi: Vietnamese difficulty 1–5
+    - description_vi: Friendly, conversational Vietnamese sentence that acknowledges
+      the object, teaches the English word, and invites the child to repeat (2–3 sentences,
+      e.g. "Ố Ồ, tờ thấy cậu có 1 chiếc máy xúc đồ chơi đấy nhỉ. Máy xúc đồ chơi Tiếng Anh gọi là toy excavator đấy. Cậu lặp lại cùng mình nhé!")
     - Confidence 0.0–1.0
 
     {{ ctx.output_format }}

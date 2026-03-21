@@ -21,7 +21,6 @@ export interface VocabCard {
     word_en: string;
     word_vi: string;
     word_zh: string;
-    pinyin: string | null;
     phonetic_en: string | null;
     category: string;
     rarity_tier: string;
@@ -44,14 +43,9 @@ export interface VocabDetail {
     word_en: string;
     word_vi: string;
     word_zh: string;
-    pinyin: string | null;
     phonetic_en: string | null;
     category: string;
     rarity_tier: string;
-    fun_fact_vi: string | null;
-    example_sentence_en: string | null;
-    example_sentence_vi: string | null;
-    example_sentence_zh: string | null;
     mastery_en: number;
     mastery_vi: number;
     mastery_zh: number;

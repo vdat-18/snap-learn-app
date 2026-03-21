@@ -103,9 +103,7 @@ export interface ReferenceVocab {
     word_en: string;
     phonetic_en: string;
     word_zh: string;
-    pinyin: string;
     category: string;
-    fun_fact_vi: string;
     rarity_tier: string;
     sentence_en?: string;
     sentence_vi?: string;

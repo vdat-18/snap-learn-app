@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
-import { ArrowLeft, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { triggerSparkles, triggerLegendaryBurst } from '../../utils/confetti';
 import { mascotSpeak } from '../../utils/feedbackUtils';
 import { speechApi } from '../../services/speechApi';
@@ -16,7 +16,6 @@ interface RevealCardProps {
     word_vi: string;
     word_en: string;
     word_zh: string;
-    pinyin: string;
     phonetic_en: string;
     rarity: Rarity;
     imageUrl: string;
@@ -26,13 +25,6 @@ interface RevealCardProps {
     xpEarned?: number;
     onCardFlyToCollection?: () => void;
     description_vi?: string | null;
-    description_en?: string | null;
-    description_zh?: string | null;
-    description_tts_urls?: { en: string; zh: string };
-    example_sentence_en?: string | null;
-    example_sentence_vi?: string | null;
-    example_sentence_zh?: string | null;
-    fun_fact_vi?: string | null;
 }
 
 const rarityGlowMap: Record<Rarity, string> = {
@@ -59,7 +51,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
     word_vi,
     word_en,
     word_zh,
-    pinyin,
     phonetic_en,
     rarity,
     imageUrl,
@@ -69,13 +60,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
     xpEarned,
     onCardFlyToCollection,
     description_vi,
-    description_en,
-    description_zh,
-    description_tts_urls,
-    example_sentence_en,
-    example_sentence_vi,
-    example_sentence_zh,
-    fun_fact_vi,
 }) => {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState('');
@@ -83,14 +67,10 @@ const RevealCard: React.FC<RevealCardProps> = ({
     const [attemptCount, setAttemptCount] = useState(0);
     const [stars, setStars] = useState<PronunciationTier | null>(null);
     const [feedbackText, setFeedbackText] = useState('');
-    const [showAutoCloseMessage, setShowAutoCloseMessage] = useState(false);
     const [isFlyingToCollection, setIsFlyingToCollection] = useState(false);
     const [showPostRevealOptions, setShowPostRevealOptions] = useState(false);
     const [hasTriggeredXP, setHasTriggeredXP] = useState(false);
     const [isTTSLoading, setIsTTSLoading] = useState(false);
-    const [showExamples, setShowExamples] = useState(false);
-    const [achievementImageUrl, setAchievementImageUrl] = useState<string | null>(null);
-    const [showAchievementFlip, setShowAchievementFlip] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
@@ -410,9 +390,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
         }
     };
 
-    // Check if any example sentences are available
-    const hasExamples = example_sentence_en || example_sentence_vi || example_sentence_zh;
-
     const cardVariants = {
         idle: { y: 0, scale: 1 },
         shake: {
@@ -673,7 +650,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                     >
                                         <span className="text-xl mr-1">🇨🇳</span>
                                         <span className="text-base font-bold text-lang-zh">{word_zh}</span>
-                                        <span className="text-xs font-medium text-slate-400">{pinyin}</span>
                                         <button
                                             onClick={() => playWordTTS()}
                                             className={`w-10 h-10 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-base ${isTTSLoading ? 'animate-pulse' : ''}`}
@@ -706,7 +682,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                         {secondary_language === 'zh' && (
                                             <div className="flex items-center justify-center gap-2">
                                                 <span className="text-base font-semibold text-lang-zh">{word_zh}</span>
-                                                <span className="text-xs font-medium text-slate-400">{pinyin}</span>
                                                 <button
                                                     onClick={() => mascotSpeak(word_zh, 'zh-CN')}
                                                     className="w-7 h-7 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-xs"
@@ -719,77 +694,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                 )}
                             </div>
                         </div>
-
-                        {/* Fun Fact Section */}
-                        {fun_fact_vi && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.4 }}
-                                className="mb-4 bg-amber-50 rounded-2xl p-4 border border-amber-200/50"
-                            >
-                                <div className="flex items-start gap-3">
-                                    <Lightbulb className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                                    <p className="text-sm font-medium text-amber-800 leading-relaxed">
-                                        {fun_fact_vi}
-                                    </p>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* Example Sentences Section (Collapsible) */}
-                        {hasExamples && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.5 }}
-                                className="mb-6"
-                            >
-                                <button
-                                    onClick={() => setShowExamples(!showExamples)}
-                                    className="flex items-center justify-center gap-2 w-full py-2 text-xs font-bold text-slate-500 uppercase tracking-wider hover:text-slate-700 transition-colors"
-                                >
-                                    Câu ví dụ
-                                    {showExamples ? (
-                                        <ChevronUp className="w-4 h-4" />
-                                    ) : (
-                                        <ChevronDown className="w-4 h-4" />
-                                    )}
-                                </button>
-                                <AnimatePresence>
-                                    {showExamples && (
-                                        <motion.div
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: 'auto', opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            transition={{ duration: 0.2 }}
-                                            className="overflow-hidden"
-                                        >
-                                            <div className="space-y-2 pt-2">
-                                                {example_sentence_en && (
-                                                    <div className="flex items-start gap-2 px-3 py-2 bg-slate-50 rounded-xl">
-                                                        <span className="text-sm flex-shrink-0">🇺🇸</span>
-                                                        <p className="text-sm text-slate-600 italic">{example_sentence_en}</p>
-                                                    </div>
-                                                )}
-                                                {example_sentence_vi && (
-                                                    <div className="flex items-start gap-2 px-3 py-2 bg-slate-50 rounded-xl">
-                                                        <span className="text-sm flex-shrink-0">🇻🇳</span>
-                                                        <p className="text-sm text-slate-600 italic">{example_sentence_vi}</p>
-                                                    </div>
-                                                )}
-                                                {example_sentence_zh && (
-                                                    <div className="flex items-start gap-2 px-3 py-2 bg-slate-50 rounded-xl">
-                                                        <span className="text-sm flex-shrink-0">🇨🇳</span>
-                                                        <p className="text-sm text-slate-600 italic">{example_sentence_zh}</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </motion.div>
-                        )}
 
                         {/* Practice Area OR Post-Reveal Options */}
                         <div className={`transition-all duration-300 rounded-[24px] p-6 border ${stars === 3 ? 'bg-mintGreen/10 border-mintGreen/20' : stars ? 'bg-skyBlue/10 border-skyBlue/20' : 'bg-softCream border-sunshineYellow/20'}`}>

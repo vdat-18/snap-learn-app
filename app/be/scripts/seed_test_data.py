@@ -24,50 +24,44 @@ from app.utils.security import hash_password
 
 
 SAMPLE_WORDS = [
-    {"en": "cat", "vi": "con mèo", "zh": "猫", "pinyin": "māo", "category": "animals"},
-    {"en": "dog", "vi": "con chó", "zh": "狗", "pinyin": "gǒu", "category": "animals"},
+    {"en": "cat", "vi": "con mèo", "zh": "猫", "category": "animals"},
+    {"en": "dog", "vi": "con chó", "zh": "狗", "category": "animals"},
     {
         "en": "apple",
         "vi": "quả táo",
         "zh": "苹果",
-        "pinyin": "píngguǒ",
         "category": "food",
     },
     {
         "en": "book",
         "vi": "quyển sách",
         "zh": "书",
-        "pinyin": "shū",
         "category": "school",
     },
     {
         "en": "car",
         "vi": "xe hơi",
         "zh": "汽车",
-        "pinyin": "qìchē",
         "category": "vehicles",
     },
-    {"en": "tree", "vi": "cái cây", "zh": "树", "pinyin": "shù", "category": "nature"},
+    {"en": "tree", "vi": "cái cây", "zh": "树", "category": "nature"},
     {
         "en": "shirt",
         "vi": "áo sơ mi",
         "zh": "衬衫",
-        "pinyin": "chènshān",
         "category": "clothing",
     },
-    {"en": "ball", "vi": "quả bóng", "zh": "球", "pinyin": "qiú", "category": "sports"},
+    {"en": "ball", "vi": "quả bóng", "zh": "球", "category": "sports"},
     {
         "en": "guitar",
         "vi": "đàn guitar",
         "zh": "吉他",
-        "pinyin": "jítā",
         "category": "instruments",
     },
     {
         "en": "phone",
         "vi": "điện thoại",
         "zh": "手机",
-        "pinyin": "shǒujī",
         "category": "technology",
     },
 ]
@@ -125,7 +119,6 @@ async def main() -> None:
                 word_en=word["en"],
                 word_vi=word["vi"],
                 word_zh=word["zh"],
-                pinyin=word["pinyin"],
                 category=word["category"],
                 rarity_tier=random.choice(["common", "uncommon", "rare"]),
                 confidence=round(random.uniform(0.75, 0.99), 2),
