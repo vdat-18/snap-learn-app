@@ -12,7 +12,7 @@ interface DuplicateState {
 
 const DuplicateCaptureModal: React.FC = () => {
     const [duplicateState, setDuplicateState] = useState<DuplicateState | null>(null);
-    const { addXP, recordCapture } = useGameStore();
+    useGameStore();
 
     // This would be called when a capture is attempted
     // For now, it's a placeholder for the capture flow
@@ -25,13 +25,6 @@ const DuplicateCaptureModal: React.FC = () => {
     */
 
     const handleContinueCapture = () => {
-        if (duplicateState) {
-            // Award reduced XP for duplicate capture (50% of normal)
-            const baseXP = 100;
-            const bonusXP = baseXP * 0.5;
-            addXP(Math.round(bonusXP));
-            recordCapture(duplicateState.rarity);
-        }
         setDuplicateState(null);
     };
 

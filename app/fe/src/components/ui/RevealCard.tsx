@@ -71,6 +71,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
     const [showPostRevealOptions, setShowPostRevealOptions] = useState(false);
     const [hasTriggeredXP, setHasTriggeredXP] = useState(false);
     const [isTTSLoading, setIsTTSLoading] = useState(false);
+    const [achievementImageUrl, setAchievementImageUrl] = useState<string | null>(null);
+    const [showAchievementFlip, setShowAchievementFlip] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
@@ -249,7 +251,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
             setFeedbackText('');
             setHasPlayedAudio(false);
             setAttemptCount(0);
-            setShowAutoCloseMessage(false);
             setIsFlyingToCollection(false);
             setHasTriggeredXP(false);
             setAchievementImageUrl(null);

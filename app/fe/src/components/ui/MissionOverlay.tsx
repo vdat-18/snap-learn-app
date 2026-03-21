@@ -33,20 +33,19 @@ const mockMissions: Quest[] = [
 ];
 
 const MissionOverlay: React.FC<MissionOverlayProps> = () => {
-    const { quests, setQuests } = useGameStore();
+    const { quests } = useGameStore();
     const [currentMission, setCurrentMission] = useState<Quest | null>(null);
 
     // Initialize with mock missions if no quests
     useEffect(() => {
         if (quests.length === 0) {
-            setQuests(mockMissions);
             setCurrentMission(mockMissions[0]);
         } else {
             // Get the first in-progress mission
             const inProgress = quests.find(q => q.status === 'in-progress');
             setCurrentMission(inProgress || quests[0]);
         }
-    }, []);
+    }, [quests]);
 
     if (!currentMission) return null;
 
