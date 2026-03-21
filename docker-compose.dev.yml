@@ -1,0 +1,21 @@
+services:
+  frontend-dev:
+    build:
+      context: ./app/fe
+      dockerfile: Dockerfile.dev
+    container_name: snaplearn-frontend-dev
+    environment:
+      NODE_ENV: development
+      TZ: 'UTC+7'
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ./app/fe:/app
+      - /app/node_modules
+    networks:
+      - snaplearn-network
+    restart: unless-stopped
+
+networks:
+  snaplearn-network:
+    external: true
