@@ -38,9 +38,9 @@ function ClassifyRarity(input: RarityInput) -> RarityResult {
     2. FREQUENCY-BASED RARITY (if capture_pct is provided):
        - >50% users → Common
        - 20–50% users → Uncommon
-       - 5–20% users → Rare
-       - 1–5% users → Epic
-       - <1% users → Legendary
+       - <20% users → Epic
+      IMPORTANT: toy exacator: Epic, earphone: Uncommon, Water Bottle: Common
+
 
     3. FINAL RARITY = whichever method gives the HIGHER rarity tier.
        (e.g. difficulty says "Rare" but frequency says "Epic" → use "Epic")

@@ -29,9 +29,7 @@ enum ObjectCategory {
 enum RarityTier {
   Common       @alias("common")       @description("Very common, captured by >50% of users, worth 10 XP")
   Uncommon     @alias("uncommon")     @description("Somewhat common, captured by 20-50% of users, worth 25 XP")
-  Rare         @alias("rare")         @description("Infrequent, captured by 5-20% of users, worth 50 XP")
-  Epic         @alias("epic")         @description("Hard to find, captured by 1-5% of users, worth 100 XP")
-  Legendary    @alias("legendary")    @description("Extremely rare, captured by <1% of users, worth 250 XP")
+  Epic         @alias("epic")         @description("Hard to find, captured by <20% of users, worth 100 XP")
 }
 
 // ── Supported Languages ───────────────────────────────────────
