@@ -11,13 +11,19 @@ interface LeaderboardScreenProps {
 }
 
 const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }) => {
-    const { xp, level, userName } = useGameStore();
+    const { xp, userName } = useGameStore();
     const { playPop } = useSoundEffects();
     const [activeTab, setActiveTab] = useState('All');
 
-    const currentPlayers = MOCK_LEADERBOARD[activeTab] || [];
+    // Sort players by points to ensure leaderboard is correct
+    const currentPlayers = [...(MOCK_LEADERBOARD[activeTab] || [])].sort((a, b) => b.points - a.points);
     const top3 = currentPlayers.slice(0, 3);
     const others = currentPlayers.slice(3);
+
+    // Calculate dynamic rank for current user
+    const userRank = [...currentPlayers, { name: userName, points: xp }]
+        .sort((a, b) => b.points - a.points)
+        .findIndex(p => p.name === userName) + 1;
 
     return (
         <AnimatePresence>
@@ -36,13 +42,12 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                 <X className="w-8 h-8 text-deepNavy" />
                             </button>
                             <h1 className="text-lg font-black text-deepNavy tracking-tight flex items-center gap-3">
-                                <img src="/icon-rank.png" alt="" className="w-10 h-10 object-contain mix-blend-multiply" />
                                 👑 Siêu nhân Snap
                             </h1>
                         </div>
                     </header>
 
-                    <div className="flex-1 overflow-y-auto px-6 pt-6 pb-24">
+                    <div className="flex-1 overflow-y-auto px-6 pt-6 pb-72">
                         {/* Tabs */}
                         <div className="flex bg-slate-100 p-1.5 rounded-2xl relative mb-8">
                             {['Class', 'Friends', 'All'].map((tab) => (
@@ -128,9 +133,9 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                     className="bg-white p-4 rounded-[20px] shadow-sm flex items-center justify-between border-b-2 border-slate-50"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <span className="text-2xl">
-                                            {player.rank === 4 ? '4️⃣' : player.rank === 5 ? '5️⃣' : player.rank === 6 ? '6️⃣' : player.rank === 7 ? '7️⃣' : '8️⃣'}
-                                        </span>
+                                        <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-black text-sm border border-slate-200">
+                                            {idx + 4}
+                                        </div>
                                         <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-2xl shadow-sm border-2 border-white">
                                             {player.avatar}
                                         </div>
@@ -147,11 +152,11 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                     </div>
 
                     {/* Footer / User Stick Position */}
-                    <div className="bg-white/80 backdrop-blur-xl border-t border-slate-100 p-4 absolute bottom-0 left-0 right-0 z-50">
+                    <div className="bg-white/80 backdrop-blur-xl border-t border-slate-100 p-4 absolute bottom-28 left-0 right-0 z-50">
                         <div className="max-w-md mx-auto bg-deepNavy rounded-[24px] p-5 flex items-center justify-between shadow-level-3">
                             <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 bg-skyBlue rounded-full flex items-center justify-center text-xl text-white font-black border-2 border-white/20">
-                                    {level}
+                                    {userRank > 0 ? userRank : '-'}
                                 </div>
                                 <div>
                                     <h4 className="font-black text-white text-xs">BẠN ({userName})</h4>

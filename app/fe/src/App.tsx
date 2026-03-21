@@ -9,6 +9,7 @@ import LoginScreen from './components/ui/LoginScreen';
 import LevelUpCelebration from './components/ui/LevelUpCelebration';
 import ErrorOverlay from './components/ui/ErrorOverlay';
 import AIProcessingLoading from './components/ui/AIProcessingLoading';
+import XPFlyManager from './components/ui/XPFlyManager';
 import { useGameStore } from './store/gameStore';
 import { useSoundEffects } from './hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from './utils/feedbackUtils';
@@ -40,6 +41,7 @@ const App: React.FC = () => {
   const [devMode, setDevMode] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [isCategoryViewOpen, setIsCategoryViewOpen] = useState(false);
+  const [isFlashing, setIsFlashing] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -57,6 +59,7 @@ const App: React.FC = () => {
     isTimeLimitExceeded,
     checkAndResetDailyUsage,
     incrementUsageSeconds,
+    streak,
   } = useGameStore();
 
   const { playPop, playShutter, playChime } = useSoundEffects();
@@ -147,35 +150,43 @@ const App: React.FC = () => {
     // Start "AI Processing" mock
     setIsAIProcessing(true);
 
+    // Reset previous result before processing new one to ensure UI updates
+    setCapturedResult(null);
+
     setTimeout(() => {
       const validResponses = MOCK_AI_RESPONSES.filter((r: any) => r.response.object_en);
       const randomResp = validResponses[Math.floor(Math.random() * validResponses.length)];
 
+      const resp = randomResp.response as any;
       const result = {
-        word_en: randomResp.response.object_en as string,
-        word_vi: randomResp.response.object_vi as string,
-        word_zh: randomResp.response.object_zh as string,
-        rarity: (randomResp.response.rarity === 'legendary' ? 'Legendary' :
-          randomResp.response.rarity === 'epic' ? 'Epic' :
-            randomResp.response.rarity === 'rare' ? 'Rare' :
-              randomResp.response.rarity === 'uncommon' ? 'Uncommon' : 'Common') as any,
-        category: randomResp.response.category === 'animals' ? 'Animals' :
+        word_en: resp.object_en as string,
+        word_vi: resp.object_vi as string,
+        word_zh: resp.object_zh as string,
+        rarity: (resp.rarity === 'legendary' ? 'Legendary' :
+          resp.rarity === 'epic' ? 'Epic' :
+            resp.rarity === 'rare' ? 'Rare' :
+              resp.rarity === 'uncommon' ? 'Uncommon' : 'Common') as any,
+        category: resp.category === 'animals' ? 'Animals' :
           randomResp.response.category === 'food' ? 'Food' :
             randomResp.response.category === 'nature' ? 'Nature' :
               randomResp.response.category === 'vehicles' ? 'Vehicles' :
                 randomResp.response.category === 'school' ? 'School' : 'Home'
       };
 
-      setIsAIProcessing(false);
+      // Set new result
       setCapturedResult(result);
-      setIsRevealOpen(true);
+      setIsAIProcessing(false);
 
-      if (result.rarity === 'Legendary') {
-        playChime();
-      }
+      // Delay opening the reveal card slightly to allow state to settle
+      setTimeout(() => {
+        setIsRevealOpen(true);
+        if (result.rarity === 'Legendary') {
+          playChime();
+        }
+        addXP(10);
+        recordCapture(result.rarity);
+      }, 100);
 
-      addXP(10);
-      recordCapture(result.rarity);
     }, 2500);
   };
 
@@ -189,6 +200,10 @@ const App: React.FC = () => {
 
     playShutter();
     triggerHaptic(50);
+
+    // Trigger Flash Effect
+    setIsFlashing(true);
+    setTimeout(() => setIsFlashing(false), 150);
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -236,18 +251,24 @@ const App: React.FC = () => {
 
         <motion.div
           animate={{
-            scale: [1, 1.05, 1],
             rotate: [0, 3, -3, 0],
             y: [0, -10, 0]
           }}
           transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
           className="w-64 h-64 mb-10 relative z-10 flex items-center justify-center rounded-full overflow-hidden"
         >
-          <img
-            src="/owl-mascot.png"
-            alt="SnapLearn Mascot"
-            className="w-full h-full object-contain mix-blend-multiply scale-110"
-          />
+          {/* Breathing Animation Wrapper */}
+          <motion.div
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            className="w-full h-full"
+          >
+            <img
+              src="/owl-mascot.png"
+              alt="SnapLearn Mascot"
+              className="w-full h-full object-contain scale-110"
+            />
+          </motion.div>
         </motion.div>
 
         <div className="relative z-10 text-center flex flex-col items-center">
@@ -287,6 +308,11 @@ const App: React.FC = () => {
     <div className="relative w-full h-screen bg-black overflow-hidden select-none">
 
       <AnimatePresence>
+        {/* Flash Overlay */}
+        {isFlashing && (
+          <div className="fixed inset-0 z-[100] bg-white pointer-events-none animate-out fade-out duration-150" />
+        )}
+
         {/* 1. TOP HUD (Head-Up Display) */}
         <div className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 pt-12 pb-4 pointer-events-none">
           <div className="flex-1 flex flex-col pointer-events-auto">
@@ -306,13 +332,20 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 pointer-events-auto">
-            {/* Stats - Visual only */}
-            <div className="flex items-center gap-2 bg-black/40 backdrop-blur-lg pl-1.5 pr-3 py-1.5 rounded-full border border-white/20 shadow-xl">
-              <div className="w-8 h-8 rounded-full bg-sunshineYellow flex items-center justify-center shadow-[0_3px_0_rgb(161,98,7)] border-t border-white/30">
-                <span className="text-sm">⚡</span>
+            {/* Streak - Fire Animation */}
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
+                filter: ["drop-shadow(0 0 2px rgba(239,68,68,0.2))", "drop-shadow(0 0 8px rgba(239,68,68,0.6))", "drop-shadow(0 0 2px rgba(239,68,68,0.2))"]
+              }}
+              transition={{ duration: 1, repeat: Infinity }}
+              className="flex items-center gap-2 bg-black/40 backdrop-blur-lg pl-1.5 pr-3 py-1.5 rounded-full border border-white/20 shadow-xl"
+            >
+              <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center shadow-[0_3px_0_rgb(154,52,18)] border-t border-white/30">
+                <span className="text-sm">🔥</span>
               </div>
-              <span className="text-sm font-black text-white leading-none">85</span>
-            </div>
+              <span className="text-sm font-black text-white leading-none">{streak}</span>
+            </motion.div>
 
             <button
               onClick={() => {
@@ -321,7 +354,12 @@ const App: React.FC = () => {
               }}
               className="w-12 h-12 rounded-2xl bg-gradient-to-br from-white to-slate-50 flex items-center justify-center shadow-[0_4px_0_rgba(0,0,0,0.1),0_8px_15px_rgba(0,0,0,0.1)] border border-slate-200 transition-all active:translate-y-0.5 active:shadow-none"
             >
-              <img src="/icon-book.png" alt="Book" className="w-10 h-10 object-contain rounded-xl" />
+              <motion.img
+                layoutId="book-icon"
+                src="/icon-book.png"
+                alt="Book"
+                className="w-10 h-10 object-contain rounded-xl"
+              />
             </button>
 
             <button
@@ -404,19 +442,7 @@ const App: React.FC = () => {
 
         {/* 3. CAPTURE / ACTION CONTROLS (Moved down to bottom-12) */}
         <div className="fixed bottom-12 left-0 w-full z-50 px-8 flex items-center justify-between pointer-events-none">
-          <div className="flex-1 flex justify-center items-center gap-8 translate-x-12">
-            <motion.button
-              whileTap={{ scale: 0.85 }}
-              onClick={handleCaptureClick}
-              disabled={isAIProcessing}
-              className="relative w-28 h-28 pointer-events-auto"
-            >
-              <div className="absolute inset-0 bg-white rounded-full shadow-2xl scale-110" />
-              <div className="absolute inset-1.5 border-[6px] border-black rounded-full" />
-              <div className="absolute inset-3.5 bg-black rounded-full flex items-center justify-center">
-                <div className="w-16 h-16 bg-white/20 rounded-full" />
-              </div>
-            </motion.button>
+          <div className="flex-1 flex justify-center items-center gap-12">
             <motion.button
               whileTap={{ scale: 0.8, rotate: 180 }}
               onClick={() => {
@@ -424,10 +450,24 @@ const App: React.FC = () => {
                 playPop();
                 setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
               }}
-              className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white pointer-events-auto"
+              className="w-14 h-14 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white pointer-events-auto shadow-lg"
             >
               <RefreshCw className="w-6 h-6" />
             </motion.button>
+
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={handleCaptureClick}
+              disabled={isAIProcessing}
+              className="relative w-24 h-24 pointer-events-auto"
+            >
+              <div className="absolute inset-0 bg-white rounded-full shadow-2xl scale-110" />
+              <div className="absolute inset-1.5 border-[6px] border-black rounded-full" />
+              <div className="absolute inset-3.5 bg-black rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-white/20 rounded-full" />
+              </div>
+            </motion.button>
+
             <motion.button
               whileTap={{ scale: 0.8 }}
               onClick={() => {
@@ -435,7 +475,7 @@ const App: React.FC = () => {
                 playPop();
                 fileInputRef.current?.click();
               }}
-              className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white pointer-events-auto ml-4"
+              className="w-14 h-14 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white pointer-events-auto shadow-lg"
             >
               <Image className="w-6 h-6" />
             </motion.button>
@@ -452,7 +492,10 @@ const App: React.FC = () => {
         {/* Mobile Nav Bar - ONLY visible on sub-pages (Book, Quest, Rank, Me) */}
         {!showSplash && hasSeenOnboarding && userName && (isBookOpen || isQuestOpen || isRankOpen || isProfileOpen) && !isCategoryViewOpen && (
           <nav className="fixed bottom-0 left-0 right-0 p-4 pb-8 flex justify-center z-[200] pointer-events-none">
-            <div className="bg-white/90 backdrop-blur-xl rounded-[32px] shadow-level-3 border-2 border-white px-2 py-3 flex items-center justify-around pointer-events-auto w-[92%] max-w-md mx-auto">
+            {/* Background Blur Gradient for better separation */}
+            <div className="absolute inset-0 bg-gradient-to-t from-snowWhite via-snowWhite/80 to-transparent pointer-events-none h-40 bottom-0" />
+
+            <div className="bg-white/90 backdrop-blur-2xl rounded-[32px] shadow-[0_15px_35px_rgba(0,0,0,0.15)] border-2 border-white/60 px-2 py-3 flex items-center justify-around pointer-events-auto w-[92%] max-w-md mx-auto relative ring-1 ring-black/5">
               <NavItem
                 image="/icon-book.png"
                 label="Kho báu"
@@ -572,6 +615,9 @@ const App: React.FC = () => {
       />
 
       <AIProcessingLoading isVisible={isAIProcessing} />
+
+      {/* Global Animation Layers */}
+      <XPFlyManager targetX={60} targetY={60} />
 
       {
         devMode && (

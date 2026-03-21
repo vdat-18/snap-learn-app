@@ -1,6 +1,7 @@
+import { useGameStore } from '../store/gameStore';
+
 /**
  * Triggers a vibration on supported devices (Android/WebXR)
- * @param pattern ms of vibration/pause (e.g., 50ms pulse)
  */
 export const triggerHaptic = (pattern: number | number[] = 50) => {
     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
@@ -28,6 +29,14 @@ const MOTIVATIONAL_PHRASES = [
  * Speak text using Web Speech API (TTS)
  */
 export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = 'vi-VN', forceInterrupt = false) => {
+    const phrase = text || MOTIVATIONAL_PHRASES[Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)];
+
+    // Update UI first
+    useGameStore.getState().setMascotMessage({
+        text: phrase,
+        state: 'talking'
+    });
+
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
     const startSpeak = () => {
@@ -39,7 +48,6 @@ export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = '
             window.speechSynthesis.cancel();
         }
 
-        const phrase = text || MOTIVATIONAL_PHRASES[Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)];
         console.log(`[TTS] Speaking: ${phrase} (${lang})`);
 
         const utterance = new SpeechSynthesisUtterance(phrase);

@@ -97,6 +97,10 @@ interface GameState {
     addCollection: (word: CapturedWord) => void;
     practiceWord: (wordId: string, stars: number) => void;
     resetAll: () => void;
+
+    // Mascot Interaction (New)
+    mascotMessage: { text: string; state?: 'idle' | 'talking' | 'excited' | 'thinking' } | null;
+    setMascotMessage: (message: { text: string; state?: 'idle' | 'talking' | 'excited' | 'thinking' } | null) => void;
 }
 
 export interface CapturedWord {
@@ -413,5 +417,20 @@ export const useGameStore = create<GameState>()((set, get) => ({
         });
         // Force clear localStorage to be sure
         localStorage.removeItem('snap-learn-storage');
+    },
+
+    // Mascot Interaction
+    mascotMessage: null,
+    setMascotMessage: (message) => {
+        set({ mascotMessage: message });
+        if (message) {
+            // Auto-clear message after 5 seconds
+            setTimeout(() => {
+                const current = get().mascotMessage;
+                if (current?.text === message.text) {
+                    set({ mascotMessage: null });
+                }
+            }, 5000);
+        }
     }
 }));

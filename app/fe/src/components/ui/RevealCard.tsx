@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
-import { ArrowLeft, Book } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { triggerSparkles, triggerLegendaryBurst } from '../../utils/confetti';
 import { mascotSpeak } from '../../utils/feedbackUtils';
 import { MOCK_PRON_RESULTS } from '../../store/mockData';
+import { triggerXPFly } from './XPFlyManager';
 
 export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
 
@@ -61,8 +62,9 @@ const RevealCard: React.FC<RevealCardProps> = ({
     const [hasPlayedAudio, setHasPlayedAudio] = useState(false);
     const [attemptCount, setAttemptCount] = useState(0);
     const [stars, setStars] = useState<PronunciationTier | null>(null);
-    const [showAutoCloseMessage, setShowAutoCloseMessage] = useState(false);
     const [isFlyingToCollection, setIsFlyingToCollection] = useState(false);
+    const [showPostRevealOptions, setShowPostRevealOptions] = useState(false);
+    const [hasTriggeredXP, setHasTriggeredXP] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     const { addCollection, target_language, secondary_language } = useGameStore();
     const { playChime, playPop } = useSoundEffects();
@@ -89,6 +91,13 @@ const RevealCard: React.FC<RevealCardProps> = ({
             practiceCount,
             isEvolved: false
         });
+
+        // Trigger XP Fly animation from the center of the card - Only once per session
+        if (cardRef.current && !hasTriggeredXP && scoredStars >= 2) {
+            const rect = cardRef.current.getBoundingClientRect();
+            triggerXPFly(rect.left + rect.width / 2, rect.top + rect.height / 2, 8);
+            setHasTriggeredXP(true);
+        }
     };
 
     // TTS Sequence: VI → Scaffolding → Target Language
@@ -120,14 +129,21 @@ const RevealCard: React.FC<RevealCardProps> = ({
             setTranscript('');
             setHasPlayedAudio(false);
             setAttemptCount(0);
-            setShowAutoCloseMessage(false);
+            setIsFlyingToCollection(false);
+            setShowPostRevealOptions(false);
+            setHasTriggeredXP(false);
 
             // Trigger Legendary celebration if rarity is Legendary
             if (rarity === 'Legendary') {
                 setTimeout(() => {
                     triggerLegendaryBurst();
                     playChime();
+                    mascotSpeak("TRỜI ƠI! BẠN VỪA BẮT ĐƯỢC THẺ HUYỀN THOẠI RỒI NÈ!", 'vi-VN', true);
                 }, 500);
+            } else if (rarity === 'Epic' || rarity === 'Rare') {
+                mascotSpeak("Oa! Đồ hiếm nha!", 'vi-VN', true);
+            } else {
+                mascotSpeak(); // Random phrase
             }
         }
     }, [isOpen, rarity, playChime]);
@@ -176,39 +192,48 @@ const RevealCard: React.FC<RevealCardProps> = ({
             const newAttemptCount = attemptCount + 1;
             setAttemptCount(newAttemptCount);
 
-            // If got 2 or 3 stars, save and allow card to stay for celebration
+            // If got 2 or 3 stars, save and show post-reveal options
             if (scoredStars >= 2) {
                 handleSaveCollection(scoredStars, newAttemptCount);
-
-                // Trigger card fly-to-collection animation after 1.5 seconds
                 setTimeout(() => {
-                    setIsFlyingToCollection(true);
-                    playChime();
-                    triggerSparkles(window.innerWidth / 2, window.innerHeight / 2);
-
-                    // Close after flight animation completes (1.2 seconds)
-                    setTimeout(() => {
-                        if (onCardFlyToCollection) {
-                            onCardFlyToCollection();
-                        }
-                        onClose();
-                    }, 1200);
-                }, 1500);
+                    if (!showPostRevealOptions) {
+                        triggerSparkles(window.innerWidth / 2, window.innerHeight / 2);
+                    }
+                    setShowPostRevealOptions(true);
+                }, 1000);
             }
             // If only 1 star and still have attempts, we stay and wait for retry
-            // If all 3 attempts used and still only 1 star, show auto-close message
+            // If all 3 attempts used and still only 1 star, show options anyway so they aren't stuck
             else if (newAttemptCount >= 3) {
-                setShowAutoCloseMessage(true);
-                // Auto-close after 2 seconds
+                handleSaveCollection(scoredStars, newAttemptCount);
                 setTimeout(() => {
-                    handleSaveCollection(scoredStars, newAttemptCount);
-                    onClose();
-                }, 2000);
+                    setShowPostRevealOptions(true);
+                }, 1000);
             }
             // Otherwise, we just stay here and the UI shows a "Retry" prompt (implicitly by not closing)
         }, 1500); // Simulate 1.5s recording/processing time
     };
 
+
+    const cardVariants = {
+        idle: { y: 0, scale: 1 },
+        shake: {
+            x: [0, -10, 10, -10, 10, 0],
+            transition: { duration: 0.4 }
+        },
+        fly: {
+            scale: [1, 1.1, 0.05],
+            x: 180,
+            y: -window.innerHeight / 2 - 100,
+            opacity: [1, 1, 0],
+            rotate: [0, -10, 720],
+            transition: {
+                duration: 1.1,
+                ease: [0.6, 0.01, -0.05, 0.95] as any,
+                times: [0, 0.2, 1]
+            }
+        }
+    };
 
     return (
         <AnimatePresence>
@@ -226,21 +251,17 @@ const RevealCard: React.FC<RevealCardProps> = ({
                     {/* Card Content */}
                     <motion.div
                         ref={cardRef}
-                        initial={{ y: '100%' }}
-                        animate={isFlyingToCollection ? {
-                            scale: 0.1,
-                            x: window.innerWidth - 100,
-                            y: window.innerHeight - 140,
-                            opacity: 0
-                        } : { y: 0 }}
-                        exit={{ y: '100%' }}
+                        variants={cardVariants}
+                        animate={isFlyingToCollection ? 'fly' : (stars === 1 ? 'shake' : 'idle')}
+                        initial={{ y: '100%', scale: 0.8 }}
+                        exit={{ y: '100%', scale: 0.8 }}
                         transition={isFlyingToCollection ? {
-                            duration: 1.2,
+                            duration: 0.8,
                             ease: 'easeInOut'
                         } : {
                             type: 'spring',
-                            damping: 25,
-                            stiffness: 200
+                            damping: 20,
+                            stiffness: 300
                         }}
                         className="relative w-full max-w-md bg-white rounded-t-[32px] p-8 pb-12 shadow-level-3"
                     >
@@ -263,8 +284,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             className="absolute top-6 left-6 flex items-center gap-2 bg-skyBlue/10 hover:bg-skyBlue/20 px-3 py-2 rounded-2xl transition-all"
                         >
                             <ArrowLeft className="w-5 h-5 text-skyBlue" />
-                            <Book className="w-5 h-5 text-skyBlue" />
-                            <span className="text-[10px] font-black text-skyBlue uppercase tracking-widest hidden sm:inline">Sổ của Bạn</span>
+                            <img src="/icon-book.png" alt="" className="w-5 h-5 object-contain" />
+                            <span className="text-[10px] font-black text-skyBlue uppercase tracking-widest hidden sm:inline">Kho báu</span>
                         </button>
 
                         {/* Rarity Badge */}
@@ -274,10 +295,66 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             </span>
                         </div>
 
-                        {/* Captured Image with Glow */}
-                        <div className={`aspect-square w-full rounded-card overflow-hidden bg-slate-100 mb-8 border-4 border-white ${rarityGlowMap[rarity]}`}>
-                            <img src={imageUrl} alt={word_en} className="w-full h-full object-cover" />
-                            {!imageUrl && <div className="w-full h-full flex items-center justify-center text-4xl">📸</div>}
+                        {/* Captured Image with Glow & Effects */}
+                        <div className={`aspect-square w-full rounded-card overflow-hidden bg-slate-100 mb-8 border-4 border-white relative ${rarityGlowMap[rarity]}`}>
+                            {/* Background beams for Rare+ */}
+                            {(rarity === 'Rare' || rarity === 'Epic' || rarity === 'Legendary') && (
+                                <motion.div
+                                    className="absolute inset-0 z-0 overflow-hidden"
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                                >
+                                    {[...Array(6)].map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className={`absolute top-1/2 left-1/2 w-[200%] h-12 -translate-x-1/2 -translate-y-1/2 opacity-30 blur-xl ${rarity === 'Legendary' ? 'bg-sunshineYellow' : rarity === 'Epic' ? 'bg-purple-400' : 'bg-skyBlue'}`}
+                                            style={{ rotate: `${i * 30}deg` }}
+                                        />
+                                    ))}
+                                </motion.div>
+                            )}
+
+                            <motion.img
+                                initial={{ scale: 1.2, filter: 'blur(10px)' }}
+                                animate={{ scale: 1, filter: 'blur(0px)' }}
+                                transition={{ duration: 0.8, ease: "easeOut" }}
+                                src={imageUrl}
+                                alt={word_en}
+                                className="w-full h-full object-cover relative z-10"
+                            />
+
+                            {/* Shiny Effect for High Rarity */}
+                            {(rarity === 'Epic' || rarity === 'Legendary') && (
+                                <motion.div
+                                    initial={{ x: '-100%', opacity: 0 }}
+                                    animate={{ x: '100%', opacity: [0, 0.5, 0] }}
+                                    transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+                                    className="absolute inset-0 z-20 bg-gradient-to-r from-transparent via-white/50 to-transparent skew-x-12"
+                                />
+                            )}
+
+                            {/* Floating Particles for Legendary */}
+                            {rarity === 'Legendary' && (
+                                <div className="absolute inset-0 z-30 pointer-events-none">
+                                    {[...Array(5)].map((_, i) => (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ y: 0, opacity: 0 }}
+                                            animate={{ y: -100, opacity: [0, 1, 0] }}
+                                            transition={{
+                                                duration: 2 + Math.random(),
+                                                repeat: Infinity,
+                                                delay: Math.random() * 2,
+                                                ease: "easeOut"
+                                            }}
+                                            className="absolute w-2 h-2 bg-yellow-300 rounded-full blur-[1px]"
+                                            style={{ left: `${Math.random() * 100}%`, top: '80%' }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+
+                            {!imageUrl && <div className="w-full h-full flex items-center justify-center text-4xl relative z-10">📸</div>}
                         </div>
 
                         {/* Multilingual Details — filtered by target_language */}
@@ -297,41 +374,58 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             <div className="flex flex-col gap-1">
                                 {/* Target Language (Primary) */}
                                 {target_language === 'en' && (
-                                    <div className="flex items-center justify-center gap-2">
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.3 }}
+                                        className="flex items-center justify-center gap-2"
+                                    >
                                         <span className="text-xl mr-1">🇺🇸</span>
                                         <span className="text-base font-bold text-lang-en">{word_en}</span>
                                         <span className="text-xs font-medium text-slate-400">{phonetic_en}</span>
-                                        <button
+                                        <motion.button
+                                            whileTap={{ scale: 0.9 }}
                                             onClick={() => mascotSpeak(word_en, 'en-US')}
                                             className="w-10 h-10 rounded-full bg-skyBlue/10 flex items-center justify-center text-skyBlue text-base"
                                         >
                                             🔊
-                                        </button>
-                                    </div>
+                                        </motion.button>
+                                    </motion.div>
                                 )}
                                 {target_language === 'zh' && (
-                                    <div className="flex items-center justify-center gap-2">
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.3 }}
+                                        className="flex items-center justify-center gap-2"
+                                    >
                                         <span className="text-xl mr-1">🇨🇳</span>
                                         <span className="text-base font-bold text-lang-zh">{word_zh}</span>
                                         <span className="text-xs font-medium text-slate-400">{pinyin}</span>
-                                        <button
+                                        <motion.button
+                                            whileTap={{ scale: 0.9 }}
                                             onClick={() => mascotSpeak(word_zh, 'zh-CN')}
                                             className="w-10 h-10 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-base"
                                         >
                                             🔊
-                                        </button>
-                                    </div>
+                                        </motion.button>
+                                    </motion.div>
                                 )}
 
                                 {/* Secondary Language (if enabled) */}
                                 {secondary_language && (
-                                    <>
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.5 }}
+                                    >
                                         <div className="h-px bg-slate-200 my-2" />
                                         {secondary_language === 'en' && (
                                             <div className="flex items-center justify-center gap-2">
                                                 <span className="text-base font-semibold text-lang-en">{word_en}</span>
                                                 <span className="text-xs font-medium text-slate-400">{phonetic_en}</span>
-                                                <button
+                                                <motion.button
+                                                    whileTap={{ scale: 0.9 }}
                                                     onClick={() => {
                                                         const utterance = new SpeechSynthesisUtterance(word_en);
                                                         utterance.lang = 'en-US';
@@ -340,14 +434,15 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                                     className="w-7 h-7 rounded-full bg-skyBlue/10 flex items-center justify-center text-skyBlue text-xs"
                                                 >
                                                     🔊
-                                                </button>
+                                                </motion.button>
                                             </div>
                                         )}
                                         {secondary_language === 'zh' && (
                                             <div className="flex items-center justify-center gap-2">
                                                 <span className="text-base font-semibold text-lang-zh">{word_zh}</span>
                                                 <span className="text-xs font-medium text-slate-400">{pinyin}</span>
-                                                <button
+                                                <motion.button
+                                                    whileTap={{ scale: 0.9 }}
                                                     onClick={() => {
                                                         const utterance = new SpeechSynthesisUtterance(word_zh);
                                                         utterance.lang = 'zh-CN';
@@ -356,25 +451,54 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                                     className="w-7 h-7 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-xs"
                                                 >
                                                     🔊
-                                                </button>
+                                                </motion.button>
                                             </div>
                                         )}
-                                    </>
+                                    </motion.div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Practice Area (PTT) */}
+                        {/* Practice Area OR Post-Reveal Options */}
                         <div className={`transition-all duration-300 rounded-[24px] p-6 border ${stars === 3 ? 'bg-mintGreen/10 border-mintGreen/20' : stars ? 'bg-skyBlue/10 border-skyBlue/20' : 'bg-softCream border-sunshineYellow/20'}`}>
-                            {showAutoCloseMessage ? (
-                                <div className="text-center space-y-3">
-                                    <span className="block text-base font-bold text-coralRed">👏 Bạn giỏi lắm! Làm lại sau nhé!</span>
-                                    <p className="text-xs text-slate-600">Bạn đã luyện tập {attemptCount} lần rồi đấy, thật tuyệt!</p>
-                                </div>
+                            {showPostRevealOptions ? (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex flex-col gap-3"
+                                >
+                                    <h3 className="text-center font-bold text-deepNavy mb-2">Bạn muốn làm gì tiếp theo?</h3>
+                                    <motion.button
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => {
+                                            setIsFlyingToCollection(true);
+                                            playChime();
+                                            // Close after flight animation completes (1.1 seconds)
+                                            setTimeout(() => {
+                                                if (onCardFlyToCollection) {
+                                                    onCardFlyToCollection();
+                                                }
+                                                onClose();
+                                            }, 1100);
+                                        }}
+                                        className="w-full bg-sunshineYellow text-deepNavy py-4 rounded-xl font-black shadow-[0_4px_0_rgb(161,98,7)] active:shadow-none active:translate-y-1 flex items-center justify-center gap-2 border-t-2 border-white/40"
+                                    >
+                                        <img src="/icon-book.png" alt="" className="w-6 h-6 object-contain mix-blend-multiply" />
+                                        VÀO KHO BÁU
+                                    </motion.button>
+
+                                    <motion.button
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={onClose}
+                                        className="w-full bg-white text-deepNavy py-4 rounded-xl font-black shadow-[0_4px_0_rgb(203,213,225)] active:shadow-none active:translate-y-1 flex items-center justify-center gap-2 border-2 border-slate-100"
+                                    >
+                                        📷 CHỤP TIẾP
+                                    </motion.button>
+                                </motion.div>
                             ) : (
                                 <>
                                     <span className={`block text-center text-xs font-bold mb-4 uppercase tracking-wider ${stars === 3 ? 'text-mintGreen' : stars ? 'text-skyBlue' : isListening ? 'text-coralRed' : 'text-skyBlue'}`}>
-                                        {stars === 3 ? 'Tuyệt vời! Bạn nói đúng rồi.' : stars === 2 ? 'Gần đúng rồi! 👍' : stars === 1 ? 'Cùng tớ tập nói nhé! 🎯' : isListening ? 'Tớ đang nghe bạn nè...' : `Nói thật to để bắt bài nhé! (Lần ${attemptCount}/3)`}
+                                        {stars === 3 ? 'Tuyệt vời! Bạn nói đúng rồi.' : stars === 2 ? 'Gần đúng rồi! 👍' : stars === 1 ? 'Cùng tớ tập nói nhé! 🎯' : isListening ? 'Push to stop' : `Nói thật to để bắt bài nhé! (Lần ${attemptCount}/3)`}
                                     </span>
 
                                     <div className="flex flex-col items-center gap-4">
