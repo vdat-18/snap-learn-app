@@ -28,7 +28,7 @@
 | **Personal hook** | 0:00-0:15 | "My daughter is 2.5. She grabs my phone and demands YouTube. I wanted to build something where handing over the phone feels like good parenting." |
 | **Problem**       | 0:15-0:30 | "Every parent knows this guilt. Kids absorb brainrot. Meanwhile, in Vietnam, parents spend $200/mo on tutoring but kids have no daily practice."  |
 | **Solution**      | 0:30-0:45 | "SnapLearn turns that phone into a tool for exploration and learning language. Pokémon Go for vocabulary."                                       |
-| **Demo**          | 0:45-2:15 | 3 captures: water bottle (Common) → headphones with deliberate mispronunciation + retry (Uncommon) → nón lá (Epic). Show vault + leaderboard. |
+| **Demo**          | 0:45-2:15 | 3 captures: water bottle (Common) → earbuds with deliberate mispronunciation + retry (Uncommon) → toy excavator (Epic). Show vault + leaderboard. |
 | **Innovation**    | 2:15-2:30 | "The real innovation is shared visual context. The camera is a disguised prompt. The AI sees what the child sees."                                |
 | **Vision**        | 2:30-2:50 | "Imagine the AI sees a cat and asks 'Is that your cat?' Hardware devices. School deployments."                                                    |
 | **Close**         | 2:50-3:00 | "SnapLearn — so parents can hand over the phone and feel proud, not guilty."                                                                     |
@@ -37,8 +37,8 @@
 
 - [ ] App opens to camera viewfinder
 - [ ] Capture 1: Water bottle → Common card → perfect pronunciation
-- [ ] Capture 2: Headphones → Uncommon card → deliberate fail → retry → success
-- [ ] Capture 3: Nón lá → Epic/Legendary card → dramatic reveal
+- [ ] Capture 2: Earbuds → Uncommon card → deliberate fail → retry → success
+- [ ] Capture 3: Toy excavator → Epic/Legendary card → dramatic reveal
 - [ ] Words Vault grid with collected cards
 - [ ] Leaderboard view
 
@@ -51,9 +51,9 @@
 | # | Object                 | Expected Rarity | Pre-tested? | Fallback cached? |
 | - | ---------------------- | --------------- | ----------- | ---------------- |
 | 1 | Water bottle           | ⚪ Common       | ☐          | ☐               |
-| 2 | Headphones             | 🟢 Uncommon     | ☐          | ☐               |
+| 2 | Earbuds             | 🟢 Uncommon     | ☐          | ☐               |
 | 3 | Rubik's cube           | 🔵 Rare         | ☐          | ☐               |
-| 4 | Nón lá (conical hat) | 🟣 Epic         | ☐          | ☐               |
+| 4 | Toy excavator        | 🟣 Epic         | ☐          | ☐               |
 | 5 | Potted plant (spare)   | 🟢 Uncommon     | ☐          | ☐               |
 
 ### Backup Plans
@@ -112,7 +112,7 @@
 
 > "My daughter is two and a half — she already demands my phone for YouTube. We built SnapLearn so parents can hand over the phone and feel good about it.
 >
-> It's Pokémon Go for vocabulary. Watch — [snap water bottle] — the AI identifies it, plays the pronunciation, and checks if the child can say it back. [snap headphones] — this one's rarer, worth more points. Kids are motivated to explore, not scroll.
+> It's Pokémon Go for vocabulary. Watch — [snap water bottle] — the AI identifies it, plays the pronunciation, and checks if the child can say it back. [snap earbuds] — this one's rarer, worth more points. Kids are motivated to explore, not scroll.
 >
 > The real innovation is the interaction model — the camera creates shared context between child and AI. Today it's vocabulary. Tomorrow, the AI sees the same cat your child does and starts a conversation."
 
