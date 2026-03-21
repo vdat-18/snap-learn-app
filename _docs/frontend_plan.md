@@ -1,61 +1,61 @@
-# SnapLearn — Frontend Plan (Chi tiết A-Z)
+# SnapLearn — Frontend Plan (Complete A-Z Guide)
 
 ---
 
-## Mục lục
+## Table of Contents
 
-1. [Đối tượng Người dùng](#1-đối-tượng-người-dùng)
+1. [Target Users](#1-target-users)
 2. [Design System](#2-design-system)
-3. [Hệ thống Màn hình](#3-hệ-thống-màn-hình)
+3. [Screen System](#3-screen-system)
 4. [Gamification & Mechanics](#4-gamification--mechanics)
 5. [Animation & Motion](#5-animation--motion)
 6. [Sound Design](#6-sound-design)
-7. [Xử lý Lỗi cho Trẻ em](#7-xử-lý-lỗi-cho-trẻ-em)
+7. [Error Handling for Children](#7-error-handling-for-children)
 8. [Offline & PWA](#8-offline--pwa)
-9. [An toàn & Bảo mật](#9-an-toàn--bảo-mật)
+9. [Safety & Security](#9-safety--security)
 
 ---
 
-## 1. Đối tượng Người dùng
+## 1. Target Users
 
-### 1.1 Trẻ em (6-10 tuổi) - Trọng tâm chính
-- **Thị giác & Tương tác:** Ưu tiên màu sắc rực rỡ, icon thay cho văn bản, và phản hồi tức thì (hình ảnh + âm thanh + haptic).
-- **UX phù hợp:** Nút bấm lớn (tối thiểu 48px), font chữ to rõ (16px+), thao tác đơn giản (không double-tap).
-- **Tâm lý:** Thích sưu tập (Gacha), được khen thưởng, và nhiệm vụ ngắn gọn (5-10 phút).
+### 1.1 Children (6-10 years old) - Main Focus
+- **Visual & Interaction:** Use bright colors, icons instead of text, and instant feedback (images + sounds + haptic).
+- **Good UX:** Large buttons (minimum 48px), big clear fonts (16px+), simple actions (no double-tap).
+- **Psychology:** Like collecting things (Gacha style), want rewards, and short tasks (5-10 minutes).
 
-### 1.2 Phụ huynh
-- **Kiểm soát:** Truy cập qua Parent Gate (giải toán) để quản lý thời gian và bật/tắt ngôn ngữ.
-- **Theo dõi:** Dashboard thống kê từ vựng và nhật ký ảnh chụp của trẻ.
+### 1.2 Parents
+- **Control:** Access through Parent Gate (solve math) to manage time and turn languages on/off.
+- **Tracking:** Dashboard with vocabulary stats and log of child's photos.
 
 ---
 
 ## 2. Design System
 
-### 2.1 Bảng màu (Color Palette)
+### 2.1 Color Palette
 
-#### Màu chính (Primary Colors)
-| Tên | Hex | Sử dụng |
+#### Primary Colors
+| Name | Hex | Use |
 |---|---|---|
-| **Sky Blue** | `#4DA8FF` | Màu chủ đạo — nút bấm, links, HUD highlights |
-| **Sunshine Yellow** | `#FFD234` | Điểm nhấn — XP, phần thưởng, ngôi sao |
-| **Coral Red** | `#FF6B6B` | Nút Capture chính, streak flame |
+| **Sky Blue** | `#4DA8FF` | Main color — buttons, links, HUD highlights |
+| **Sunshine Yellow** | `#FFD234` | Accent — XP, rewards, stars |
+| **Coral Red** | `#FF6B6B` | Main Capture button, streak flame |
 
-#### Màu nền (Backgrounds)
-| Tên | Hex | Sử dụng |
+#### Background Colors
+| Name | Hex | Use |
 |---|---|---|
-| **Snow White** | `#F8FAFC` | Nền chính các màn hình (trừ Camera) |
-| **Soft Cream** | `#FFF9ED` | Nền cards, sections |
-| **Deep Navy** | `#0F172A` | Nền Camera viewfinder |
+| **Snow White** | `#F8FAFC` | Main background for screens (except Camera) |
+| **Soft Cream** | `#FFF9ED` | Background for cards, sections |
+| **Deep Navy** | `#0F172A` | Camera viewfinder background |
 
-#### Màu phụ (Secondary / Accent)
-| Tên | Hex | Sử dụng |
+#### Secondary / Accent Colors
+| Name | Hex | Use |
 |---|---|---|
-| **Mint Green** | `#34D399` | Thành công, đúng, hoàn thành |
-| **Lavender Purple** | `#A78BFA` | Tiếng Trung, Epic rarity |
-| **Warm Orange** | `#FB923C` | Cảnh báo nhẹ, gợi ý |
+| **Mint Green** | `#34D399` | Success, correct, completed |
+| **Lavender Purple** | `#A78BFA` | Chinese language, Epic rarity |
+| **Warm Orange** | `#FB923C` | Light warning, hints |
 
-#### Màu Rarity (Độ hiếm)
-| Độ hiếm | Màu chính | Màu glow | Gradient |
+#### Rarity Colors
+| Rarity | Main Color | Glow Color | Gradient |
 |---|---|---|---|
 | **Common** | `#94A3B8` (Slate) | `rgba(148,163,184,0.4)` | Slate 400 → Slate 300 |
 | **Uncommon** | `#22C55E` (Green) | `rgba(34,197,94,0.4)` | Green 500 → Emerald 400 |
@@ -63,71 +63,71 @@
 | **Epic** | `#A855F7` (Purple) | `rgba(168,85,247,0.4)` | Purple 500 → Violet 400 |
 | **Legendary** | `#F59E0B` (Amber) | `rgba(245,158,11,0.4)` | Amber 500 → Yellow 300 |
 
-#### Màu ngôn ngữ
-| Ngôn ngữ | Màu | Mục đích |
+#### Language Colors
+| Language | Color | Purpose |
 |---|---|---|
-| Tiếng Việt | `#0F172A` (Navy) | Ngôn ngữ chính, hiển thị đậm nhất |
-| Tiếng Anh | `#3B82F6` (Blue) | Luôn kèm nhãn "EN" |
-| Tiếng Trung | `#22C55E` (Green) | Luôn kèm nhãn "ZH" |
+| Vietnamese | `#0F172A` (Navy) | Main language, shown with darkest color |
+| English | `#3B82F6` (Blue) | Always with "EN" label |
+| Chinese | `#22C55E` (Green) | Always with "ZH" label |
 
-### 2.2 Typography (Phông chữ)
+### 2.2 Typography (Fonts)
 
-| Vai trò | Font | Weight | Size | Ghi chú |
+| Role | Font | Weight | Size | Notes |
 |---|---|---|---|---|
-| **Heading lớn** | Outfit | 700 (Bold) | 28-32px | Tên từ vựng tiếng Việt, tiêu đề màn hình |
-| **Heading nhỏ** | Outfit | 600 (SemiBold) | 20-24px | Tên nhóm, tiêu đề section |
-| **Body** | Outfit | 500 (Medium) | 16-18px | Mô tả, nội dung thẻ |
-| **Caption** | Outfit | 400 (Regular) | 12-14px | Phiên âm, label nhỏ |
-| **Badge / Tag** | Outfit | 700 (Bold) | 10-11px | Rarity badge, level tag — UPPERCASE, letter-spacing rộng |
+| **Large Heading** | Outfit | 700 (Bold) | 28-32px | Vietnamese word name, screen titles |
+| **Small Heading** | Outfit | 600 (SemiBold) | 20-24px | Group names, section titles |
+| **Body** | Outfit | 500 (Medium) | 16-18px | Descriptions, card content |
+| **Caption** | Outfit | 400 (Regular) | 12-14px | Pronunciation, small labels |
+| **Badge / Tag** | Outfit | 700 (Bold) | 10-11px | Rarity badge, level tag — UPPERCASE, wide letter-spacing |
 
-> **Lý do chọn Outfit:** Bo tròn, thân thiện, dễ đọc cho trẻ em. Hỗ trợ tốt tiếng Việt. Không quá "trẻ con" để phụ huynh vẫn thấy chuyên nghiệp.
+> **Why Outfit:** Rounded, friendly, easy to read for children. Good Vietnamese support. Not too "childish" so parents still see it as professional.
 
 ### 2.3 Spacing & Layout
 
-- **Grid:** 4px base unit. Mọi khoảng cách là bội số của 4px (4, 8, 12, 16, 24, 32, 48, 64).
-- **Safe area:** Padding 16px hai bên. Top: tính cả notch/status bar. Bottom: tính cả home indicator.
-- **Card border-radius:** 16-24px (bo tròn mềm mại).
-- **Button border-radius:** 16px (nút thường), full-rounded (nút tròn như Capture).
+- **Grid:** 4px base unit. All spacing is multiples of 4px (4, 8, 12, 16, 24, 32, 48, 64).
+- **Safe area:** 16px padding on sides. Top: includes notch/status bar. Bottom: includes home indicator.
+- **Card border-radius:** 16-24px (soft rounded corners).
+- **Button border-radius:** 16px (regular buttons), full-rounded (round buttons like Capture).
 - **Glassmorphism:** `background: rgba(255,255,255,0.7)`, `backdrop-filter: blur(20px)`, `border: 1px solid rgba(255,255,255,0.3)`.
 
-### 2.4 Iconography
+### 2.4 Icons
 
-- **Thư viện:** Lucide React (nhất quán, stroke-based, 24px mặc định).
-- **Icon size:** 20px (inline), 24px (navigation), 32px (action buttons), 48px (feature highlights).
-- **Icon quan trọng:**
-  - 📸 Camera → icon tùy chỉnh hoặc `Camera`
-  - 📖 Book → `Book` hoặc `BookOpen`
-  - ⚔️ Quest → `Target` hoặc `Swords`
-  - 🏆 Rank → `Award` hoặc `Trophy`
-  - 👤 Me → `User` hoặc `CircleUser`
+- **Library:** Lucide React (consistent, stroke-based, 24px default).
+- **Icon sizes:** 20px (inline), 24px (navigation), 32px (action buttons), 48px (feature highlights).
+- **Important icons:**
+  - 📸 Camera → custom icon or `Camera`
+  - 📖 Book → `Book` or `BookOpen`
+  - ⚔️ Quest → `Target` or `Swords`
+  - 🏆 Rank → `Award` or `Trophy`
+  - 👤 Me → `User` or `CircleUser`
   - 🎤 Mic → `Mic`
   - ⭐ Star → `Star`
-  - 🔥 Streak → emoji hoặc custom flame icon
+  - 🔥 Streak → emoji or custom flame icon
   - ❌ Close → `X`
   - ✅ Success → `Check`
 
 ### 2.5 Shadows & Elevation
 
-| Level | Shadow | Sử dụng |
+| Level | Shadow | Use |
 |---|---|---|
-| **Level 0** | Không shadow | Nền, flat elements |
-| **Level 1** | `0 1px 3px rgba(0,0,0,0.08)` | Cards nhỏ, tags |
-| **Level 2** | `0 4px 12px rgba(0,0,0,0.1)` | Cards chính, bottom nav |
+| **Level 0** | No shadow | Background, flat elements |
+| **Level 1** | `0 1px 3px rgba(0,0,0,0.08)` | Small cards, tags |
+| **Level 2** | `0 4px 12px rgba(0,0,0,0.1)` | Main cards, bottom nav |
 | **Level 3** | `0 8px 24px rgba(0,0,0,0.15)` | Modal, overlay cards |
-| **Rarity Glow** | `0 0 20px [rarity-color]` | Viền thẻ từ vựng khi reveal |
+| **Rarity Glow** | `0 0 20px [rarity-color]` | Vocabulary card border when revealed |
 
-### 2.6 Hình ảnh & Illustration Style
+### 2.6 Images & Illustration Style
 
-- **Phong cách:** Flat illustration với màu pastel, đường nét mềm, góc bo tròn.
-- **Nhân vật mascot:** Không bắt buộc cho POC, nhưng nên có 1 nhân vật (ví dụ: con cú nhỏ đeo kính) xuất hiện trong onboarding và thông báo lỗi.
-- **Category icons:** Dùng emoji hoặc illustration nhỏ cho mỗi nhóm chủ đề (🐾 Động vật, 🍎 Thức ăn, 🌿 Thiên nhiên, 🏫 Trường học, 🏠 Nhà cửa, 🚗 Phương tiện).
-- **Silhouette cards:** Thẻ chưa khám phá hiển thị bóng đen + "?" ở giữa, tạo sự tò mò.
+- **Style:** Flat illustration with pastel colors, soft lines, rounded corners.
+- **Mascot character:** Not required for POC, but should have 1 character (example: small owl with glasses) appearing in onboarding and error messages.
+- **Category icons:** Use emoji or small illustrations for each topic group (🐾 Animals, 🍎 Food, 🌿 Nature, 🏫 School, 🏠 Home, 🚗 Transportation).
+- **Silhouette cards:** Undiscovered cards show black shadow + "?" in center, creating curiosity.
 
 ---
 
-## 3. Hệ thống Màn hình
+## 3. Screen System
 
-### 3.1 Sơ đồ Điều hướng (Navigation Map)
+### 3.1 Navigation Map
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -142,65 +142,65 @@
      │                                 │
      ▼                                 ▼
  Vocab Detail                    Parent Dashboard
- Screen                          (sau Parent Gate)
+ Screen                          (after Parent Gate)
 
 ┌─────────────────────────────────────────────┐
-│    📸 CAMERA SCREEN (NÚT NỔI / FAB)        │
-│    Luôn accessible từ mọi màn hình          │
-│    hoặc là màn hình mặc định khi mở app     │
+│    📸 CAMERA SCREEN (FLOATING BUTTON)      │
+│    Always accessible from every screen     │
+│    or default screen when opening app      │
 └─────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────┐
-│    🎬 ONBOARDING (chỉ hiện lần đầu tiên)   │
+│    🎬 ONBOARDING (only shows first time)   │
 └─────────────────────────────────────────────┘
 ```
 
 ---
 
-### 3.2 Màn hình 1: 🎬 Onboarding
+### 3.2 Screen 1: 🎬 Onboarding
 
-**Mục đích:** Giới thiệu ứng dụng cho trẻ em lần đầu sử dụng.
+**Purpose:** Introduce the app to children using it for the first time.
 
-**Cấu trúc:** 4 slides, vuốt ngang hoặc nhấn nút "Tiếp".
+**Structure:** 4 slides, swipe horizontally or tap "Next" button.
 
-| Slide | Illustration | Tiêu đề | Mô tả ngắn |
+| Slide | Illustration | Title | Short Description |
 |---|---|---|---|
-| 1 | Trẻ em cầm điện thoại, xung quanh có các vật thể sáng lấp lánh | "Chào mừng đến SnapLearn!" | "Khám phá thế giới và học từ mới mỗi ngày!" |
-| 2 | Tay chụp ảnh một con mèo, thẻ từ bay ra | "Chụp vật xung quanh!" | "Đưa camera về phía vật thể và nhấn nút chụp" |
-| 3 | Biểu tượng micro với sóng âm thanh | "Nói để thu thập!" | "Phát âm đúng để thêm từ vào bộ sưu tập" |
-| 4 | Cuốn sổ sưu tập mở ra, bên trong có nhiều sticker sáng lấp lánh | "Sưu tập & Thăng cấp!" | "Thu thập từ hiếm, hoàn thành nhiệm vụ, trở thành nhà vô địch!" |
+| 1 | Child holding phone with bright sparkling objects around | "Welcome to SnapLearn!" | "Discover the world and learn new words every day!" |
+| 2 | Hand taking photo of a cat, word card flying out | "Take photos of things around you!" | "Point camera at objects and tap the capture button" |
+| 3 | Microphone icon with sound waves | "Speak to collect!" | "Say it correctly to add words to your collection" |
+| 4 | Collection book opening with many sparkling stickers inside | "Collect & Level Up!" | "Gather rare words, complete quests, become a champion!" |
 
-**Nút CTA ở slide cuối:** "🚀 Bắt đầu khám phá!" → chuyển tới Camera Screen.
+**CTA button on last slide:** "🚀 Start exploring!" → goes to Camera Screen.
 
-**Chỉ báo tiến trình:** 4 chấm tròn ở dưới cùng, chấm hiện tại sáng lên.
+**Progress indicator:** 4 round dots at bottom, current dot lights up.
 
-**Quy tắc:** Chỉ hiện 1 lần duy nhất. Lưu trạng thái "đã xem" vào bộ nhớ thiết bị. Nếu đã xem, mở app sẽ vào thẳng Camera Screen.
+**Rule:** Only shows once. Save "seen" status to device memory. If already seen, opening app goes straight to Camera Screen.
 
 ---
 
-### 3.3 Màn hình 2: 📸 Camera Screen (Trải nghiệm Lõi)
+### 3.3 Screen 2: 📸 Camera Screen (Core Experience)
 
-**Mục đích:** Đây là màn hình CHÍNH. Trẻ sử dụng camera để chụp ảnh vật thể, AI nhận diện và tạo thẻ từ vựng.
+**Purpose:** This is the MAIN screen. Children use camera to take photos of objects, AI recognizes and creates vocabulary cards.
 
-**Bố cục tổng thể:**
+**Overall Layout:**
 
 ```
 ┌──────────────────────────────────┐
 │ [Level Badge]  [XP]    [🔥 7]   │ ← Top HUD (glassmorphism)
 │                                  │
 │  ┌─ Today's Mission ──────────┐  │ ← Mission Overlay
-│  │ Tìm 3 vật màu đỏ 🔴       │  │
+│  │ Find 3 red objects 🔴     │  │
 │  │ ████░░░░░░ 1/3             │  │
 │  └────────────────────────────┘  │
 │                                  │
 │         ┌──────────┐             │
-│         │          │             │ ← Viewfinder (camera live)
-│     ┌───│  🎯 AI   │───┐        │    với 4 góc trắng
+│         │          │             │ ← Viewfinder (live camera)
+│     ┌───│  🎯 AI   │───┐        │    with 4 white corners
 │         │          │             │
 │         └──────────┘             │
 │                                  │
 │           ┌──────┐               │
-│           │  ●   │               │ ← Capture Button (đỏ, tròn, lớn)
+│           │  ●   │               │ ← Capture Button (red, round, big)
 │           └──────┘               │
 │                                  │
 │ ┌──────────────────────────────┐ │
@@ -210,115 +210,114 @@
 ```
 
 #### Top HUD (Head-Up Display)
-- **Vị trí:** Trên cùng, nằm đè lên camera view.
-- **Style:** Glassmorphism (trong suốt mờ, blur nền).
-- **Bên trái:** Badge tròn hiển thị Level (ví dụ: "L5" trên nền xanh) + XP hiện tại (ví dụ: "⭐ 142 pts").
-- **Bên phải:** Streak flame "🔥 7" (số ngày liên tiếp).
-- **Khi XP thay đổi:** Số XP nhảy lên kèm hiệu ứng vàng lấp lánh.
+- **Position:** Top, overlaying camera view.
+- **Style:** Glassmorphism (transparent blur, blur background).
+- **Left side:** Round badge showing Level (example: "L5" on blue background) + current XP (example: "⭐ 142 pts").
+- **Right side:** Streak flame "🔥 7" (consecutive days).
+- **When XP changes:** XP number jumps up with golden sparkle effect.
 
 #### Mission Overlay
-- **Vị trí:** Phía dưới Top HUD, bên trái.
-- **Style:** Glassmorphism card nhỏ gọn (max 200px width).
-- **Nội dung:** Label "TODAY'S MISSION" (nhỏ, xanh, uppercase) + mô tả nhiệm vụ + thanh tiến trình.
-- **Animation:** Slide-in từ trái khi mở app.
+- **Position:** Below Top HUD, left side.
+- **Style:** Compact glassmorphism card (max 200px width).
+- **Content:** "TODAY'S MISSION" label (small, blue, uppercase) + mission description + progress bar.
+- **Animation:** Slide-in from left when opening app.
 
 #### Camera Viewfinder
-- **Nền:** Live camera feed (camera sau của điện thoại).
-- **Overlay:** 4 góc trắng bán trong suốt tạo thành khung ngắm ở giữa (khoảng 70% chiều rộng màn hình).
-- **Khi app chưa được cấp quyền camera:** Hiển thị thông báo dễ thương "📸 Cho mình xem thế giới nhé!" kèm nút "Cho phép".
+- **Background:** Live camera feed (phone's rear camera).
+- **Overlay:** 4 white semi-transparent corners forming viewfinder frame in center (about 70% of screen width).
+- **When app doesn't have camera permission:** Show cute message "📸 Let me see the world!" with "Allow" button.
 
 #### Capture Button
-- **Vị trí:** Giữa dưới, phía trên Bottom Nav.
-- **Kích thước:** 72px (vòng ngoài), 56px (vòng đỏ bên trong).
-- **Style:** Viền trắng dày, bên trong là hình tròn đỏ coral. Khi nhấn: scale nhỏ lại 90% rồi nảy lên.
-- **Trạng thái Loading:** Vòng đỏ biến thành vòng xoay spinner xanh (AI đang xử lý).
-- **Bị vô hiệu hóa:** Khi đang xử lý hoặc khi Reveal Card đang mở.
+- **Position:** Center bottom, above Bottom Nav.
+- **Size:** 72px (outer ring), 56px (red inner circle).
+- **Style:** Thick white border, inside is coral red circle. When pressed: scale down to 90% then bounce up.
+- **Loading state:** Red circle becomes spinning blue spinner (AI processing).
+- **Disabled:** When processing or when Reveal Card is open.
 
 #### Bottom Navigation
-- **Style:** Glassmorphism bar, bo tròn 24px, nằm cách đáy 24px.
-- **4 mục:** Book | Quest | Rank | Me (icon + label nhỏ bên dưới).
-- **Mục đang chọn:** Màu Sky Blue + chấm tròn nhỏ bên dưới.
-- **Mục không chọn:** Màu Slate 400.
+- **Style:** Glassmorphism bar, 24px border radius, 24px from bottom.
+- **4 items:** Book | Quest | Rank | Me (icon + small label below).
+- **Selected item:** Sky Blue color + small dot below.
+- **Unselected items:** Slate 400 color.
 
 ---
 
-### 3.4 Overlay: 🃏 Reveal Card (Thẻ từ vựng)
+### 3.4 Overlay: 🃏 Reveal Card (Vocabulary Card)
 
-**Khi nào xuất hiện:** Sau khi AI nhận diện thành công (confidence ≥ 0.7).
+**When it appears:** After AI successfully recognizes (confidence ≥ 0.7).
 
-**Animation xuất hiện:** Slide up từ dưới lên với hiệu ứng spring (nảy nhẹ). Nền phía sau tối dần (overlay đen 40%).
+**Appearance animation:** Slide up from bottom with spring effect (light bounce). Background dims (40% black overlay).
 
-**Bố cục:**
+**Layout:**
 
 ```
 ┌──────────────────────────────────┐
-│                    [X]           │ ← Nút đóng (góc phải)
+│                    [X]           │ ← Close button (top right)
 │                                  │
-│         [ RARE ]                 │ ← Rarity Badge (màu tương ứng)
+│         [ RARE ]                 │ ← Rarity Badge (matching color)
 │                                  │
 │     ┌──────────────────┐         │
 │     │                  │         │
-│     │   📷 Ảnh chụp    │         │ ← Ảnh vật thể do trẻ chụp
-│     │                  │         │    Viền + glow theo rarity
+│     │   📷 Photo       │         │ ← Object photo taken by child
+│     │                  │         │    Border + glow by rarity
 │     └──────────────────┘         │
 │                                  │
-│       "Con mèo"                  │ ← Tiếng Việt (lớn, đậm, navy)
-│       "Cat" /kæt/                │ ← Tiếng Anh (xanh dương) + phiên âm
-│       "猫" māo                   │ ← Tiếng Trung (xanh lá) + pinyin
+│       "Con mèo"                  │ ← Vietnamese (big, bold, navy)
+│       "Cat" /kæt/                │ ← English (blue) + pronunciation
+│       "猫" māo                   │ ← Chinese (green) + pinyin
 │                                  │
 │  ┌──────────────────────────┐    │
-│  │   "Nói đi nào!"          │    │ ← Khu vực luyện phát âm
+│  │   "Say it!"              │    │ ← Pronunciation practice area
 │  │                          │    │
-│  │       [ 🎤 ]             │    │ ← Nút PTT (Push-to-Talk)
+│  │       [ 🎤 ]             │    │ ← PTT (Push-to-Talk) button
 │  │                          │    │
-│  │    ☆   ☆   ☆            │    │ ← 3 ngôi sao (chờ đánh giá)
+│  │    ☆   ☆   ☆            │    │ ← 3 stars (waiting for rating)
 │  └──────────────────────────┘    │
 │                                  │
 └──────────────────────────────────┘
 ```
 
-**Các trạng thái ngôi sao:**
-- ☆☆☆ — Chưa thử (xám nhạt)
-- ★☆☆ — Phát âm được nhưng chưa chuẩn
-- ★★☆ — Phát âm khá tốt
-- ★★★ — Phát âm xuất sắc (kèm confetti animation)
+**Star states:**
+- ☆☆☆ — Not tried yet (light gray)
+- ★☆☆ — Can pronounce but not accurate
+- ★★☆ — Pretty good pronunciation
+- ★★★ — Excellent pronunciation (with confetti animation)
 
-**Hiệu ứng Rarity Glow:**
-- Common: Không glow, viền slate nhẹ
-- Uncommon: Viền phát sáng xanh lá nhẹ
-- Rare: Viền phát sáng xanh dương + particle nhỏ
-- Epic: Viền phát sáng tím + particle trung bình
-- Legendary: Viền phát sáng vàng gold + particle rực rỡ + tia sáng xoay
+**Rarity Glow Effects:**
+- Common: No glow, light slate border
+- Uncommon: Light green glowing border
+- Rare: Blue glowing border + small particles
+- Epic: Purple glowing border + medium particles
+- Legendary: Golden glow border + bright particles + spinning light rays
 
 ---
 
-### 3.5 Màn hình 3: 📖 Collection Screen (Sổ sưu tập)
+### 3.5 Screen 3: 📖 Collection Screen (Collection Book)
 
-**Mục đích:** Hiển thị tất cả từ vựng đã thu thập, phân loại theo chủ đề. Giống "Pokédex".
+**Purpose:** Show all collected vocabulary, organized by topics. Like a "Pokédex".
 
-**Bố cục:**
+**Layout:**
 
 ```
 ┌──────────────────────────────────┐
-│   📖 Sổ sưu tập                 │ ← Tiêu đề
-│   "42 từ đã thu thập"           │ ← Tổng số từ
+│   📖 Collection Book             │ ← Title
+│   "42 words collected"           │ ← Total words count
 │                                  │
 │  ┌─────────┐  ┌─────────┐       │
-│  │ 🐾      │  │ 🍎      │       │ ← Category Grid (2 cột)
-│  │ Động vật │  │ Thức ăn │       │
-│  │ 8/20    │  │ 5/15    │       │    Mỗi tile: icon + tên + progress
+│  │ 🐾      │  │ 🍎      │       │ ← Category Grid (2 columns)
+│  │ Animals │  │ Food    │       │
+│  │ 8/20    │  │ 5/15    │       │    Each tile: icon + name + progress
 │  │ ████░░░ │  │ ███░░░░ │       │
 │  └─────────┘  └─────────┘       │
 │  ┌─────────┐  ┌─────────┐       │
 │  │ 🌿      │  │ 🏫      │       │
-│  │ Thiên   │  │ Trường  │       │
-│  │ nhiên   │  │ học     │       │
+│  │ Nature  │  │ School  │       │
 │  │ 12/25   │  │ 3/18    │       │
 │  └─────────┘  └─────────┘       │
 │  ┌─────────┐  ┌─────────┐       │
 │  │ 🏠      │  │ 🚗      │       │
-│  │ Nhà cửa │  │ Phương  │       │
-│  │ 10/22   │  │ tiện    │       │
+│  │ Home    │  │ Trans   │       │
+│  │ 10/22   │  │ port    │       │
 │  │ ████░░░ │  │ 4/12    │       │
 │  └─────────┘  └─────────┘       │
 │                                  │
@@ -328,16 +327,16 @@
 └──────────────────────────────────┘
 ```
 
-**Khi nhấn vào một Category → Mở VocabGrid:**
+**When clicking a Category → Opens VocabGrid:**
 
 ```
 ┌──────────────────────────────────┐
-│ ← Quay lại    🐾 Động vật       │
-│               8/20               │
+│ ← Back       🐾 Animals          │
+│              8/20                │
 │                                  │
-│  ┌────┐ ┌────┐ ┌────┐ ┌────┐   │ ← Grid 4 cột
-│  │ 🐱 │ │ 🐶 │ │ ?? │ │ ?? │   │    Từ đã có: ảnh thumbnail
-│  │Cat │ │Dog │ │    │ │    │   │    Từ chưa có: silhouette + "?"
+│  ┌────┐ ┌────┐ ┌────┐ ┌────┐   │ ← 4-column Grid
+│  │ 🐱 │ │ 🐶 │ │ ?? │ │ ?? │   │    Have: photo thumbnail
+│  │Cat │ │Dog │ │    │ │    │   │    Don't have: silhouette + "?"
 │  │ ★★ │ │ ★★★│ │    │ │    │   │
 │  └────┘ └────┘ └────┘ └────┘   │
 │  ┌────┐ ┌────┐ ┌────┐ ┌────┐   │
@@ -348,104 +347,103 @@
 └──────────────────────────────────┘
 ```
 
-**Style Category Tile:**
-- Nền: Soft Cream (`#FFF9ED`) hoặc trắng.
-- Viền: 1px solid, màu nhạt.
+**Category Tile Style:**
+- Background: Soft Cream (`#FFF9ED`) or white.
+- Border: 1px solid, light color.
 - Border-radius: 20px.
-- Progress bar: Thanh nhỏ ở dưới, màu Sky Blue.
-- Khi category hoàn thành 100%: Viền vàng gold + badge "Master ✨".
+- Progress bar: Small bar at bottom, Sky Blue color.
+- When category 100% complete: Gold border + "Master ✨" badge.
 
 ---
 
-### 3.6 Màn hình 4: 🔍 Vocab Detail Screen
+### 3.6 Screen 4: 🔍 Vocab Detail Screen
 
-**Mục đích:** Xem chi tiết một từ vựng. Luyện phát âm. Xem tiến hóa.
+**Purpose:** View details of one word. Practice pronunciation. See evolution.
 
-**Bố cục:**
+**Layout:**
 
 ```
 ┌──────────────────────────────────┐
-│ ← Quay lại              [RARE]  │ ← Rarity badge
+│ ← Back                   [RARE]  │ ← Rarity badge
 │                                  │
 │     ┌──────────────────┐         │
-│     │                  │         │ ← Ảnh gốc do trẻ chụp
-│     │   📷 Ảnh con mèo │         │    Viền glow theo rarity
+│     │                  │         │ ← Original photo by child
+│     │   📷 Cat photo   │         │    Border glow by rarity
 │     │                  │         │
 │     └──────────────────┘         │
 │                                  │
-│     "Con mèo"                    │ ← Tiếng Việt (28px, bold)
-│     🔊 "Cat" /kæt/              │ ← Tiếng Anh (có nút nghe 🔊)
-│     🔊 "猫" māo                 │ ← Tiếng Trung (có nút nghe 🔊)
+│     "Con mèo"                    │ ← Vietnamese (28px, bold)
+│     🔊 "Cat" /kæt/              │ ← English (with sound button 🔊)
+│     🔊 "猫" māo                 │ ← Chinese (with sound button 🔊)
 │                                  │
-│  ┌─ Phát âm ──────────────────┐  │
-│  │ Tiếng Anh: ★★★             │  │ ← Sao phát âm mỗi ngôn ngữ
-│  │ Tiếng Trung: ★★☆           │  │
-│  └────────────────────────────┘  │
+│  ┌─ Pronunciation ─────────────┐  │
+│  │ English: ★★★              │  │ ← Stars for each language
+│  │ Chinese: ★★☆              │  │
+│  └───────────────────────────┘  │
 │                                  │
-│  ┌─ Tiến hóa ─────────────────┐  │
-│  │ ●●●○○  3/5 lần luyện       │  │ ← Thanh tiến hóa
-│  │ "Luyện thêm 2 lần nữa     │  │
-│  │  để mở khóa sự thật        │  │
-│  │  thú vị!"                   │  │
-│  └────────────────────────────┘  │
+│  ┌─ Evolution ─────────────────┐  │
+│  │ ●●●○○  3/5 practice times  │  │ ← Evolution progress bar
+│  │ "Practice 2 more times    │  │
+│  │  to unlock fun facts!"    │  │
+│  └───────────────────────────┘  │
 │                                  │
-│  ┌─ Sự thật thú vị 🔒 ────────┐  │ ← Khóa cho đến khi tiến hóa
-│  │ (Mở khóa sau khi tiến hóa) │  │
-│  └────────────────────────────┘  │
+│  ┌─ Fun Facts 🔒 ─────────────┐  │ ← Locked until evolution
+│  │ (Unlock after evolution)   │  │
+│  └───────────────────────────┘  │
 │                                  │
-│  [ 🎤 Luyện phát âm ]           │ ← Nút luyện (mở SayItChallenge)
+│  [ 🎤 Practice Speaking ]       │ ← Practice button (opens SayItChallenge)
 │                                  │
 └──────────────────────────────────┘
 ```
 
-**Sau khi tiến hóa (5/5):**
-- Hiệu ứng nổ confetti + glow rực rỡ.
-- Section "Sự thật thú vị" mở khóa (ví dụ: "Mèo có thể ngủ 16 giờ mỗi ngày!").
-- Section "Câu ví dụ" mở khóa (ví dụ: "The cat is sleeping on the sofa.").
-- Badge "Evolved ✨" xuất hiện trên thẻ.
+**After evolution (5/5):**
+- Confetti explosion effect + bright glow.
+- "Fun Facts" section unlocks (example: "Cats can sleep 16 hours per day!").
+- "Example Sentence" section unlocks (example: "The cat is sleeping on the sofa.").
+- "Evolved ✨" badge appears on card.
 
 ---
 
-### 3.7 Màn hình 5: ⚔️ Quest Screen
+### 3.7 Screen 5: ⚔️ Quest Screen
 
-**Mục đích:** Hiển thị nhiệm vụ hàng ngày/tuần để thúc đẩy khám phá.
+**Purpose:** Show daily/weekly quests to encourage exploration.
 
-**Bố cục:**
+**Layout:**
 
 ```
 ┌──────────────────────────────────┐
-│   ⚔️ Nhiệm vụ                   │
+│   ⚔️ Quests                     │
 │                                  │
-│  ── Hôm nay ──                   │
+│  ── Today ──                     │
 │  ┌────────────────────────────┐  │
-│  │ 🔴 Tìm 3 vật màu đỏ      │  │ ← Mission Card
-│  │    ●●○  2/3                │  │    Icon + mô tả + progress
-│  │    Thưởng: 50 XP + Streak │  │    Phần thưởng preview
+│  │ 🔴 Find 3 red objects     │  │ ← Mission Card
+│  │    ●●○  2/3                │  │    Icon + description + progress
+│  │    Reward: 50 XP + Streak │  │    Reward preview
 │  └────────────────────────────┘  │
 │  ┌────────────────────────────┐  │
-│  │ 📷 Chụp 5 vật bất kỳ     │  │
+│  │ 📷 Take 5 photos          │  │
 │  │    ●●●●○  4/5             │  │
-│  │    Thưởng: 30 XP          │  │
+│  │    Reward: 30 XP          │  │
 │  └────────────────────────────┘  │
 │  ┌────────────────────────────┐  │
-│  │ ✅ Luyện nói 3 từ          │  │ ← Đã hoàn thành
-│  │    ●●●  3/3  XONG! 🎉     │  │    Nền xanh nhạt
-│  │    [Nhận thưởng]           │  │    Nút nhận thưởng sáng lên
+│  │ ✅ Practice 3 words        │  │ ← Completed
+│  │    ●●●  3/3  DONE! 🎉     │  │    Light green background
+│  │    [Claim Reward]         │  │    Glowing claim button
 │  └────────────────────────────┘  │
 │                                  │
-│  ── Tuần này ──                  │
+│  ── This Week ──                 │
 │  ┌────────────────────────────┐  │
-│  │ 🍳 Chụp 5 món trong bếp  │  │
+│  │ 🍳 Take 5 kitchen photos  │  │
 │  │    ●●○○○  2/5             │  │
-│  │    Thưởng: 200 XP + 🏅   │  │
+│  │    Reward: 200 XP + 🏅   │  │
 │  └────────────────────────────┘  │
 │                                  │
-│  ── Thử thách lớn ──            │
+│  ── Big Challenge ──             │
 │  ┌────────────────────────────┐  │
-│  │ 🐾 Nhà Động vật học        │  │
-│  │    Hoàn thành nhóm Động vật│  │
+│  │ 🐾 Animal Master          │  │
+│  │    Complete Animal group   │  │
 │  │    8/20                    │  │
-│  │    Thưởng: 500 XP + 🏆   │  │
+│  │    Reward: 500 XP + 🏆   │  │
 │  └────────────────────────────┘  │
 │                                  │
 │ ┌──────────────────────────────┐ │
@@ -454,43 +452,43 @@
 └──────────────────────────────────┘
 ```
 
-**Trạng thái Mission Card:**
-| Trạng thái | Style |
+**Mission Card States:**
+| State | Style |
 |---|---|
-| Đang thực hiện | Nền trắng, viền nhạt, progress bar Sky Blue |
-| Hoàn thành (chưa nhận thưởng) | Nền Mint Green nhạt, nút "Nhận thưởng" sáng lấp lánh |
-| Đã nhận thưởng | Nền xám nhạt, đánh dấu ✅, opacity 60% |
+| In progress | White background, light border, Sky Blue progress bar |
+| Complete (not claimed) | Light Mint Green background, glowing "Claim Reward" button |
+| Already claimed | Light gray background, ✅ mark, 60% opacity |
 
 ---
 
-### 3.8 Màn hình 6: 🏆 Leaderboard Screen
+### 3.8 Screen 6: 🏆 Leaderboard Screen
 
-**Bố cục:**
+**Layout:**
 
 ```
 ┌──────────────────────────────────┐
-│   🏆 Bảng xếp hạng              │
+│   🏆 Leaderboard                 │
 │                                  │
-│  [ Lớp học ] [ Bạn bè ] [ Mọi  ]│ ← Tab bar
-│                  ↑ active         │
+│  [ Class ] [ Friends ] [ All  ]  │ ← Tab bar
+│              ↑ active            │
 │                                  │
 │        👑                        │
 │     ┌──────┐                     │ ← Top 3 Podium
-│     │  #1  │                     │    Avatar lớn, 3D-like
-│  ┌──┤ An   ├──┐                  │    Crown cho #1
+│     │  #1  │                     │    Large avatar, 3D-like
+│  ┌──┤ An   ├──┐                  │    Crown for #1
 │  │#2│ 980  │#3│                  │
-│  │Mai│     │Bảo│                 │
+│  │Mai│     │Bao│                 │
 │  │720│     │650│                 │
 │  └──┘      └──┘                  │
 │                                  │
 │  4. Linh       ⭐ 580            │ ← Ranked List
-│  5. Hùng       ⭐ 520            │    Avatar nhỏ + tên + điểm
-│  6. Thảo       ⭐ 490            │
-│  7. Dũng       ⭐ 445            │
+│  5. Hung       ⭐ 520            │    Small avatar + name + points
+│  6. Thao       ⭐ 490            │
+│  7. Dung       ⭐ 445            │
 │  ...                             │
 │                                  │
 │ ┌──────────────────────────────┐ │
-│ │ 📍 Bạn: #12  ⭐ 142         │ │ ← Sticky bar (vị trí của mình)
+│ │ 📍 You: #12  ⭐ 142         │ │ ← Sticky bar (your position)
 │ └──────────────────────────────┘ │
 │                                  │
 │ ┌──────────────────────────────┐ │
@@ -499,44 +497,44 @@
 └──────────────────────────────────┘
 ```
 
-**Ghi chú:**
-- Top 3 hiển thị lớn, nổi bật với podium style.
-- Crown vàng cho hạng 1. Huy chương bạc cho hạng 2. Huy chương đồng cho hạng 3.
-- Leaderboard reset hàng tháng — hiển thị countdown timer nhỏ "Reset in 12 days".
-- Sticky bar ở dưới luôn hiển thị vị trí hiện tại của trẻ.
+**Notes:**
+- Top 3 shown large and prominent with podium style.
+- Gold crown for #1. Silver medal for #2. Bronze medal for #3.
+- Leaderboard resets monthly — show small countdown timer "Reset in 12 days".
+- Sticky bar at bottom always shows child's current position.
 
 ---
 
-### 3.9 Màn hình 7: 👤 Profile Screen
+### 3.9 Screen 7: 👤 Profile Screen
 
-**Bố cục:**
+**Layout:**
 
 ```
 ┌──────────────────────────────────┐
 │                                  │
 │         ┌────────┐               │
-│         │ Avatar │               │ ← Avatar tròn, viền gradient
-│         │  (📸)  │               │    theo level
+│         │ Avatar │               │ ← Round avatar, gradient border
+│         │  (📸)  │               │    by level
 │         └────────┘               │
-│         "Đạt Nguyễn"            │ ← Tên
-│     [ Word Collector - Lv.5 ]    │ ← Badge danh hiệu
+│         "Dat Nguyen"             │ ← Name
+│     [ Word Collector - Lv.5 ]    │ ← Title badge
 │                                  │
 │  ┌──────┐ ┌──────┐ ┌──────┐     │
 │  │  42  │ │  7   │ │  3   │     │ ← Stats Grid
-│  │ Từ   │ │ Ngày │ │ Hiếm │     │    Tổng từ | Streak | Thẻ hiếm
+│  │Words │ │ Days │ │ Rare │     │    Total words | Streak | Rare cards
 │  └──────┘ └──────┘ └──────┘     │
 │                                  │
-│  ── Huy hiệu ──                 │
+│  ── Badges ──                    │
 │  🏅 🏅 🏅 🔒 🔒 🔒 🔒 🔒       │ ← Badge Showcase
-│  "Nhà thám hiểm"                │    Đã nhận: sáng
-│  "Bạn của động vật"              │    Chưa nhận: khóa, xám
+│  "Explorer"                      │    Earned: bright
+│  "Animal Friend"                 │    Not earned: locked, gray
 │                                  │
-│  ── Nhóm yêu thích ──           │
-│  🐾 Động vật (8 từ)             │ ← Category yêu thích nhất
+│  ── Favorite Topic ──            │
+│  🐾 Animals (8 words)            │ ← Most collected category
 │                                  │
 │                                  │
-│  ⚙️ (Giữ 3 giây để vào         │ ← Parent Gate
-│      cài đặt phụ huynh)         │    Nút nhỏ, ẩn, góc dưới
+│  ⚙️ (Hold 3 seconds for         │ ← Parent Gate
+│      parent settings)           │    Small, hidden, bottom corner
 │                                  │
 │ ┌──────────────────────────────┐ │
 │ │ Bottom Navigation            │ │
@@ -544,194 +542,193 @@
 └──────────────────────────────────┘
 ```
 
-**Parent Gate — Cách hoạt động:**
-1. Nút nhỏ (icon ⚙️) ở góc dưới, màu xám nhạt, kích thước 32px — trẻ khó nhận ra.
-2. Khi nhấn giữ 3 giây → Hiện popup "Giải bài toán: 7 + 8 = ?" (phép tính thay đổi mỗi lần).
-3. Trả lời đúng → Chuyển đến Parent Dashboard.
-4. Trả lời sai → "Hỏi bố mẹ nhé! 😊"
+**Parent Gate — How it works:**
+1. Small button (⚙️ icon) in bottom corner, light gray, 32px size — hard for children to notice.
+2. Hold for 3 seconds → Show popup "Solve: 7 + 8 = ?" (math changes each time).
+3. Correct answer → Go to Parent Dashboard.
+4. Wrong answer → "Ask mom and dad! 😊"
 
 ---
 
-### 3.10 Màn hình 8: 👨‍👩‍👧 Parent Dashboard
+### 3.10 Screen 8: 👨‍👩‍👧 Parent Dashboard
 
-**Mục đích:** Cho phụ huynh theo dõi và kiểm soát trải nghiệm học tập.
+**Purpose:** Let parents track and control learning experience.
 
-**Phong cách thiết kế:** **KHÁC BIỆT** hoàn toàn với giao diện trẻ em:
-- Nền trắng sạch, typography tối giản.
-- Không animation rực rỡ, không emoji.
-- Bảng biểu và số liệu rõ ràng.
-- Giống dashboard quản trị chuyên nghiệp.
+**Design Style:** **COMPLETELY DIFFERENT** from children's interface:
+- Clean white background, minimal typography.
+- No bright animations, no emoji.
+- Clear charts and numbers.
+- Like professional admin dashboard.
 
-**Các section:**
+**Sections:**
 
-| Section | Nội dung |
+| Section | Content |
 |---|---|
-| **Tổng quan** | Số từ đã học, streak hiện tại, level |
-| **Biểu đồ tiến độ** | Đường cong số từ mới theo ngày/tuần (line chart) |
-| **Phân bổ chủ đề** | Pie chart: tỉ lệ từ theo nhóm (Động vật chiếm 30%...) |
-| **Phân bổ độ hiếm** | Bar chart: bao nhiêu Common, Uncommon, Rare... |
-| **Nhật ký hoạt động** | Danh sách gần đây: ảnh + từ + kết quả phát âm + thời gian |
-| **Cài đặt thời gian** | Slider: Giới hạn mỗi ngày (mặc định 30 phút) |
-| **Cài đặt ngôn ngữ** | Toggle: Bật/tắt Tiếng Anh, Bật/tắt Tiếng Trung |
-| **Cài đặt lưu ảnh** | Toggle: Lưu ảnh gốc hay không |
-| **Nút đăng xuất Parent** | Quay lại giao diện trẻ em |
+| **Overview** | Words learned, current streak, level |
+| **Progress Chart** | Line chart of new words by day/week |
+| **Topic Distribution** | Pie chart: word percentage by group (Animals 30%...) |
+| **Rarity Distribution** | Bar chart: how many Common, Uncommon, Rare... |
+| **Activity Log** | Recent list: photo + word + pronunciation result + time |
+| **Time Settings** | Slider: Daily limit (default 30 minutes) |
+| **Language Settings** | Toggle: Enable/disable English, Enable/disable Chinese |
+| **Photo Storage** | Toggle: Save original photos or not |
+| **Parent Logout** | Back to children's interface |
 
 ---
 
 ## 4. Gamification & Mechanics
 
-### 4.1 Hệ thống Điểm (XP)
+### 4.1 Point System (XP)
 
-| Hành động | Điểm |
+| Action | Points |
 |---|---|
-| Capture Common mới | 10 XP |
-| Capture Uncommon mới | 25 XP |
-| Capture Rare mới | 50 XP |
-| Capture Epic mới | 100 XP |
-| Capture Legendary mới | 250 XP |
-| Capture trùng lặp (duplicate) | 25% điểm gốc |
-| Phát âm đúng 3 sao | +5 XP bonus |
-| Hoàn thành Daily Quest | 50 XP |
-| Hoàn thành Weekly Quest | 200 XP |
-| Hoàn thành Category | 500 XP |
+| Capture new Common | 10 XP |
+| Capture new Uncommon | 25 XP |
+| Capture new Rare | 50 XP |
+| Capture new Epic | 100 XP |
+| Capture new Legendary | 250 XP |
+| Capture duplicate | 25% of original points |
+| Perfect pronunciation (3 stars) | +5 XP bonus |
+| Complete Daily Quest | 50 XP |
+| Complete Weekly Quest | 200 XP |
+| Complete Category | 500 XP |
 | Diversity Bonus | 300 XP |
 
-### 4.2 Hệ thống Level
+### 4.2 Level System
 
-| Level | Danh hiệu | XP cần | Mở khóa |
+| Level | Title | XP Needed | Unlocks |
 |---|---|---|---|
 | 1 | Beginner Explorer | 0 | Camera, Daily Quests |
 | 5 | Word Collector | 500 | Collection Book |
-| 10 | Vocab Hunter | 1,500 | Weekly Quests, Bảng xếp hạng bạn bè |
-| 20 | Language Scout | 5,000 | Điểm Epic bonus, Bảng xếp hạng lớp |
-| 50 | Polyglot Champion | 20,000 | Rare Radar (gợi ý tìm vật hiếm) |
+| 10 | Vocab Hunter | 1,500 | Weekly Quests, Friends Leaderboard |
+| 20 | Language Scout | 5,000 | Epic bonus points, Class Leaderboard |
+| 50 | Polyglot Champion | 20,000 | Rare Radar (hints for finding rare objects) |
 
-### 4.3 Streak (Chuỗi ngày)
-- Mỗi ngày chụp ≥ 1 từ mới = duy trì streak.
-- Streak hiển thị bằng 🔥 + số ngày.
-- Streak dài → phần thưởng nhân đôi (ví dụ: streak 7 ngày → 2x XP trong 1 ngày).
+### 4.3 Streak (Daily Chain)
+- Each day with ≥ 1 new word = maintain streak.
+- Streak shown as 🔥 + number of days.
+- Long streaks → double rewards (example: 7-day streak → 2x XP for 1 day).
 
-### 4.4 Evolution (Tiến hóa)
-- Luyện phát âm đúng **5 lần** (trong **phiên học khác nhau**) → Thẻ tiến hóa.
-- Tiến hóa mở khóa: Fun Fact + Example Sentence + Visual upgrade.
-- Animation tiến hóa: Thẻ sáng rực, particle explosion, âm thanh "level up".
+### 4.4 Evolution
+- Practice pronunciation correctly **5 times** (in **different sessions**) → Card evolves.
+- Evolution unlocks: Fun Fact + Example Sentence + Visual upgrade.
+- Evolution animation: Card glows bright, particle explosion, "level up" sound.
 
-### 4.5 Chống Gian lận
-- Chụp cùng 1 vật thể nhiều lần → chỉ tính 1 lần capture mới + các lần sau là duplicate (25% XP).
-- Leaderboard reset hàng tháng.
-- Diversity bonus khuyến khích chụp nhiều nhóm khác nhau thay vì spam 1 nhóm.
+### 4.5 Anti-Cheat
+- Taking photos of same object multiple times → only counts once as new capture + later times are duplicates (25% XP).
+- Leaderboard resets monthly.
+- Diversity bonus encourages taking photos of different groups instead of spamming one group.
 
 ---
 
 ## 5. Animation & Motion
 
-### 5.1 Nguyên tắc chung
-- **Nhanh & mượt:** Duration 200-400ms cho micro-interactions, 400-600ms cho transitions lớn.
-- **Spring physics:** Sử dụng spring animation (damping + stiffness) thay vì easing tuyến tính — tạo cảm giác "có trọng lượng".
-- **Không quá nhiều:** Trẻ em thích animation nhưng quá nhiều sẽ gây mất tập trung. Chỉ animate ở những thời điểm quan trọng.
+### 5.1 General Rules
+- **Fast & smooth:** 200-400ms duration for micro-interactions, 400-600ms for large transitions.
+- **Spring physics:** Use spring animation (damping + stiffness) instead of linear easing — creates "weight" feeling.
+- **Not too much:** Children like animation but too much causes distraction. Only animate at important moments.
 
-### 5.2 Danh sách Animation cụ thể
+### 5.2 Specific Animation List
 
-| Thời điểm | Loại Animation | Chi tiết |
+| Moment | Animation Type | Details |
 |---|---|---|
-| Nhấn Capture Button | Scale bounce | Scale 1 → 0.9 → 1.05 → 1 (200ms) |
-| AI đang xử lý | Rotation spinner | Vòng xoay liên tục (border spinner) |
-| Reveal Card xuất hiện | Slide-up spring | Từ dưới lên, spring damping 25, stiffness 200 |
-| Rarity glow (Legendary) | Pulse glow + particles | Box-shadow pulse liên tục + floating particles |
-| XP tăng | Number counter + sparkle | Số nhảy từ cũ → mới + tia sáng vàng |
-| Level Up | Full-screen celebration | Flash trắng + "Level Up!" text + confetti |
-| Ngôi sao phát âm | Pop-in | Scale 0 → 1.2 → 1 từng sao một, delay 100ms mỗi sao |
-| Confetti (3 sao) | Particle explosion | Nhiều particle nhỏ đa màu rơi từ trên xuống (3 giây) |
-| Thu thập thẻ thành công | Card fly | Thẻ thu nhỏ + bay vào icon Book trên nav bar |
-| Evolution | Glow burst | Thẻ sáng rực + particle vỡ tung + morphing hình ảnh |
-| Mission hoàn thành | Checkmark bounce | ✅ xuất hiện với bounce effect + particle nhỏ |
-| Streak flame | Wobble | 🔥 rung nhẹ liên tục (subtle wobble, 2-3px) |
-| Onboarding slides | Slide horizontal | Slide trái/phải mượt mà khi chuyển slide |
-| Bottom Nav switch | Content fade | Fade out → fade in (150ms) khi chuyển tab |
+| Press Capture Button | Scale bounce | Scale 1 → 0.9 → 1.05 → 1 (200ms) |
+| AI processing | Rotation spinner | Continuous spinning (border spinner) |
+| Reveal Card appears | Slide-up spring | From bottom up, spring damping 25, stiffness 200 |
+| Rarity glow (Legendary) | Pulse glow + particles | Continuous box-shadow pulse + floating particles |
+| XP increase | Number counter + sparkle | Number jumps from old → new + golden sparkles |
+| Level Up | Full-screen celebration | White flash + "Level Up!" text + confetti |
+| Pronunciation stars | Pop-in | Scale 0 → 1.2 → 1 each star, 100ms delay per star |
+| Confetti (3 stars) | Particle explosion | Many small colorful particles falling from top (3 seconds) |
+| Card collection success | Card fly | Card shrinks + flies into Book icon on nav bar |
+| Evolution | Glow burst | Card glows bright + particle burst + morphing image |
+| Mission complete | Checkmark bounce | ✅ appears with bounce effect + small particles |
+| Streak flame | Wobble | 🔥 shakes gently continuously (subtle wobble, 2-3px) |
+| Onboarding slides | Slide horizontal | Smooth left/right slide when changing slides |
+| Bottom Nav switch | Content fade | Fade out → fade in (150ms) when switching tabs |
 
 ---
 
 ## 6. Sound Design
 
-### 6.1 Nguyên tắc
-- Âm thanh phải **vui tươi, tích cực**, không đáng sợ hay quá ồn ào.
-- Mỗi âm thanh **ngắn** (< 1 giây cho SFX, < 3 giây cho jingle).
-- Cho phép phụ huynh **tắt âm thanh** trong Parent Dashboard.
+### 6.1 Rules
+- Sounds must be **happy and positive**, not scary or too loud.
+- Each sound is **short** (< 1 second for SFX, < 3 seconds for jingles).
+- Allow parents to **turn off sounds** in Parent Dashboard.
 
-### 6.2 Danh sách âm thanh
+### 6.2 Sound List
 
-| Sự kiện | Mô tả âm thanh | Thời gian |
+| Event | Sound Description | Duration |
 |---|---|---|
-| Chụp ảnh (Capture) | "Click" camera cơ học, sắc nét | 0.3s |
-| AI đang xử lý | Tiếng "bíp bo" nhẹ, lặp lại | Loop |
-| Reveal Card | Tiếng "whoosh" + tiếng chuông nhẹ (chime) | 0.8s |
-| Reveal Legendary | Tiếng "whoosh" mạnh hơn + fanfare ngắn | 1.5s |
-| Phát âm mẫu (TTS) | Giọng AI đọc từ vựng (ElevenLabs) | Tùy từ |
-| Phát âm đúng (1-2 sao) | Tiếng "ding" nhẹ, vui | 0.3s |
-| Phát âm xuất sắc (3 sao) | Tiếng "ta-da!" + confetti jingle | 1s |
-| Phát âm sai | Tiếng "boop" nhẹ nhàng (KHÔNG tiêu cực) | 0.3s |
-| XP nhận được | Tiếng xu rơi "ching ching" | 0.5s |
-| Level Up | Fanfare ngắn, trang trọng | 2s |
-| Evolution | Tiếng sáng lấp lánh "shimmer + ding" | 1.5s |
-| Mission Complete | Tiếng trumpet ngắn vui vẻ | 1s |
-| Nhận thưởng (Reward) | Tiếng mở rương/hộp quà | 1s |
+| Take photo (Capture) | Sharp mechanical camera "click" | 0.3s |
+| AI processing | Light "beep boop" repeating | Loop |
+| Reveal Card | "Whoosh" + light chime | 0.8s |
+| Reveal Legendary | Stronger "whoosh" + short fanfare | 1.5s |
+| Sample pronunciation (TTS) | AI voice reads vocabulary (ElevenLabs) | Variable |
+| Correct pronunciation (1-2 stars) | Light happy "ding" | 0.3s |
+| Perfect pronunciation (3 stars) | "Ta-da!" + confetti jingle | 1s |
+| Wrong pronunciation | Gentle "boop" (NOT negative) | 0.3s |
+| Receive XP | Coin drop "ching ching" | 0.5s |
+| Level Up | Short, dignified fanfare | 2s |
+| Evolution | Sparkling "shimmer + ding" | 1.5s |
+| Mission Complete | Short happy trumpet | 1s |
+| Claim Reward | Treasure chest/gift box opening | 1s |
 
 ---
 
-## 7. Xử lý Lỗi cho Trẻ em
+## 7. Error Handling for Children
 
-### 7.1 Nguyên tắc vàng
-> **KHÔNG BAO GIỜ** hiện thông báo lỗi kỹ thuật. Mọi lỗi đều phải được "dịch" sang ngôn ngữ trẻ em hiểu được, kèm gợi ý hành động.
+### 7.1 Golden Rule
+> **NEVER** show technical error messages. All errors must be "translated" to child-friendly language with action suggestions.
 
-### 7.2 Bảng xử lý lỗi
+### 7.2 Error Handling Table
 
-| Lỗi kỹ thuật | Thông báo cho trẻ | Hành động |
+| Technical Error | Message for Children | Action |
 |---|---|---|
-| Camera permission denied | "📸 Cho mình nhìn thế giới nhé! Nhấn 'Cho phép' để bật camera." | Nút "Cho phép" |
-| AI API timeout / 500 | "😴 Ôi, AI buồn ngủ một chút! Chụp lại nhé!" | Nút "Thử lại" |
-| AI confidence < 0.7 | "🤔 Hmm, mình chưa nhìn rõ lắm. Lại gần hơn nha!" | Quay lại viewfinder |
-| Không có internet | "📡 Ối, mất sóng rồi! Xem sổ sưu tập trong khi chờ nhé." | Nút "Xem sổ sưu tập" |
-| Mic permission denied | "🎤 Cho mình nghe giọng bạn nhé! Nhấn 'Cho phép'." | Nút "Cho phép" |
-| Phát âm sai 3 lần | "👏 Giỏi lắm! Thử từ khác dễ hơn nhé!" | Tự chuyển từ |
-| Dung lượng IndexedDB đầy | "📦 Sổ sưu tập đầy rồi! Nhờ bố mẹ giúp nhé." | Parent Gate |
-| Hết thời gian (time limit) | "⏰ Hôm nay học đủ rồi! Mai quay lại nha! 🌟" | Khóa camera, cho xem collection |
+| Camera permission denied | "📸 Let me see the world! Tap 'Allow' to turn on camera." | "Allow" button |
+| AI API timeout / 500 | "😴 Oops, AI is a bit sleepy! Let's try again!" | "Try Again" button |
+| AI confidence < 0.7 | "🤔 Hmm, I can't see clearly. Come closer!" | Back to viewfinder |
+| No internet | "📡 Oops, lost signal! Let's look at your collection while waiting." | "View Collection" button |
+| Mic permission denied | "🎤 Let me hear your voice! Tap 'Allow'." | "Allow" button |
+| Wrong pronunciation 3 times | "👏 Great job! Let's try an easier word!" | Auto-switch word |
+| IndexedDB storage full | "📦 Collection is full! Ask mom and dad for help." | Parent Gate |
+| Time limit reached | "⏰ You learned enough today! Come back tomorrow! 🌟" | Lock camera, show collection |
 
 ---
 
 ## 8. Offline & PWA
 
-### 8.1 Khả năng Offline
+### 8.1 Offline Capabilities
 
-| Tính năng | Online | Offline |
+| Feature | Online | Offline |
 |---|---|---|
-| Camera + AI Capture | ✅ | ❌ (Cần AI API) |
-| Xem sổ sưu tập | ✅ | ✅ (Dữ liệu IndexedDB) |
-| Xem chi tiết từ vựng | ✅ | ✅ |
-| Luyện phát âm (TTS) | ✅ | ⚠️ (Nếu đã cache audio) |
-| Xem nhiệm vụ | ✅ | ✅ (Hiển thị từ cache) |
-| Bảng xếp hạng | ✅ | ❌ (Cần server) |
-| Parent Dashboard | ✅ | ⚠️ (Dữ liệu cục bộ, không sync) |
+| Camera + AI Capture | ✅ | ❌ (Needs AI API) |
+| View collection | ✅ | ✅ (IndexedDB data) |
+| View word details | ✅ | ✅ |
+| Practice pronunciation (TTS) | ✅ | ⚠️ (If audio cached) |
+| View quests | ✅ | ✅ (Show from cache) |
+| Leaderboard | ✅ | ❌ (Needs server) |
+| Parent Dashboard | ✅ | ⚠️ (Local data, no sync) |
 
 ### 8.2 PWA Requirements
-- **manifest.json:** App name, icon (192x192 và 512x512), theme color (Sky Blue), background color (Snow White).
+- **manifest.json:** App name, icons (192x192 and 512x512), theme color (Sky Blue), background color (Snow White).
 - **Service Worker:** Cache static assets + vocabulary data.
-- **Install prompt:** Hiện gợi ý "Thêm vào Màn hình chính" sau lần sử dụng thứ 2.
+- **Install prompt:** Show "Add to Home Screen" suggestion after 2nd use.
 
 ---
 
-## 9. An toàn & Bảo mật
+## 9. Safety & Security
 
-### 9.1 Content Safety (Lọc nội dung)
-- AI được prompt để **từ chối** nhận diện: vũ khí, chất kích thích, nội dung người lớn, nội dung bạo lực.
+### 9.1 Content Safety (Content Filtering)
+- AI is prompted to **reject** recognition of: weapons, stimulants, adult content, violent content.
+- Have **stop-list** of sensitive words — if AI returns words in this list → skip, ask to retake photo.
 
-### 9.2 Privacy (Quyền riêng tư)
-- **PII Blurring:** Không lưu ảnh có mặt người (xử lý phía server hoặc prompt AI bỏ qua).
-- **Không có tính năng xã hội trực tiếp:** Trẻ không thể chat, gửi tin nhắn hay chia sẻ ảnh với người khác.
-- **Leaderboard ẩn danh:** Chỉ hiển thị tên (không ảnh, không thông tin cá nhân).
+### 9.2 Privacy
+- **PII Blurring:** Don't save photos with people's faces (handle server-side or prompt AI to skip).
+- **No direct social features:** Children cannot chat, send messages, or share photos with others.
+- **Anonymous leaderboard:** Only show names (no photos, no personal information).
 
 ### 9.3 Parent Gate
-- **Bắt buộc** để truy cập bất kỳ cài đặt nào ảnh hưởng đến trải nghiệm.
-- Xác thực bằng phép tính (ví dụ: 17 + 6 = ?) — đủ khó để trẻ 6-10 tuổi không tự giải được.
-- Session hết hạn sau 5 phút — phải xác thực lại.
-
-
+- **Required** to access any settings that affect the experience.
+- Authenticate with math problem (example: 17 + 6 = ?) — hard enough for 6-10 year olds to not solve.
+- Session expires after 5 minutes — need to authenticate again.
