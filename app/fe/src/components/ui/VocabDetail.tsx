@@ -205,12 +205,15 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
                         </motion.div>
                     </div>
 
-                    <div className="flex items-center justify-center gap-3 mb-6">
-                        <span className="text-xl">🇻🇳</span>
-                        <span className="text-2xl font-black text-deepNavy">{vocab.word_vi}</span>
-                        <button onClick={() => mascotSpeak(vocab.word_vi, 'vi-VN')} className="p-3 rounded-full bg-deepNavy/5 text-deepNavy active:scale-95 transition-all">
-                            <Volume2 className="w-6 h-6" />
-                        </button>
+                    <div className="flex flex-col items-center gap-1 mb-6">
+                        <div className="flex items-center gap-3">
+                            <span className="text-xl">🇬🇧</span>
+                            <span className="text-2xl font-black text-deepNavy">{vocab.word_en}</span>
+                            <button onClick={() => mascotSpeak(vocab.word_en, 'en-US')} className="p-3 rounded-full bg-deepNavy/5 text-deepNavy active:scale-95 transition-all">
+                                <Volume2 className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <p className="text-base font-bold text-slate-400">{vocab.word_vi}</p>
                     </div>
 
                     <section className="bg-white rounded-[32px] p-6 shadow-level-2 mb-6 border-b-4 border-slate-100">
