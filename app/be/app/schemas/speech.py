@@ -22,3 +22,4 @@ class PronounceResponse(BaseModel):
     evolved: bool  # whether the card just evolved
     xp_earned: int
     total_xp: int
+    image_url: str | None = None  # vocab image URL (set on exact match)

@@ -36,9 +36,9 @@ async def ensure_cached(
         cache_path = Path(cache_dir)
 
         for text, lang in [
-            (word_en, Language.en),
-            (word_vi, Language.vi),
-            (word_zh, Language.zh),
+            (word_en, Language.En),
+            (word_vi, Language.Vi),
+            (word_zh, Language.Zh),
         ]:
             if text:
                 try:

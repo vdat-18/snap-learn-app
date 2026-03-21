@@ -23,6 +23,7 @@ from app.schemas.speech import PronounceRequest, PronounceResponse
 from app.services import game_service
 from app.services.speech_service import synthesize_speech
 from app.utils.errors import AudioInvalid
+from app.utils.vocab_image import lookup_vocab_image
 
 router = APIRouter(tags=["speech"])
 
@@ -63,7 +64,7 @@ async def pronounce(
     # Call BAML speech service
     from baml_client.types import Language as BamlLanguage
 
-    lang_map = {"en": BamlLanguage.en, "vi": BamlLanguage.vi}
+    lang_map = {"en": BamlLanguage.En, "vi": BamlLanguage.Vi}
     baml_lang = lang_map[body.language]
 
     from app.services.speech_service import judge_pronunciation
@@ -96,6 +97,9 @@ async def pronounce(
     # Determine match type
     match_type = "exact" if pronunciation_result.is_match else "no_match"
 
+    # Look up vocab image on exact match (fuzzy-match against vocab.json)
+    image_url = lookup_vocab_image(target_word) if match_type == "exact" else None
+
     return PronounceResponse(
         stars=pronunciation_result.stars,
         match_type=match_type,
@@ -105,6 +109,7 @@ async def pronounce(
         evolved=evolved,
         xp_earned=xp_earned,
         total_xp=child.total_xp,
+        image_url=image_url,
     )
 
 

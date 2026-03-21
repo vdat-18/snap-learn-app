@@ -63,6 +63,6 @@ client<llm> VisionFallback {
 client<llm> FastFallback {
   provider fallback
   options {
-    strategy [GPT4oMini, GeminiFlash]
+    strategy [GPT4o, GeminiFlash]
   }
 }
