@@ -9,7 +9,9 @@
 // Main function: receives a photo, returns trilingual vocabulary
 // with difficulty ratings, fun facts, and example sentences.
 
-function IdentifyObject(photo: image) -> VisionResult {
+function IdentifyObject(
+  photo: image
+) -> VisionResult {
   client VisionFallback
 
   prompt #"
@@ -38,19 +40,14 @@ function IdentifyObject(photo: image) -> VisionResult {
     - Adult/sexual content or nudity
     - Violence, blood, or gore
     - Hate symbols or gambling
-    - Human faces or identifiable persons
 
     If content is unsafe, respond ONLY with:
     {"status": "blocked", "reason": "inappropriate_content"}
-    If a person/face is detected, respond ONLY with:
-    {"status": "blocked", "reason": "person_detected"}
 
     For safe objects, respond with status "success" and all required fields.
 
     {{ ctx.output_format }}
-  "#
 
-  @@user #"
     {{ photo }}
   "#
 }
@@ -58,7 +55,10 @@ function IdentifyObject(photo: image) -> VisionResult {
 // ── Identify Object with Filter Level ─────────────────────────
 // Extended version that respects parent-configured filter level.
 
-function IdentifyObjectFiltered(photo: image, filter_level: FilterLevel) -> VisionResult | BlockedResult {
+function IdentifyObjectFiltered(
+  photo: image,
+  filter_level: FilterLevel
+) -> VisionResult | BlockedResult {
   client VisionFallback
 
   prompt #"
@@ -71,7 +71,6 @@ function IdentifyObjectFiltered(photo: image, filter_level: FilterLevel) -> Visi
 
     STANDARD FILTER blocks:
     - Weapons, alcohol, tobacco, drugs, adult content, violence, hate symbols, gambling
-    - Human faces or identifiable persons
 
     STRICT FILTER additionally blocks:
     - Insects, spiders, snakes
@@ -80,8 +79,6 @@ function IdentifyObjectFiltered(photo: image, filter_level: FilterLevel) -> Visi
 
     If content is blocked, return:
     {"status": "blocked", "reason": "inappropriate_content"}
-    If a person is detected, return:
-    {"status": "blocked", "reason": "person_detected"}
 
     For safe objects:
     - Identify only ONE concrete, physical object
@@ -95,9 +92,7 @@ function IdentifyObjectFiltered(photo: image, filter_level: FilterLevel) -> Visi
     - Confidence 0.0–1.0
 
     {{ ctx.output_format }}
-  "#
 
-  @@user #"
     {{ photo }}
   "#
 }

@@ -93,7 +93,7 @@ All types are shared across functions and generate Pydantic v2 models.
 | `RarityTier` | common, uncommon, rare, epic, legendary | Gamification rarity with XP rewards (10–250 XP) |
 | `Language` | en, vi, zh | Supported languages |
 | `SafetyStatus` | safe, blocked | Content safety gate |
-| `BlockReason` | inappropriate_content, person_detected, low_confidence | Why content was blocked |
+| `BlockReason` | inappropriate_content, low_confidence | Why content was blocked |
 | `FilterLevel` | standard, strict | Parent-configurable content filter level |
 
 **Classes:**

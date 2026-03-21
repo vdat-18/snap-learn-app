@@ -49,7 +49,6 @@ enum SafetyStatus {
 
 enum BlockReason {
   InappropriateContent @alias("inappropriate_content") @description("Weapons, alcohol, tobacco, drugs, adult, violence, hate, gambling")
-  PersonDetected       @alias("person_detected")       @description("Human face or person detected — privacy protection")
   LowConfidence        @alias("low_confidence")        @description("AI confidence below 0.7 threshold")
 }
 

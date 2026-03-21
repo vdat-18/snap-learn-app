@@ -53,6 +53,7 @@ def _get_elevenlabs_client() -> AsyncElevenLabs:
 
 # ── ASR (OpenAI gpt-4o-transcribe) ──────────────────────────
 
+
 async def transcribe_audio(
     audio_bytes: bytes,
     language: Language,
@@ -81,6 +82,7 @@ async def transcribe_audio(
 
 
 # ── Pronunciation Judging (BAML) ──────────────────────────────
+
 
 async def judge_pronunciation(
     target_word: str,
@@ -121,6 +123,7 @@ async def judge_pronunciation(
 
 # ── Pronunciation Hints (BAML) ────────────────────────────────
 
+
 async def get_pronunciation_hint(word: str, language: Language) -> str:
     """
     Get a short Vietnamese pronunciation hint for a word.
@@ -136,6 +139,7 @@ async def get_pronunciation_hint(word: str, language: Language) -> str:
 
 
 # ── TTS (ElevenLabs with filesystem caching) ─────────────────
+
 
 async def synthesize_speech(
     text: str,
@@ -175,7 +179,7 @@ async def synthesize_speech(
         )
 
     client = _get_elevenlabs_client()
-    audio_iterator = await client.text_to_speech.convert(
+    audio_iterator = client.text_to_speech.convert(
         text=text,
         voice_id=voice_id,
         model_id=ELEVENLABS_MODEL,

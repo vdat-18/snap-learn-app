@@ -10,7 +10,10 @@
 // Quick image safety scan BEFORE full vision inference.
 // Uses a fast/cheap model to minimize latency on blocked content.
 
-function CheckImageSafety(photo: image, filter_level: FilterLevel) -> ImageSafetyResult {
+function CheckImageSafety(
+  photo: image,
+  filter_level: FilterLevel
+) -> ImageSafetyResult {
   client FastFallback
 
   prompt #"
@@ -39,9 +42,7 @@ function CheckImageSafety(photo: image, filter_level: FilterLevel) -> ImageSafet
     - confidence: 0.0–1.0 how confident you are in the assessment
 
     {{ ctx.output_format }}
-  "#
 
-  @@user #"
     {{ photo }}
   "#
 }
