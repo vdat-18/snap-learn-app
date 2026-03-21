@@ -31,7 +31,7 @@ const rarityGlowMap: Record<Rarity, string> = {
     Common: 'shadow-[0_0_20px_rgba(148,163,184,0.4)]',
     Uncommon: 'shadow-[0_0_20px_rgba(34,197,94,0.4)]',
     Rare: 'shadow-[0_0_20px_rgba(59,130,246,0.4)]',
-    Epic: 'shadow-[0_0_20px_rgba(168,85,247,0.4)]',
+    Epic: 'shadow-[0_0_40px_rgba(168,85,247,0.6),0_0_80px_rgba(168,85,247,0.3)]',
     Legendary: 'shadow-[0_0_20px_rgba(245,158,11,0.4)]',
 };
 
@@ -262,7 +262,13 @@ const RevealCard: React.FC<RevealCardProps> = ({
                     playChime();
                     mascotSpeak("TRỜI ƠI! BẠN VỪA BẮT ĐƯỢC THẺ HUYỀN THOẠI RỒI NÈ!", 'vi-VN', true);
                 }, 500);
-            } else if (rarity === 'Epic' || rarity === 'Rare') {
+            } else if (rarity === 'Epic') {
+                setTimeout(() => {
+                    triggerSparkles(window.innerWidth / 2, window.innerHeight / 3);
+                    playChime();
+                    mascotSpeak("UAAAA! THẺ SIÊU HIẾM NÈ! ĐỒ QUÝ LẮM ĐÓ!", 'vi-VN', true);
+                }, 400);
+            } else if (rarity === 'Rare') {
                 mascotSpeak("Oa! Đồ hiếm nha!", 'vi-VN', true);
             } else {
                 mascotSpeak(); // Random phrase
@@ -412,8 +418,18 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        className={`absolute inset-0 backdrop-blur-sm ${rarity === 'Epic' ? 'bg-purple-950/60' : 'bg-black/40'}`}
                     />
+
+                    {/* Epic ambient glow behind card */}
+                    {rarity === 'Epic' && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: [0.4, 0.7, 0.4], scale: [0.9, 1.1, 0.9] }}
+                            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] rounded-full bg-purple-500/20 blur-3xl pointer-events-none"
+                        />
+                    )}
 
                     {/* Card Content */}
                     <motion.div
@@ -430,7 +446,11 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             damping: 20,
                             stiffness: 300
                         }}
-                        className="relative w-full max-w-md bg-white rounded-t-[32px] p-8 pb-12 shadow-level-3 max-h-[90vh] overflow-y-auto"
+                        className={`relative w-full max-w-md rounded-t-[32px] p-8 pb-12 max-h-[90vh] overflow-y-auto ${
+                            rarity === 'Epic'
+                                ? 'bg-gradient-to-b from-purple-50 via-white to-purple-50/80 shadow-[0_-4px_40px_rgba(168,85,247,0.3)] border-t-2 border-purple-300/50'
+                                : 'bg-white shadow-level-3'
+                        }`}
                     >
                         {/* Close Button */}
                         <button
@@ -455,9 +475,25 @@ const RevealCard: React.FC<RevealCardProps> = ({
 
                         {/* Rarity Badge & XP */}
                         <div className="flex justify-center items-center gap-2 mb-6 relative">
-                            <span className={`px-4 py-1.5 ${rarityBadgeColor[rarity]} text-white text-[11px] font-bold uppercase tracking-widest rounded-full shadow-sm relative z-10`}>
-                                {rarityLabels[rarity]}
-                            </span>
+                            {rarity === 'Epic' ? (
+                                <motion.span
+                                    initial={{ scale: 0, rotate: -10 }}
+                                    animate={{ scale: 1, rotate: 0 }}
+                                    transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.1 }}
+                                    className="relative z-10 px-5 py-2 bg-gradient-to-r from-purple-600 via-violet-500 to-purple-600 text-white text-[12px] font-black uppercase tracking-widest rounded-full shadow-[0_0_20px_rgba(168,85,247,0.5),0_4px_0_rgb(107,33,168)] border-t border-purple-300/40"
+                                >
+                                    <motion.span
+                                        animate={{ opacity: [0.5, 1, 0.5] }}
+                                        transition={{ duration: 2, repeat: Infinity }}
+                                        className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
+                                    />
+                                    <span className="relative">💎 {rarityLabels[rarity]}</span>
+                                </motion.span>
+                            ) : (
+                                <span className={`px-4 py-1.5 ${rarityBadgeColor[rarity]} text-white text-[11px] font-bold uppercase tracking-widest rounded-full shadow-sm relative z-10`}>
+                                    {rarityLabels[rarity]}
+                                </span>
+                            )}
                             {xpEarned && xpEarned > 0 && stars === 3 ? (
                                 <motion.div
                                     initial={{ scale: 0, x: -20 }}
@@ -471,9 +507,11 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         </div>
 
                         {/* Card Image — flips from camera photo to achievement card on 3 stars */}
-                        <div className={`aspect-square w-full rounded-card overflow-hidden bg-slate-100 mb-6 border-4 relative ${showAchievementFlip
-                            ? 'border-sunshineYellow shadow-[0_0_30px_rgba(255,210,52,0.6)]'
-                            : `border-white ${rarityGlowMap[rarity]}`
+                        <div className={`aspect-square w-full rounded-card overflow-hidden bg-slate-100 mb-6 relative ${showAchievementFlip
+                            ? 'border-4 border-sunshineYellow shadow-[0_0_30px_rgba(255,210,52,0.6)]'
+                            : rarity === 'Epic'
+                                ? 'border-[3px] border-purple-400/80 shadow-[0_0_30px_rgba(168,85,247,0.4),inset_0_0_20px_rgba(168,85,247,0.1)]'
+                                : `border-4 border-white ${rarityGlowMap[rarity]}`
                             }`}
                             style={{ perspective: '1200px' }}
                         >
@@ -553,10 +591,10 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                 />
                             )}
 
-                            {/* Floating particles for Legendary or achievement */}
-                            {(rarity === 'Legendary' || showAchievementFlip) && (
+                            {/* Floating particles for Epic, Legendary, or achievement */}
+                            {(rarity === 'Epic' || rarity === 'Legendary' || showAchievementFlip) && (
                                 <div className="absolute inset-0 z-30 pointer-events-none">
-                                    {[...Array(showAchievementFlip ? 8 : 5)].map((_, i) => (
+                                    {[...Array(showAchievementFlip ? 8 : rarity === 'Epic' ? 6 : 5)].map((_, i) => (
                                         <motion.div
                                             key={i}
                                             initial={{ y: 0, opacity: 0 }}
@@ -567,7 +605,11 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                                 delay: Math.random() * 2,
                                                 ease: "easeOut"
                                             }}
-                                            className={`absolute w-2 h-2 rounded-full blur-[1px] ${showAchievementFlip ? 'bg-sunshineYellow' : 'bg-yellow-300'}`}
+                                            className={`absolute w-2 h-2 rounded-full blur-[1px] ${
+                                                showAchievementFlip ? 'bg-sunshineYellow'
+                                                : rarity === 'Epic' ? 'bg-purple-400'
+                                                : 'bg-yellow-300'
+                                            }`}
                                             style={{ left: `${Math.random() * 100}%`, top: '80%' }}
                                         />
                                     ))}
@@ -583,14 +625,26 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                 transition={{ delay: 0.2, duration: 0.4 }}
                                 className="relative mb-6"
                             >
-                                <div className="bg-gradient-to-br from-skyBlue/10 to-skyBlue/5 rounded-2xl p-4 border border-skyBlue/20">
+                                <div className={`rounded-2xl p-4 border ${
+                                    rarity === 'Epic'
+                                        ? 'bg-gradient-to-br from-purple-100/60 to-violet-50/40 border-purple-200/40'
+                                        : 'bg-gradient-to-br from-skyBlue/10 to-skyBlue/5 border-skyBlue/20'
+                                }`}>
                                     {/* Speech bubble tail */}
-                                    <div className="absolute -top-2 left-8 w-4 h-4 bg-skyBlue/10 border-l border-t border-skyBlue/20 rotate-45" />
+                                    <div className={`absolute -top-2 left-8 w-4 h-4 rotate-45 ${
+                                        rarity === 'Epic'
+                                            ? 'bg-purple-100/60 border-l border-t border-purple-200/40'
+                                            : 'bg-skyBlue/10 border-l border-t border-skyBlue/20'
+                                    }`} />
                                     <div className="flex items-start gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-skyBlue/20 flex items-center justify-center flex-shrink-0">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                            rarity === 'Epic' ? 'bg-purple-200/40' : 'bg-skyBlue/20'
+                                        }`}>
                                             <img src="/owl-mascot.png" alt="Mascot" className="w-8 h-8 object-contain" />
                                         </div>
-                                        <p className="text-sm font-medium text-slate-700 leading-relaxed flex-1">
+                                        <p className={`text-sm font-medium leading-relaxed flex-1 ${
+                                            rarity === 'Epic' ? 'text-purple-900/80' : 'text-slate-700'
+                                        }`}>
                                             {description_vi}
                                         </p>
                                     </div>

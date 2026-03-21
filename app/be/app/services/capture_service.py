@@ -153,6 +153,7 @@ async def process_capture(
         if hasattr(rarity_result.rarity, "value")
         else str(rarity_result.rarity)
     )
+    print(f'Orignal rarity: {rarity_value}')
 
     existing_word = await dedup_service.find_word_duplicate(
         child.id, vision_result.object_en, vision_result.object_vi, db=db

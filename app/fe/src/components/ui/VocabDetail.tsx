@@ -172,15 +172,22 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
             initial={{ y: '100%', opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
-            className="fixed inset-0 z-[180] bg-white flex flex-col font-sans"
+            className={`fixed inset-0 z-[180] flex flex-col font-sans ${
+                tier === 'epic' ? 'bg-gradient-to-b from-purple-50 via-white to-purple-50/60' : 'bg-white'
+            }`}
         >
             <header className="px-6 pt-12 pb-4 flex items-center justify-between">
                 <button onClick={onClose} className="p-2 -ml-2">
                     <X className="w-8 h-8 text-deepNavy" />
                 </button>
-                <div className={`px-4 py-1.5 rounded-full border-2 text-[9px] font-black uppercase tracking-widest ${tier === 'legendary' ? 'bg-amber-100 border-amber-400 text-amber-600' : 'bg-slate-100 border-slate-300 text-slate-500'
+                <div className={`px-4 py-1.5 rounded-full border-2 text-[9px] font-black uppercase tracking-widest ${
+                    tier === 'legendary'
+                        ? 'bg-amber-100 border-amber-400 text-amber-600'
+                        : tier === 'epic'
+                            ? 'bg-purple-100 border-purple-400 text-purple-600 shadow-[0_0_12px_rgba(168,85,247,0.25)]'
+                            : 'bg-slate-100 border-slate-300 text-slate-500'
                     }`}>
-                    {rarityLabels[tier] || 'Thường'} {vocab.evolved && '• TIẾN HÓA ✨'}
+                    {tier === 'epic' && '💎 '}{rarityLabels[tier] || 'Thường'} {vocab.evolved && '• TIẾN HÓA ✨'}
                 </div>
                 <div className="w-12 h-12" />
             </header>
@@ -189,7 +196,13 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
                 <div className="flex-1 overflow-y-auto px-6 pb-10">
                     <div className="relative mb-8">
                         <motion.div
-                            className={`rounded-[40px] overflow-hidden shadow-level-3 border-8 border-white aspect-square relative ${vocab.evolved ? 'ring-8 ring-sunshineYellow/20' : ''}`}
+                            className={`rounded-[40px] overflow-hidden aspect-square relative ${
+                                vocab.evolved
+                                    ? 'shadow-level-3 border-8 border-white ring-8 ring-sunshineYellow/20'
+                                    : tier === 'epic'
+                                        ? 'border-4 border-purple-300/60 shadow-[0_8px_24px_rgba(0,0,0,0.15),0_0_30px_rgba(168,85,247,0.25)] ring-4 ring-purple-200/30'
+                                        : 'shadow-level-3 border-8 border-white'
+                            }`}
                             animate={vocab.evolved ? { scale: [1, 1.02, 1] } : {}}
                             transition={{ repeat: Infinity, duration: 3 }}
                         >

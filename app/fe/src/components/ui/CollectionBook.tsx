@@ -196,7 +196,11 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                         <TradingCard
                                             key={card.id}
                                             onClick={() => { playChime(); setSelectedVocabId(card.id); }}
-                                            className={`relative aspect-[3/4] rounded-[24px] bg-gradient-to-br ${rarityColors[tier] || 'bg-white'} border-[3px] border-white shadow-level-2 overflow-hidden flex flex-col`}
+                                            className={`relative aspect-[3/4] rounded-[24px] bg-gradient-to-br ${rarityColors[tier] || 'bg-white'} overflow-hidden flex flex-col ${
+                                                tier === 'epic'
+                                                    ? 'border-2 border-purple-400/60 shadow-[0_4px_12px_rgba(0,0,0,0.1),0_0_16px_rgba(168,85,247,0.25)]'
+                                                    : 'border-[3px] border-white shadow-level-2'
+                                            }`}
                                         >
                                             <div className="flex-1 w-full relative p-2">
                                                 <div className="w-full h-full rounded-[18px] overflow-hidden bg-white/50 backdrop-blur-sm shadow-inner">
