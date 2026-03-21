@@ -156,6 +156,24 @@ async def process_capture(
         else str(rarity_result.rarity)
     )
 
+    existing_word = await dedup_service.find_word_duplicate(
+        child.id, vision_result.object_en, vision_result.object_vi, db=db
+    )
+    if existing_word is not None:
+        xp_earned = max(1, int(existing_word.points_earned * 0.25))
+        total_xp, level, leveled_up = await game_service.on_capture(
+            child, xp_earned, db=db, redis=redis
+        )
+        return CaptureResponse(
+            status="duplicate",
+            vocab_card=_vocab_to_response(existing_word),
+            xp_earned=xp_earned,
+            total_xp=total_xp,
+            level=level,
+            level_up=leveled_up,
+            message_vi="Bạn đã có từ này rồi! Nhận thêm ít XP nhé!",
+        )
+
     vocab = CapturedVocab(
         child_id=child.id,
         word_en=vision_result.object_en,

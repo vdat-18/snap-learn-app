@@ -48,6 +48,8 @@ function IdentifyObject(photo: image) -> VisionResult {
     For safe objects, respond with status "success" and all required fields.
 
     {{ ctx.output_format }}
+
+    {{ photo }}
   "#
 }
 
@@ -91,5 +93,7 @@ function IdentifyObjectFiltered(photo: image, filter_level: FilterLevel) -> Visi
     - Confidence 0.0–1.0
 
     {{ ctx.output_format }}
+
+    {{ photo }}
   "#
 }

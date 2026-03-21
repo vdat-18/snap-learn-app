@@ -27,3 +27,24 @@ async def find_duplicate(
         )
     )
     return result.scalar_one_or_none()
+
+
+async def find_word_duplicate(
+    child_id: UUID,
+    word_en: str,
+    word_vi: str,
+    *,
+    db: AsyncSession,
+) -> CapturedVocab | None:
+    """Check if a child already has a vocab with the same (word_en, word_vi).
+
+    Returns the existing CapturedVocab row if a duplicate is found, else None.
+    """
+    result = await db.execute(
+        select(CapturedVocab).where(
+            CapturedVocab.child_id == child_id,
+            CapturedVocab.word_en == word_en,
+            CapturedVocab.word_vi == word_vi,
+        )
+    )
+    return result.scalar_one_or_none()

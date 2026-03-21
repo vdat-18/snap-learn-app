@@ -87,6 +87,11 @@ class BlockedResult {
 
 // ── Safety Check Types ────────────────────────────────────────
 
+class ImageSafetyResult {
+  status       SafetyStatus  @description("Whether content is safe for children")
+  confidence   float         @description("Safety assessment confidence 0.0-1.0")
+}
+
 class SafetyCheckResult {
   status       SafetyStatus  @description("Whether content is safe for children")
   reason       BlockReason?  @description("Reason for blocking, null if safe")

@@ -15,6 +15,7 @@ from baml_client import b
 from baml_client.types import (
     BlockedResult,
     FilterLevel,
+    ImageSafetyResult,
     SafetyCheckResult,
     VisionResult,
 )
@@ -66,15 +67,15 @@ async def identify_object(
     # ── Step 1: Pre-flight safety check (fast model) ──────────
     if run_safety_preflight:
         try:
-            safety: SafetyCheckResult = await b.CheckImageSafety(
+            safety: ImageSafetyResult = await b.CheckImageSafety(
                 photo=image,
                 filter_level=filter_level,
             )
             if safety.status.value == "blocked":
-                logger.info("Pre-flight safety blocked: %s", safety.reason)
+                logger.info("Pre-flight safety blocked")
                 return BlockedResult(
                     status="blocked",
-                    reason=safety.reason,
+                    reason="inappropriate_content",
                 )
         except Exception:
             # Safety check failure should NOT block the pipeline
@@ -90,7 +91,7 @@ async def identify_object(
         # LLM refused to process the image (e.g. "I'm sorry, I can't assist
         # with that request.") — the raw text doesn't match VisionResult or
         # BlockedResult.  Treat provider-level refusals as blocked content.
-        raw = getattr(e, "raw_output", "") or str(e)
+        raw = e.raw_output
         raw_lower = raw.lower()
         if any(phrase in raw_lower for phrase in _REFUSAL_PHRASES):
             logger.warning(

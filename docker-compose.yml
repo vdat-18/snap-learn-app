@@ -91,7 +91,7 @@ services:
 
     volumes:
       - ./app/be:/app
-      - baml_client:/app/baml_client
+      - ./app/be/baml_client:/app/baml_client
       - backend_uploads:/app/uploads
       - backend_tts_cache:/app/tts_cache
       - backend_logs:/app/logs
@@ -164,8 +164,6 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
-    driver: local
-  baml_client:
     driver: local
   backend_uploads:
     driver: local

@@ -21,7 +21,7 @@ dependencies = [
     "python-multipart>=0.0.18",
     "structlog>=24.4.0",
     "apscheduler>=3.10.0",
-    "baml-py==0.76.2",
+    "baml-py==0.220.0",
     "openai>=2.29.0",
     "elevenlabs>=1.50.0",
 ]

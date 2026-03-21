@@ -155,9 +155,9 @@ async def get_tts(
         from baml_client.types import Language as BamlLanguage
 
         lang_enum_map = {
-            "en": BamlLanguage.en,
-            "vi": BamlLanguage.vi,
-            "zh": BamlLanguage.zh,
+            "en": BamlLanguage.En,
+            "vi": BamlLanguage.Vi,
+            "zh": BamlLanguage.Zh,
         }
         audio_bytes = await synthesize_speech(
             text=text,
