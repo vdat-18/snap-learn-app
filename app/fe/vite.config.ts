@@ -43,6 +43,12 @@ export default defineConfig({
   server: {
     fs: {
       allow: ['..', '../../_docs']
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      }
     }
   }
 })

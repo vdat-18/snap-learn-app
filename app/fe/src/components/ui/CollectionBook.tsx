@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowLeft, Star, Lock, Sparkles } from 'lucide-react';
+import { X, ArrowLeft, Star, Lock, Sparkles, Loader2 } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
+import { collectionApi, type CollectionOverview, type CategoryDetail } from '../../services/collectionApi';
 import { MOCK_REFERENCE_VOCAB } from '../../store/mockData';
 import VocabDetail from './VocabDetail';
 
@@ -28,6 +29,11 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
     const selectedWord = collections.find(w => w.id === selectedWordId) || null;
     const { playPop, playChime } = useSoundEffects();
 
+    // Server data state
+    const [serverCategories, setServerCategories] = useState<CollectionOverview | null>(null);
+    const [categoryDetail, setCategoryDetail] = useState<CategoryDetail | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
     // Notify parent about category selection to show/hide nav
     React.useEffect(() => {
         if (onCategorySelectChange) {
@@ -35,8 +41,38 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
         }
     }, [selectedCategory, isOpen, onCategorySelectChange]);
 
+    // Fetch collection overview when opened
+    useEffect(() => {
+        if (isOpen && !selectedCategory) {
+            setIsLoading(true);
+            collectionApi.getCollection()
+                .then(data => setServerCategories(data))
+                .catch(err => console.error('Failed to fetch collection:', err))
+                .finally(() => setIsLoading(false));
+        }
+    }, [isOpen, selectedCategory]);
+
+    // Fetch category detail when a category is selected
+    useEffect(() => {
+        if (selectedCategory) {
+            setIsLoading(true);
+            setCategoryDetail(null);
+            collectionApi.getCategoryDetail(selectedCategory)
+                .then(data => setCategoryDetail(data))
+                .catch(err => console.error('Failed to fetch category:', err))
+                .finally(() => setIsLoading(false));
+        }
+    }, [selectedCategory]);
+
     const getCategoryProgress = (catId: string) => {
-        return collections.filter(w => w.category === catId).length;
+        // Prefer server data, fallback to local collections
+        if (serverCategories) {
+            const cat = serverCategories.categories.find(c => c.name === catId || c.name.toLowerCase() === catId.toLowerCase());
+            if (cat) return { captured: cat.captured, total: cat.total };
+        }
+        const captured = collections.filter(w => w.category === catId).length;
+        const total = MOCK_REFERENCE_VOCAB.filter(w => w.category === catId).length;
+        return { captured, total };
     };
 
     return (
@@ -53,7 +89,7 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                     <header className="px-6 pt-12 pb-6 flex items-center justify-between border-b border-slate-100">
                         <div className="flex items-center gap-4">
                             {selectedCategory ? (
-                                <button onClick={() => { playPop(); setSelectedCategory(null); }} className="w-12 h-12 bg-white rounded-2xl shadow-level-2 flex items-center justify-center border-t-2 border-white/40">
+                                <button onClick={() => { playPop(); setSelectedCategory(null); setCategoryDetail(null); }} className="w-12 h-12 bg-white rounded-2xl shadow-level-2 flex items-center justify-center border-t-2 border-white/40">
                                     <ArrowLeft className="w-8 h-8 text-deepNavy" />
                                 </button>
                             ) : (
@@ -80,19 +116,24 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                     )}
                                 </h1>
                                 <p className="text-xs font-black text-sky-400 uppercase tracking-widest mt-0.5">
-                                    {collections.length} Thẻ bài đã bắt
+                                    {serverCategories ? `${serverCategories.total_words} Thẻ bài đã bắt` : `${collections.length} Thẻ bài đã bắt`}
                                 </p>
                             </div>
                         </div>
                     </header>
 
                     <div className="flex-1 overflow-y-auto p-6">
-                        {!selectedCategory ? (
+                        {isLoading && (
+                            <div className="flex items-center justify-center py-20">
+                                <Loader2 className="w-10 h-10 text-skyBlue animate-spin" />
+                            </div>
+                        )}
+
+                        {!isLoading && !selectedCategory && (
                             /* Category Grid */
                             <div className="grid grid-cols-2 gap-5 pb-20">
                                 {categories.map((cat, i) => {
-                                    const total = MOCK_REFERENCE_VOCAB.filter(w => w.category === cat.id).length;
-                                    const count = getCategoryProgress(cat.id);
+                                    const { captured: count, total } = getCategoryProgress(cat.id);
                                     const progressPercent = total > 0 ? (count / total) * 100 : 0;
 
                                     return (
@@ -130,8 +171,10 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                     );
                                 })}
                             </div>
-                        ) : (
-                            /* Vocab Word Grid - Trading Card Style */
+                        )}
+
+                        {!isLoading && selectedCategory && (
+                            /* Vocab Word Grid */
                             <div className="grid grid-cols-3 gap-4 pb-24">
                                 {MOCK_REFERENCE_VOCAB.filter(w => w.category === selectedCategory).map((refWord, i) => {
                                     const word = collections.find(w => w.word_en === refWord.word_en);

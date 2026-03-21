@@ -12,7 +12,8 @@ import AIProcessingLoading from './components/ui/AIProcessingLoading';
 import { useGameStore } from './store/gameStore';
 import { useSoundEffects } from './hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from './utils/feedbackUtils';
-import { MOCK_AI_RESPONSES } from './store/mockData';
+import { captureApi } from './services/captureApi';
+import { AppError } from './services/api';
 import { Scan, WifiOff, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -24,8 +25,12 @@ const App: React.FC = () => {
     word_en: string;
     word_vi: string;
     word_zh: string;
+    pinyin: string;
+    phonetic_en: string;
     rarity: 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
     category: string;
+    vocabId: string;
+    tts_urls: { en: string; vi: string; zh: string };
   } | null>(null);
 
   const [isAIProcessing, setIsAIProcessing] = useState(false);
@@ -36,6 +41,9 @@ const App: React.FC = () => {
   const [showSplash, setShowSplash] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [showTimeLimitError, setShowTimeLimitError] = useState(false);
+  const [showApiError, setShowApiError] = useState(false);
+  const [showLowConfidence, setShowLowConfidence] = useState(false);
+  const [lowConfidenceMessage, setLowConfidenceMessage] = useState('');
   const [bookBounce, setBookBounce] = useState(false);
   const [devMode, setDevMode] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
@@ -49,16 +57,23 @@ const App: React.FC = () => {
     userName,
     userAvatar,
     level,
-    addXP,
-    recordCapture,
+    accessToken,
+    childId,
     hasSeenOnboarding,
     setOnboardingSeen,
+    setFromCaptureResponse,
+    hydrateFromStorage,
     isTimeLimitExceeded,
     checkAndResetDailyUsage,
     incrementUsageSeconds,
   } = useGameStore();
 
   const { playPop, playShutter, playChime } = useSoundEffects();
+
+  // Hydrate auth from localStorage on mount
+  useEffect(() => {
+    hydrateFromStorage();
+  }, [hydrateFromStorage]);
 
   // Initialization
   useEffect(() => {
@@ -163,39 +178,61 @@ const App: React.FC = () => {
       const imageData = canvas.toDataURL('image/jpeg');
       setCapturedImage(imageData);
 
-      // Start "AI Processing" mock
+      // Real AI Processing via backend API
       setIsAIProcessing(true);
 
-      setTimeout(() => {
-        const validResponses = MOCK_AI_RESPONSES.filter((r: any) => r.response.object_en);
-        const randomResp = validResponses[Math.floor(Math.random() * validResponses.length)] as any;
-
-        const result = {
-          word_en: randomResp.response.object_en as string,
-          word_vi: randomResp.response.object_vi as string,
-          word_zh: randomResp.response.object_zh as string,
-          rarity: (randomResp.response.rarity === 'legendary' ? 'Legendary' :
-            randomResp.response.rarity === 'epic' ? 'Epic' :
-              randomResp.response.rarity === 'rare' ? 'Rare' :
-                randomResp.response.rarity === 'uncommon' ? 'Uncommon' : 'Common') as any,
-          category: randomResp.response.category === 'animals' ? 'Animals' :
-            randomResp.response.category === 'food' ? 'Food' :
-              randomResp.response.category === 'nature' ? 'Nature' :
-                randomResp.response.category === 'vehicles' ? 'Vehicles' :
-                  randomResp.response.category === 'school' ? 'School' : 'Home'
-        };
+      try {
+        // Strip the data URL prefix to get raw base64
+        const base64 = imageData.split(',')[1] || imageData;
+        const response = await captureApi.capture(base64);
 
         setIsAIProcessing(false);
+
+        // Handle low_confidence
+        if (response.status === 'low_confidence') {
+          setLowConfidenceMessage(response.message_vi || 'Hơ... tớ thấy chưa rõ nè. Thử lại nhé!');
+          setShowLowConfidence(true);
+          return;
+        }
+
+        // Capitalize rarity and category from server format
+        const rarityMap: Record<string, 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary'> = {
+          'common': 'Common', 'uncommon': 'Uncommon', 'rare': 'Rare',
+          'epic': 'Epic', 'legendary': 'Legendary',
+        };
+        const categoryMap: Record<string, string> = {
+          'animals': 'Animals', 'food': 'Food', 'nature': 'Nature',
+          'school': 'School', 'home': 'Home', 'vehicles': 'Vehicles',
+        };
+
+        const vc = response.vocab_card;
+        const result = {
+          word_en: vc.word_en,
+          word_vi: vc.word_vi,
+          word_zh: vc.word_zh,
+          pinyin: vc.pinyin || '',
+          phonetic_en: vc.phonetic_en || '',
+          rarity: rarityMap[vc.rarity_tier] || 'Common',
+          category: categoryMap[vc.category] || vc.category,
+          vocabId: vc.id,
+          tts_urls: response.tts_urls || { en: '', vi: '', zh: '' },
+        };
+
         setCapturedResult(result);
         setIsRevealOpen(true);
+
+        // Update gameStore from server response (XP, level, collections)
+        setFromCaptureResponse(response);
 
         if (result.rarity === 'Legendary') {
           playChime();
         }
-
-        addXP(10);
-        recordCapture(result.rarity);
-      }, 2500);
+      } catch (err) {
+        setIsAIProcessing(false);
+        console.error('Capture error:', err);
+        // Show child-friendly error overlay
+        setShowApiError(true);
+      }
     }
   };
 
@@ -258,7 +295,7 @@ const App: React.FC = () => {
     );
   }
 
-  if (!userName) {
+  if (!accessToken || !childId) {
     return <LoginScreen />;
   }
 
@@ -519,8 +556,10 @@ const App: React.FC = () => {
             rarity={capturedResult.rarity}
             imageUrl={capturedImage || ''}
             category={capturedResult.category}
-            pinyin=""
-            phonetic_en=""
+            pinyin={capturedResult.pinyin}
+            phonetic_en={capturedResult.phonetic_en}
+            vocabId={capturedResult.vocabId}
+            tts_urls={capturedResult.tts_urls}
             onCardFlyToCollection={() => {
               setIsBookOpen(true);
               playPop();
@@ -534,6 +573,17 @@ const App: React.FC = () => {
         type="time-limit"
         isVisible={showTimeLimitError}
         onClose={() => setShowTimeLimitError(false)}
+      />
+      <ErrorOverlay
+        type="api-error"
+        isVisible={showApiError}
+        onClose={() => setShowApiError(false)}
+      />
+      <ErrorOverlay
+        type="low-confidence"
+        isVisible={showLowConfidence}
+        onClose={() => setShowLowConfidence(false)}
+        actionLabel={lowConfidenceMessage || undefined}
       />
 
       <AIProcessingLoading isVisible={isAIProcessing} />

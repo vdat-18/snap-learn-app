@@ -1,4 +1,7 @@
 import { create } from 'zustand';
+import { setTokens, setChildId, clearTokens } from '../services/api';
+import type { ChildProfile } from '../services/authApi';
+
 // persist removed as per user request to start fresh on every reload
 
 import { MOCK_QUESTS, MOCK_LEVELS } from './mockData';
@@ -33,6 +36,37 @@ export interface Quest {
     expiresAt?: string;
 }
 
+// --- Capture Response type (from backend) ---
+export interface CaptureResponse {
+    status: 'new_capture' | 'duplicate' | 'low_confidence';
+    vocab_card: {
+        id: string;
+        word_en: string;
+        word_vi: string;
+        word_zh: string;
+        pinyin: string;
+        phonetic_en: string;
+        category: string;
+        rarity_tier: string;
+        fun_fact_vi: string;
+        confidence: number;
+        photo_url: string;
+    };
+    xp_earned: number;
+    total_xp: number;
+    level: number;
+    level_up: boolean;
+    mission_updates: Array<{
+        mission_id: string;
+        description_vi: string;
+        current_count: number;
+        target_count: number;
+        completed: boolean;
+    }>;
+    tts_urls: { en: string; vi: string; zh: string };
+    message_vi: string;
+}
+
 interface GameState {
     xp: number;
     streak: number;
@@ -44,6 +78,22 @@ interface GameState {
     quests: Quest[];
     lastStreakUpdateDate: string | null;
     levelUpMessage: { newLevel: number; xpGained: number } | null;
+
+    // Auth state (NEW)
+    accessToken: string | null;
+    refreshToken: string | null;
+    parentId: string | null;
+    childId: string | null;
+    childProfile: ChildProfile | null;
+
+    // Auth actions (NEW)
+    setAuth: (tokens: { accessToken: string; refreshToken: string }, parentId: string) => void;
+    setChild: (childId: string, profile: ChildProfile) => void;
+    clearAuth: () => void;
+    hydrateFromStorage: () => void;
+
+    // Server state sync (NEW)
+    setFromCaptureResponse: (response: CaptureResponse) => void;
 
     // User profile
     userName: string | null;
@@ -136,6 +186,120 @@ export const useGameStore = create<GameState>()((set, get) => ({
     todayUsageSeconds: 0,
     lastUsageDate: null,
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+
+    // Auth state
+    accessToken: null,
+    refreshToken: null,
+    parentId: null,
+    childId: null,
+    childProfile: null,
+
+    // Auth actions
+    setAuth: (tokens, parentId) => {
+        setTokens(tokens.accessToken, tokens.refreshToken);
+        localStorage.setItem('snap-learn-parent-id', parentId);
+        set({
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            parentId,
+        });
+    },
+
+    setChild: (childId, profile) => {
+        setChildId(childId);
+        set({
+            childId,
+            childProfile: profile,
+            userName: profile.name,
+            userAvatar: profile.avatar_id,
+            target_language: (profile.target_language === 'en' || profile.target_language === 'zh') ? profile.target_language : 'en',
+            secondary_language: profile.secondary_language === 'en' || profile.secondary_language === 'zh' ? profile.secondary_language : null,
+            xp: profile.total_xp,
+            level: profile.level,
+        });
+    },
+
+    clearAuth: () => {
+        clearTokens();
+        set({
+            accessToken: null,
+            refreshToken: null,
+            parentId: null,
+            childId: null,
+            childProfile: null,
+            userName: null,
+            userAvatar: null,
+            xp: 0,
+            level: 1,
+            streak: 0,
+            collections: [],
+        });
+    },
+
+    hydrateFromStorage: () => {
+        const accessToken = localStorage.getItem('snap-learn-access-token');
+        const refreshToken = localStorage.getItem('snap-learn-refresh-token');
+        const parentId = localStorage.getItem('snap-learn-parent-id');
+        const childId = localStorage.getItem('snap-learn-child-id');
+
+        if (accessToken && refreshToken && parentId) {
+            set({
+                accessToken,
+                refreshToken,
+                parentId,
+                childId,
+            });
+        }
+    },
+
+    // Server state sync from capture response
+    setFromCaptureResponse: (response: CaptureResponse) => {
+        const previousLevel = get().level;
+        const levelUpMessage = response.level_up && response.level > previousLevel
+            ? { newLevel: response.level, xpGained: response.xp_earned }
+            : null;
+
+        // Capitalize rarity and category from server format
+        const rarityMap: Record<string, CapturedWord['rarity']> = {
+            'common': 'Common', 'uncommon': 'Uncommon', 'rare': 'Rare',
+            'epic': 'Epic', 'legendary': 'Legendary',
+        };
+        const categoryMap: Record<string, string> = {
+            'animals': 'Animals', 'food': 'Food', 'nature': 'Nature',
+            'school': 'School', 'home': 'Home', 'vehicles': 'Vehicles',
+        };
+
+        set((state) => {
+            const updates: Partial<GameState> = {
+                xp: response.total_xp,
+                level: response.level,
+                levelUpMessage,
+                capturedCount: state.capturedCount + 1,
+                lastCapturedAt: new Date().toISOString(),
+            };
+
+            // Add vocab card to collections if new capture
+            if (response.status === 'new_capture' && response.vocab_card) {
+                const vc = response.vocab_card;
+                const newWord: CapturedWord = {
+                    id: vc.id,
+                    word_en: vc.word_en,
+                    word_vi: vc.word_vi,
+                    word_zh: vc.word_zh,
+                    image: vc.photo_url,
+                    stars: 1,
+                    rarity: rarityMap[vc.rarity_tier] || 'Common',
+                    category: categoryMap[vc.category] || vc.category,
+                    capturedAt: new Date().toISOString(),
+                    practiceCount: 0,
+                    isEvolved: false,
+                };
+                updates.collections = [...state.collections, newWord];
+            }
+
+            return updates as any;
+        });
+    },
 
     setOnboardingSeen: () => set({ hasSeenOnboarding: true }),
 
