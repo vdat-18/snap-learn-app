@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowLeft, Star, Lock, Sparkles } from 'lucide-react';
+import { X, ArrowLeft, Star, Lock, Sparkles, Volume2 } from 'lucide-react';
+import { mascotSpeak } from '../../utils/feedbackUtils';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { collectionApi, type CollectionOverview, type CategoryDetail, type CategoryProgress } from '../../services/collectionApi';
 import { CollectionSkeleton } from './Skeleton';
@@ -219,9 +220,17 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                                     {rarityLabels[tier] || 'Thường'}
                                                 </div>
                                             </div>
-                                            <div className="px-2 pb-3 pt-1 text-center bg-white/40 backdrop-blur">
-                                                <h4 className="font-black text-deepNavy leading-tight text-[10px] truncate mb-0.5">{card.word_vi}</h4>
-                                                <p className="text-[8px] font-bold text-sky-500 leading-none">{card.word_en}</p>
+                                            <div className="px-2 pb-3 pt-1 bg-white/40 backdrop-blur">
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <h4 className="font-black text-deepNavy leading-tight text-[10px] truncate">{card.word_en}</h4>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); mascotSpeak(card.word_en, 'en-US'); }}
+                                                        className="flex-shrink-0 p-0.5 rounded-full text-skyBlue active:scale-90 transition-transform"
+                                                    >
+                                                        <Volume2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                                <p className="text-[8px] font-bold text-slate-400 leading-none text-center mt-0.5">{card.word_vi}</p>
                                                 <div className="flex justify-center mt-1.5 gap-0.5">
                                                     {[1, 2, 3].map(s => (
                                                         <Star

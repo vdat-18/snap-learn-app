@@ -16,17 +16,10 @@ class VocabCardResponse(BaseModel):
     word_en: str
     word_vi: str
     word_zh: str
-    pinyin: str | None = None
     phonetic_en: str | None = None
     category: str
     rarity_tier: str
-    description_en: str | None = None
     description_vi: str | None = None
-    description_zh: str | None = None
-    fun_fact_vi: str | None = None
-    example_sentence_en: str | None = None
-    example_sentence_vi: str | None = None
-    example_sentence_zh: str | None = None
     confidence: float
     photo_url: str | None = None
 

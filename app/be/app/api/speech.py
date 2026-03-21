@@ -221,9 +221,9 @@ async def get_description_tts(
 
     # Get description text for this language
     text_map = {
-        "en": vocab.description_en,
+        "en": None,
         "vi": vocab.description_vi,
-        "zh": vocab.description_zh,
+        "zh": None,
     }
     text = text_map[language]
 
@@ -395,14 +395,12 @@ async def refresh_tts_cache(
             CapturedVocab.word_en,
             CapturedVocab.word_vi,
             CapturedVocab.word_zh,
-            CapturedVocab.description_en,
             CapturedVocab.description_vi,
-            CapturedVocab.description_zh,
         ).distinct()
     )
     rows = result.all()
     words = [(row.word_en, row.word_vi, row.word_zh) for row in rows]
-    descriptions = [(row.description_en, row.description_vi, row.description_zh) for row in rows]
+    descriptions = [(None, row.description_vi, None) for row in rows]
 
     if not words:
         deleted = clear_cache(cache_dir, language=body.language)

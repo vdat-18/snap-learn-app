@@ -95,17 +95,11 @@ def mock_vision_service(monkeypatch):
     mock_result.object_en = "cat"
     mock_result.object_vi = "con mèo"
     mock_result.object_zh = "猫"
-    mock_result.pinyin = "māo"
     mock_result.phonetic_en = "/kæt/"
     mock_result.category = MagicMock(value="animals")
     mock_result.confidence = 0.95
-    mock_result.fun_fact_vi = "Mèo có thể ngủ 16 giờ mỗi ngày!"
-    mock_result.example_sentence_en = "The cat is sleeping."
-    mock_result.example_sentence_vi = "Con mèo đang ngủ."
-    mock_result.example_sentence_zh = "猫在睡觉。"
-    mock_result.difficulty_en = 1
     mock_result.difficulty_vi = 1
-    mock_result.difficulty_zh = 2
+    mock_result.description_vi = "Ố Ồ, tờ thấy cậu có 1 chú mèo đấy nhỉ. Mèo Tiếng Anh gọi là cat đấy. Cậu lặp lại cùng mình nhé!"
 
     mock_identify = AsyncMock(return_value=mock_result)
     monkeypatch.setattr("app.services.vision_service.identify_object", mock_identify)

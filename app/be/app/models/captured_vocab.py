@@ -33,7 +33,6 @@ class CapturedVocab(Base):
     word_en: Mapped[str] = mapped_column(String(200), nullable=False)
     word_vi: Mapped[str] = mapped_column(String(200), nullable=False)
     word_zh: Mapped[str] = mapped_column(String(200), nullable=False)
-    pinyin: Mapped[str | None] = mapped_column(String(200), nullable=True)
     phonetic_en: Mapped[str | None] = mapped_column(String(200), nullable=True)
 
     # Classification
@@ -42,13 +41,7 @@ class CapturedVocab(Base):
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
 
     # Enrichment
-    description_en: Mapped[str | None] = mapped_column(String(500), nullable=True)
     description_vi: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    description_zh: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    fun_fact_vi: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    example_sentence_en: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    example_sentence_vi: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    example_sentence_zh: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Game state
     points_earned: Mapped[int] = mapped_column(Integer, default=0)

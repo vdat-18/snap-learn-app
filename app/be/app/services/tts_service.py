@@ -24,9 +24,7 @@ async def ensure_cached(
     word_vi: str,
     word_zh: str,
     cache_dir: str,
-    description_en: str | None = None,
     description_vi: str | None = None,
-    description_zh: str | None = None,
 ) -> None:
     """Pre-generate TTS for all 3 languages (non-blocking).
 
@@ -51,17 +49,12 @@ async def ensure_cached(
                 except Exception:
                     logger.warning("TTS pre-gen failed for '%s' (%s)", text, lang.value, exc_info=True)
 
-        # Pre-generate description TTS
-        for text, lang in [
-            (description_en, Language.En),
-            (description_vi, Language.Vi),
-            (description_zh, Language.Zh),
-        ]:
-            if text:
-                try:
-                    await synthesize_speech(text, lang, cache_path)
-                except Exception:
-                    logger.warning("TTS pre-gen failed for description '%s' (%s)", text[:30], lang.value, exc_info=True)
+        # Pre-generate description TTS (Vietnamese only)
+        if description_vi:
+            try:
+                await synthesize_speech(description_vi, Language.Vi, cache_path)
+            except Exception:
+                logger.warning("TTS pre-gen failed for description '%s' (%s)", description_vi[:30], "vi", exc_info=True)
     except Exception:
         logger.warning("TTS ensure_cached failed", exc_info=True)
 

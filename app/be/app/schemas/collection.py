@@ -13,7 +13,6 @@ class VocabCard(BaseModel):
     word_en: str
     word_vi: str
     word_zh: str
-    pinyin: str | None = None
     phonetic_en: str | None = None
     category: str
     rarity_tier: str
@@ -50,14 +49,9 @@ class VocabDetailResponse(BaseModel):
     word_en: str
     word_vi: str
     word_zh: str
-    pinyin: str | None = None
     phonetic_en: str | None = None
     category: str
     rarity_tier: str
-    fun_fact_vi: str | None = None
-    example_sentence_en: str | None = None
-    example_sentence_vi: str | None = None
-    example_sentence_zh: str | None = None
     mastery_en: int = 0
     mastery_vi: int = 0
     mastery_zh: int = 0

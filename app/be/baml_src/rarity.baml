@@ -8,7 +8,7 @@
 // ── Classify Object Rarity ────────────────────────────────────
 // Determines rarity tier using a hybrid of:
 //   1. Frequency-based (% of users who captured it)
-//   2. Difficulty-based (max difficulty across 3 languages)
+//   2. Difficulty-based (Vietnamese difficulty rating)
 // Final rarity = MAX(frequency-based, difficulty-based)
 
 function ClassifyRarity(input: RarityInput) -> RarityResult {
@@ -23,14 +23,12 @@ function ClassifyRarity(input: RarityInput) -> RarityResult {
     OBJECT:
     - Name: "{{ input.object_en }}"
     - Category: {{ input.category }}
-    - Difficulty (EN): {{ input.difficulty_en }}
     - Difficulty (VI): {{ input.difficulty_vi }}
-    - Difficulty (ZH): {{ input.difficulty_zh }}
     - Capture frequency: {{ input.capture_pct }}% of users (null if unknown)
 
     RARITY RULES:
 
-    1. DIFFICULTY-BASED RARITY (use max difficulty across all languages):
+    1. DIFFICULTY-BASED RARITY (use difficulty rating):
        - Difficulty 1 → Common (10 XP)
        - Difficulty 2 → Uncommon (25 XP)
        - Difficulty 3 → Rare (50 XP)

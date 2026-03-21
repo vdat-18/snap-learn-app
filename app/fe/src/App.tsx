@@ -28,7 +28,6 @@ const App: React.FC = () => {
     word_en: string;
     word_vi: string;
     word_zh: string;
-    pinyin: string;
     phonetic_en: string;
     rarity: 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
     category: string;
@@ -249,7 +248,6 @@ const App: React.FC = () => {
         word_en: vc.word_en,
         word_vi: vc.word_vi,
         word_zh: vc.word_zh,
-        pinyin: vc.pinyin || '',
         phonetic_en: vc.phonetic_en || '',
         rarity: rarityMap[vc.rarity_tier] || 'Common',
         category: categoryMap[vc.category] || vc.category,
@@ -555,7 +553,6 @@ const App: React.FC = () => {
           rarity={capturedResult.rarity}
           imageUrl={capturedImage || ''}
           category={capturedResult.category}
-          pinyin={capturedResult.pinyin}
           phonetic_en={capturedResult.phonetic_en}
           vocabId={capturedResult.vocabId}
           tts_urls={capturedResult.tts_urls}

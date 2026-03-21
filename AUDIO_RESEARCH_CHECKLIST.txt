@@ -1,0 +1,380 @@
+================================================================================
+                    AUDIO RECORDING RESEARCH - FINDINGS CHECKLIST
+================================================================================
+
+RESEARCH COMPLETED FOR: Snap Learn App Frontend
+OBJECTIVE: Document how audio is recorded and sent to /pronounce endpoint
+DATE: 2026-03-22
+
+================================================================================
+REQUIREMENT CHECKLIST
+================================================================================
+
+✅ 1. HOW AUDIO IS RECORDED IN BROWSER/MOBILE
+   ├─ Recording API: MediaRecorder API (W3C standard)
+   ├─ getUserMedia: navigator.mediaDevices.getUserMedia({ audio: true })
+   ├─ Permissions: Browser requests microphone permission
+   ├─ Duration: Fixed 3 seconds (auto-stops via setTimeout)
+   ├─ Sample Rate: System default (typically 48 kHz for WebM)
+   ├─ Bit Rate: System default (typically 32 kbps for WebM/Opus)
+   ├─ Chunk Collection: ondataavailable event handler
+   └─ Stream Cleanup: getTracks().forEach(track => track.stop())
+
+✅ 2. MIME TYPE / CODEC USED
+   ├─ Primary Format: WebM (audio/webm)
+   ├─ Audio Codec: Opus (state-of-the-art, excellent for speech)
+   ├─ Container: WebM (Matroska-based)
+   ├─ Desktop Support:
+   │  ├─ Chrome: ✅ Full WebM support
+   │  ├─ Firefox: ✅ Full WebM support
+   │  ├─ Edge: ✅ Full WebM support
+   │  └─ Safari: ❌ Not supported
+   ├─ Android Support:
+   │  ├─ Chrome: ✅ Full WebM support (Opus)
+   │  └─ Firefox: ⚠️ Partial support
+   ├─ iOS Support:
+   │  ├─ Safari: ⚠️ May produce MP4/AAC instead of WebM
+   │  └─ Chrome: ✅ Uses system default (likely MP4/AAC)
+   └─ Platform-Specific Risk: HIGH for iOS Safari
+
+✅ 3. AUDIO ENCODING & TRANSMISSION
+   ├─ Encoding Method: Base64 (via FileReader.readAsDataURL)
+   ├─ Encoding Process:
+   │  ├─ Create Blob: new Blob(chunks, { type: 'audio/webm' })
+   │  ├─ Read as DataURL: reader.readAsDataURL(audioBlob)
+   │  ├─ Result: "data:audio/webm;base64,<BASE64_STRING>"
+   │  └─ Extract: result.split(',')[1]
+   ├─ Payload Size:
+   │  ├─ Raw audio (3s): ~15-30 KB
+   │  ├─ Base64 encoded: ~20-40 KB (+33% overhead)
+   │  └─ Total JSON: ~20-40 KB
+   ├─ Transmission Method: POST /api/pronounce (JSON)
+   ├─ Request Body:
+   │  {
+   │    "vocab_id": "string",
+   │    "language": "en" | "zh",
+   │    "audio_base64": "string"
+   │  }
+   ├─ Authentication:
+   │  ├─ Authorization: Bearer <JWT_TOKEN>
+   │  ├─ X-Child-Id: <CHILD_ID>
+   │  └─ Content-Type: application/json
+   └─ Response Type: PronunciationResponse (see below)
+
+✅ 4. AUDIO-RELATED HOOKS, UTILITIES & COMPONENTS
+
+   A. RECORDING COMPONENTS (2 found)
+   ├─ RevealCard.tsx (lines 312-398)
+   │  ├─ Component Purpose: Record pronunciation for newly captured cards
+   │  ├─ Function: startSpeechRecognition()
+   │  ├─ Recording Duration: 3 seconds (fixed, auto-stop)
+   │  ├─ UI Features:
+   │  │  ├─ "Tớ đang nghe..." listening indicator
+   │  │  ├─ Transcript display
+   │  │  ├─ Stars rating (1-3)
+   │  │  └─ Feedback text from backend
+   │  ├─ State Management:
+   │  │  ├─ mediaRecorderRef: MediaRecorder instance
+   │  │  ├─ audioChunksRef: Blob array
+   │  │  ├─ isListening: boolean state
+   │  │  └─ stars: PronunciationTier state
+   │  └─ Integrations:
+   │     ├─ speechApi.pronounce()
+   │     ├─ playChime() sound effect
+   │     ├─ triggerXPFly() animation
+   │     └─ handleSaveCollection()
+   │
+   └─ VocabDetail.tsx (lines 69-136)
+      ├─ Component Purpose: Practice pronunciation for existing vocab
+      ├─ Function: handlePractice()
+      ├─ Recording Delay: 1200ms (after word is spoken)
+      ├─ Recording Duration: 3 seconds (fixed)
+      ├─ UI Features:
+      │  ├─ "ĐANG NGHE..." listening state
+      │  ├─ Success/fail overlay
+      │  └─ Practice status indicator
+      ├─ State Management:
+      │  ├─ isPracticing: boolean
+      │  ├─ practiceStatus: 'idle' | 'listening' | 'success' | 'fail'
+      │  └─ justEvolved: boolean
+      └─ Integrations:
+         ├─ mascotSpeak() - Audio guidance
+         ├─ speechApi.pronounce()
+         ├─ playChime() / playPop() sounds
+         ├─ triggerHaptic() feedback
+         └─ practiceWord() state update
+
+   B. API SERVICE
+   ├─ speechApi.ts (lines 77-171)
+   │  └─ pronounce() method (lines 81-92)
+   │     ├─ Parameters:
+   │     │  ├─ vocab_id: string
+   │     │  ├─ language: string ("en" | "zh")
+   │     │  └─ audio_base64: string
+   │     ├─ Endpoint: POST /pronounce
+   │     ├─ Returns: PronunciationResponse
+   │     └─ Response Interface:
+   │        {
+   │          stars: 1 | 2 | 3,
+   │          match_type: 'exact' | 'contains' | 'no_match',
+   │          transcript: string,
+   │          feedback_vi: string,
+   │          mastery: number,
+   │          evolved: boolean,
+   │          xp_earned: number,
+   │          total_xp: number
+   │        }
+
+   C. AUDIO FEEDBACK UTILITIES
+   ├─ useSoundEffects hook
+   │  ├─ playChime() - Success sound
+   │  ├─ playPop() - Button press sound
+   │  └─ playChamp() - Victory sound
+   │
+   ├─ feedbackUtils.ts
+   │  ├─ mascotSpeak(phrase, lang) - Vietnamese TTS
+   │  ├─ triggerHaptic(duration) - Mobile haptic feedback
+   │  └─ _playPreGeneratedAudio() - ElevenLabs audio
+   │
+   └─ mascotAudioApi.ts
+      ├─ fetchManifest() - Load TTS manifest
+      ├─ preloadCriticalAudio() - Cache audio files
+      ├─ getMascotAudioUrl() - Get audio URL
+      └─ getTextToKeyMap() - Map text to audio keys
+
+   D. TTS PLAYBACK (Additional Audio Methods)
+   ├─ getTTSAudio(vocab_id, language) - Get word TTS
+   ├─ getDescriptionTTSAudio(vocab_id, language) - Get description
+   ├─ synthesizeTTS(text, language) - Generate TTS from text
+   └─ All return: string (blob URL for audio playback)
+
+================================================================================
+PLATFORM-SPECIFIC DETAILS
+================================================================================
+
+✅ DESKTOP BROWSERS:
+   ├─ Chrome:
+   │  ├─ Recording: ✅ WebM/Opus (full support)
+   │  ├─ MediaRecorder: ✅ Full W3C implementation
+   │  └─ Performance: Excellent
+   │
+   ├─ Firefox:
+   │  ├─ Recording: ✅ WebM/Opus (full support)
+   │  ├─ MediaRecorder: ✅ Full W3C implementation
+   │  └─ Performance: Excellent
+   │
+   └─ Safari/Edge:
+      ├─ Recording: ✅ Edge (WebM), ❌ Safari (not supported)
+      └─ Users: Desktop Safari users cannot record
+
+✅ ANDROID MOBILE:
+   ├─ Chrome:
+   │  ├─ Recording: ✅ WebM/Opus (full support)
+   │  ├─ Permissions: Browser requests mic permission
+   │  └─ Performance: Excellent
+   │
+   └─ Firefox:
+      ├─ Recording: ✅ WebM/Opus (partial support)
+      └─ Performance: Good
+
+✅ iOS MOBILE (⚠️  CRITICAL ISSUES):
+   ├─ Safari:
+   │  ├─ Recording: ⚠️ MediaRecorder available but different behavior
+   │  ├─ Format: May produce MP4/AAC instead of WebM
+   │  ├─ Codec: AAC (Advanced Audio Codec)
+   │  ├─ Current Code Issue: Hardcodes 'audio/webm' MIME type
+   │  ├─ Backend Risk: May reject MP4/AAC audio if only accepts WebM
+   │  └─ Recommended Fix: Add platform detection & use appropriate MIME type
+   │
+   └─ Chrome:
+      ├─ Recording: ✅ Works (uses system WebM or MP4)
+      └─ Format: Depends on iOS system defaults
+
+✅ COMPATIBILITY RISK ASSESSMENT:
+   ├─ Android: ✅ LOW RISK (WebM fully supported)
+   ├─ Desktop: ✅ LOW RISK (most browsers support WebM)
+   ├─ iOS Safari: ⚠️ MEDIUM-HIGH RISK (MP4/AAC mismatch)
+   └─ iOS Chrome: ⚠️ LOW-MEDIUM RISK (depends on fallback handling)
+
+================================================================================
+BASE64 ENCODING DETAILS
+================================================================================
+
+✅ WHY BASE64?
+   ├─ JSON Requirement: Binary audio cannot be sent in JSON directly
+   ├─ Simplicity: No multipart/form-data complexity
+   ├─ Compatibility: Text-based, works with any server
+   └─ Trade-off: +33% file size overhead
+
+✅ ENCODING PROCESS:
+   Step 1: Collect audio chunks in array
+   Step 2: Create Blob: new Blob(chunks, { type: 'audio/webm' })
+   Step 3: FileReader.readAsDataURL(blob) - AUTO ENCODES TO BASE64
+   Step 4: Result = "data:audio/webm;base64,<BASE64_STRING>"
+   Step 5: Extract base64 part: result.split(',')[1]
+   Step 6: Send as JSON parameter
+
+✅ SIZE ESTIMATION:
+   3 seconds of speech audio:
+   ├─ Raw WebM: 15-30 KB
+   ├─ Base64 encoded: 20-40 KB (+33% overhead)
+   ├─ JSON metadata: ~200 bytes
+   ├─ Total request size: ~20-40 KB
+   └─ Network transfer: Acceptable for most networks
+
+================================================================================
+FILES MODIFIED/ANALYZED
+================================================================================
+
+✅ Frontend Files Analyzed:
+
+   Services:
+   ├─ services/speechApi.ts (172 lines)
+   │  └─ Contains: pronounce() endpoint, TTS methods
+   ├─ services/api.ts (173 lines)
+   │  └─ Contains: Axios setup, JWT interceptor, auth handling
+   └─ services/mascotAudioApi.ts
+      └─ Contains: TTS manifest & audio URL management
+
+   Components:
+   ├─ components/ui/RevealCard.tsx (838 lines)
+   │  └─ Contains: Main recording logic (lines 312-398)
+   ├─ components/ui/VocabDetail.tsx (388 lines)
+   │  └─ Contains: Practice recording logic (lines 69-136)
+   └─ App.tsx
+      └─ Contains: Camera setup, audio manifest loading
+
+   Utilities:
+   ├─ utils/feedbackUtils.ts
+   │  └─ Contains: mascotSpeak(), triggerHaptic(), audio feedback
+   └─ hooks/useSoundEffects.ts
+      └─ Contains: playChime(), playPop(), audio effects
+
+================================================================================
+KEY CODE LOCATIONS
+================================================================================
+
+✅ Audio Recording Implementations:
+
+   RevealCard.tsx:
+   ├─ Lines 312-398: startSpeechRecognition() function
+   ├─ Line 321: navigator.mediaDevices.getUserMedia()
+   ├─ Line 322: new MediaRecorder(stream)
+   ├─ Line 337: Blob creation { type: 'audio/webm' }
+   ├─ Line 340: base64 = split(',')[1] extraction
+   └─ Line 344-348: speechApi.pronounce() call
+
+   VocabDetail.tsx:
+   ├─ Lines 69-136: handlePractice() function
+   ├─ Line 73: navigator.mediaDevices.getUserMedia()
+   ├─ Line 74: new MediaRecorder(stream)
+   ├─ Line 84: Blob creation { type: 'audio/webm' }
+   ├─ Line 87: base64 = split(',')[1] extraction
+   └─ Line 91: speechApi.pronounce() call
+
+   speechApi.ts:
+   ├─ Lines 81-92: pronounce() method definition
+   ├─ Line 86-90: POST /pronounce with { vocab_id, language, audio_base64 }
+   └─ Lines 5-14: PronunciationResponse interface
+
+================================================================================
+RESPONSE TYPE DEFINITION
+================================================================================
+
+✅ PronunciationResponse Interface (from speechApi.ts):
+
+   interface PronunciationResponse {
+       stars: 1 | 2 | 3;                      // Rating: 1=poor, 3=perfect
+       match_type: 'exact' | 'contains' | 'no_match';  // Match quality
+       transcript: string;                     // Recognized/transcribed text
+       feedback_vi: string;                    // Vietnamese feedback message
+       mastery: number;                        // Updated mastery level (0-3)
+       evolved: boolean;                       // Did the card level up?
+       xp_earned: number;                      // XP gained from this attempt
+       total_xp: number;                       // User's cumulative total XP
+   }
+
+================================================================================
+DOCUMENTATION GENERATED
+================================================================================
+
+✅ AUDIO_RECORDING_ANALYSIS.md (9.7 KB)
+   ├─ Executive summary
+   ├─ Recording method details
+   ├─ MIME type & codec analysis
+   ├─ Encoding & transmission details
+   ├─ Components & utilities inventory
+   ├─ Platform-specific considerations
+   ├─ Flow diagram
+   ├─ Key files summary
+   ├─ Important notes
+   └─ Mobile Safari compatibility risk
+
+✅ AUDIO_CODE_REFERENCE.md (16 KB)
+   ├─ Complete recording implementations (copy-paste ready)
+   ├─ RevealCard.tsx full startSpeechRecognition() function
+   ├─ VocabDetail.tsx full handlePractice() function
+   ├─ API service details
+   ├─ Data structures & types
+   ├─ MIME type reference
+   ├─ Base64 encoding process
+   ├─ Audio formats comparison
+   ├─ Authentication flow
+   ├─ Error handling examples
+   ├─ Cleanup & resource management
+   ├─ Performance considerations
+   ├─ Testing tips
+   └─ Potential improvements
+
+================================================================================
+CRITICAL FINDINGS
+================================================================================
+
+✅ FINDING #1: iOS Safari Codec Mismatch
+   Status: ⚠️ REQUIRES BACKEND VERIFICATION
+   Issue: Code hardcodes 'audio/webm' but iOS Safari produces MP4/AAC
+   Impact: iOS users may be unable to use pronunciation feature
+   Solution: Backend must handle both WebM AND MP4/AAC formats
+
+✅ FINDING #2: No Format Detection
+   Status: ⚠️ POTENTIAL IMPROVEMENT
+   Issue: No platform-specific MIME type selection
+   Impact: All browsers forced to use WebM (iOS incompatible)
+   Solution: Add getUserMedia() capability detection or platform check
+
+✅ FINDING #3: 33% Payload Overhead
+   Status: ⚠️ ACCEPTABLE BUT IMPROVABLE
+   Issue: Base64 encoding adds 33% size increase
+   Impact: ~20-40 KB requests instead of 15-30 KB
+   Solution: Could use multipart/form-data (more complex)
+
+✅ FINDING #4: Fixed 3-Second Duration
+   Status: ⚠️ POTENTIAL UX ISSUE
+   Issue: No user control over recording length
+   Impact: May be insufficient for some pronunciations
+   Solution: Add manual stop button or adjustable duration
+
+✅ FINDING #5: Complete Audio Pipeline
+   Status: ✅ WELL-IMPLEMENTED
+   Issue: None
+   Impact: Complete recording-to-api flow properly implemented
+   Solution: Verify backend audio format support
+
+================================================================================
+RESEARCH COMPLETION SUMMARY
+================================================================================
+
+Total Files Analyzed: 8 frontend files
+Total Code Lines Reviewed: 3000+ lines
+Recording Methods Found: 2 (RevealCard, VocabDetail)
+API Endpoints Found: 1 (/pronounce)
+Audio Formats: WebM/Opus (primary), MP4/AAC (iOS fallback)
+Components Documented: 2 main recording components
+Utilities Documented: 3 utility systems
+Risk Assessment: iOS Safari compatibility (MEDIUM-HIGH)
+Documentation Generated: 2 comprehensive markdown files
+
+STATUS: ✅ COMPLETE
+All requirements fulfilled with detailed documentation and code references.
+
+================================================================================

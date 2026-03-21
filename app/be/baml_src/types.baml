@@ -64,20 +64,9 @@ class VisionResult {
   status          string        @description("'success' or 'blocked'")
   object_en       string        @description("English name of the identified object")
   phonetic_en     string        @description("IPA pronunciation for English word")
-  object_vi       string        @description("Vietnamese translation")
-  object_zh       string        @description("Chinese characters (Simplified)")
-  pinyin          string        @description("Pinyin with tone marks, e.g. māo")
   category        ObjectCategory @description("Object category from 16 predefined categories")
-  difficulty_en   int           @description("English difficulty 1-5 (1=very easy, 5=legendary)")
   difficulty_vi   int           @description("Vietnamese difficulty 1-5")
-  difficulty_zh   int           @description("Mandarin difficulty 1-5")
-  description_en  string        @description("Friendly English sentence, 1-2 sentences max, excited tone")
-  description_vi  string        @description("Friendly Vietnamese sentence, 1-2 sentences max, excited tone")
-  description_zh  string        @description("Friendly Mandarin sentence, 1-2 sentences max, excited tone")
-  fun_fact_vi     string        @description("Fun fact about the object in Vietnamese, child-friendly")
-  example_sentence_en string    @description("Simple English sentence using the word")
-  example_sentence_vi string    @description("Simple Vietnamese sentence using the word")
-  example_sentence_zh string    @description("Simple Mandarin sentence using the word")
+  description_vi  string        @description("Friendly Vietnamese sentence, 2-3 sentences max, conversational tone")
   confidence      float         @description("Recognition confidence 0.0-1.0")
 }
 
@@ -104,9 +93,7 @@ class SafetyCheckResult {
 class RarityInput {
   object_en      string         @description("English name of the object")
   category       ObjectCategory @description("Object category")
-  difficulty_en  int            @description("English difficulty 1-5")
   difficulty_vi  int            @description("Vietnamese difficulty 1-5")
-  difficulty_zh  int            @description("Mandarin difficulty 1-5")
   capture_pct    float?         @description("Percentage of users who captured this (0-100), null if unknown")
 }
 
