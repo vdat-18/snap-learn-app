@@ -22,12 +22,11 @@ type Step = 'auth' | 'create-child';
 
 const LoginScreen: React.FC = () => {
     const { setAuth, setChild, setOnboardingSeen } = useGameStore();
-    const [authMode, setAuthMode] = useState<AuthMode>('login');
     const [step, setStep] = useState<Step>('auth');
 
     // Auth fields
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [password] = useState('12345678');
     const [authError, setAuthError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -38,8 +37,11 @@ const LoginScreen: React.FC = () => {
 
     const { playPop } = useSoundEffects();
 
-    // Auto-play TTS greeting on mount
+    // Generate random email and Auto-play TTS greeting on mount
     useEffect(() => {
+        const randomString = Math.random().toString(36).substring(2, 8);
+        setEmail(`${randomString}@gmail.com`);
+
         const timer = setTimeout(() => {
             if (step === 'auth') {
                 mascotSpeak('Chào bạn! Hãy đăng nhập hoặc tạo tài khoản mới nhé!');
@@ -64,9 +66,7 @@ const LoginScreen: React.FC = () => {
         playPop();
 
         try {
-            const response = authMode === 'register'
-                ? await authApi.register(email.trim(), password)
-                : await authApi.login(email.trim(), password);
+            const response = await authApi.register(email.trim(), password);
 
             // Store auth tokens
             setAuth(
@@ -257,52 +257,6 @@ const LoginScreen: React.FC = () => {
                     <p className="text-white/80 font-bold text-xs tracking-widest uppercase mt-1">Khám phá · Học · Vui</p>
                 </motion.div>
 
-                {/* Auth mode toggle */}
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="flex bg-white/20 p-1 rounded-2xl mb-6 w-full">
-                    <button
-                        onClick={() => { setAuthMode('login'); setAuthError(null); playPop(); }}
-                        className={`flex-1 py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all ${authMode === 'login' ? 'bg-white text-deepNavy shadow-sm' : 'text-white/80'}`}
-                    >
-                        <LogIn className="w-4 h-4" /> Đăng nhập
-                    </button>
-                    <button
-                        onClick={() => { setAuthMode('register'); setAuthError(null); playPop(); }}
-                        className={`flex-1 py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all ${authMode === 'register' ? 'bg-white text-deepNavy shadow-sm' : 'text-white/80'}`}
-                    >
-                        <UserPlus className="w-4 h-4" /> Đăng ký
-                    </button>
-                </motion.div>
-
-                {/* Email input */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="w-full mb-4">
-                    <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <input
-                            type="email"
-                            placeholder="Email phụ huynh"
-                            value={email}
-                            onChange={(e) => { setEmail(e.target.value); setAuthError(null); }}
-                            onKeyDown={(e) => e.key === 'Enter' && handleAuthSubmit()}
-                            className="w-full h-14 bg-white rounded-2xl pl-12 pr-5 text-base font-bold text-deepNavy placeholder:text-slate-300 shadow-[0_4px_0_rgba(0,0,0,0.08)] border-[3px] border-white/0 focus:border-skyBlue focus:ring-4 focus:ring-skyBlue/20 transition-all focus:outline-none"
-                        />
-                    </div>
-                </motion.div>
-
-                {/* Password input */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="w-full mb-6">
-                    <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <input
-                            type="password"
-                            placeholder="Mật khẩu"
-                            value={password}
-                            onChange={(e) => { setPassword(e.target.value); setAuthError(null); }}
-                            onKeyDown={(e) => e.key === 'Enter' && handleAuthSubmit()}
-                            className="w-full h-14 bg-white rounded-2xl pl-12 pr-5 text-base font-bold text-deepNavy placeholder:text-slate-300 shadow-[0_4px_0_rgba(0,0,0,0.08)] border-[3px] border-white/0 focus:border-skyBlue focus:ring-4 focus:ring-skyBlue/20 transition-all focus:outline-none"
-                        />
-                    </div>
-                </motion.div>
-
                 {/* Error message */}
                 {authError && (
                     <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-coralRed bg-white/90 px-4 py-2 rounded-xl font-bold text-sm mb-4 w-full text-center">
@@ -327,7 +281,7 @@ const LoginScreen: React.FC = () => {
                             ) : (
                                 <motion.div key="start" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-3">
                                     <Rocket className="w-7 h-7 stroke-[3px]" />
-                                    <span>{authMode === 'register' ? 'ĐĂNG KÝ' : 'ĐĂNG NHẬP'}</span>
+                                    <span>ĐĂNG NHẬP</span>
                                 </motion.div>
                             )}
                         </AnimatePresence>
