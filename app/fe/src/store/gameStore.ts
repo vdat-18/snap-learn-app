@@ -277,7 +277,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
                     word_zh: vc.word_zh,
                     image: vc.photo_url,
                     stars: 1,
-                    rarity: rarityMap[vc.rarity_tier] || 'Common',
+                    rarity: rarityMap[vc.rarity_tier.toLowerCase()] || 'Common',
                     category: categoryMap[vc.category] || vc.category,
                     capturedAt: new Date().toISOString(),
                     practiceCount: 0,

@@ -249,7 +249,7 @@ const App: React.FC = () => {
         word_vi: vc.word_vi,
         word_zh: vc.word_zh,
         phonetic_en: vc.phonetic_en || '',
-        rarity: rarityMap[vc.rarity_tier] || 'Common',
+        rarity: rarityMap[vc.rarity_tier.toLowerCase()] || 'Common',
         category: categoryMap[vc.category] || vc.category,
         vocabId: vc.id,
         tts_urls: response.tts_urls || { en: '', vi: '', zh: '' },
