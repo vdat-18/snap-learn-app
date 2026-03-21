@@ -57,6 +57,7 @@ class VocabDetailResponse(BaseModel):
     mastery_zh: int = 0
     evolved: bool = False
     photo_url: str | None = None
+    description_vi: str | None = None
     confidence: float
     captured_at: datetime
     last_practiced_at: datetime | None = None

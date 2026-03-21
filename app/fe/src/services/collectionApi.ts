@@ -51,6 +51,7 @@ export interface VocabDetail {
     mastery_zh: number;
     evolved: boolean;
     photo_url: string | null;
+    description_vi: string | null;
     confidence: number;
     captured_at: string;
     last_practiced_at: string | null;

@@ -256,15 +256,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
             setAchievementImageUrl(null);
             setShowAchievementFlip(false);
 
-            if (xpEarned && xpEarned > 0) {
-                setTimeout(() => {
-                    if (cardRef.current) {
-                        const rect = cardRef.current.getBoundingClientRect();
-                        triggerXPFly(rect.left + rect.width / 2, rect.top + rect.height / 4, Math.min(10, Math.ceil(xpEarned / 10)));
-                    }
-                }, 800);
-            }
-
             if (rarity === 'Legendary') {
                 setTimeout(() => {
                     triggerLegendaryBurst();
@@ -463,16 +454,16 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         </button>
 
                         {/* Rarity Badge & XP */}
-                        <div className="flex justify-center mb-6 relative">
+                        <div className="flex justify-center items-center gap-2 mb-6 relative">
                             <span className={`px-4 py-1.5 ${rarityBadgeColor[rarity]} text-white text-[11px] font-bold uppercase tracking-widest rounded-full shadow-sm relative z-10`}>
                                 {rarityLabels[rarity]}
                             </span>
-                            {xpEarned && xpEarned > 0 ? (
+                            {xpEarned && xpEarned > 0 && stars === 3 ? (
                                 <motion.div
-                                    initial={{ scale: 0, y: 20 }}
-                                    animate={{ scale: 1, y: -10 }}
-                                    transition={{ type: 'spring', bounce: 0.6, delay: 0.5 }}
-                                    className="absolute -top-4 -right-2 md:right-16 bg-sunshineYellow text-deepNavy font-black text-sm px-2.5 py-1 rounded-bl-xl rounded-tr-xl rounded-tl-sm rounded-br-sm shadow-[0_4px_0_rgb(161,98,7)] rotate-12 z-20 border-2 border-white"
+                                    initial={{ scale: 0, x: -20 }}
+                                    animate={{ scale: 1, x: 0 }}
+                                    transition={{ type: 'spring', bounce: 0.6 }}
+                                    className="bg-sunshineYellow text-deepNavy font-sans font-black text-xs px-2.5 py-1 rounded-full shadow-sm border-2 border-white"
                                 >
                                     +{xpEarned} XP
                                 </motion.div>
