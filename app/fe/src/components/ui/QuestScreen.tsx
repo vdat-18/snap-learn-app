@@ -117,7 +117,7 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                                 <div className="w-10 h-10 bg-sunshineYellow rounded-xl flex items-center justify-center shadow-level-1">
                                     <Trophy className="w-6 h-6 text-deepNavy" />
                                 </div>
-                                🌟 Thử thách vui
+                                Thử thách vui
                             </h1>
                         </div>
                         <div className="bg-sunshineYellow/20 px-4 py-2 rounded-2xl border border-sunshineYellow/30 flex items-center gap-2">
@@ -133,8 +133,8 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                             animate={{ x: 0, opacity: 1 }}
                             className="bg-skyBlue/10 p-5 rounded-[32px] border-2 border-skyBlue/20 flex items-center gap-4 relative"
                         >
-                            <div className="w-16 h-16 bg-white rounded-full flex-shrink-0 flex items-center justify-center shadow-sm overflow-hidden border-2 border-skyBlue/30">
-                                <img src="/owl-mascot.png" alt="Owl" className="w-full h-full object-contain mix-blend-multiply scale-110" />
+                            <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                <img src="/owl-mascot.png" alt="Owl" className="w-full h-full object-contain scale-110" />
                             </div>
                             <div className="flex-1">
                                 <p className="text-xs font-black text-skyBlue uppercase tracking-wider mb-1">Cú thông thái bảo là:</p>

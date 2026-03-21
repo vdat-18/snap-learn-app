@@ -7,6 +7,7 @@ import { triggerHaptic, mascotSpeak } from '../../utils/feedbackUtils';
 import { speechApi } from '../../services/speechApi';
 // TODO: Remove once collectionApi.getVocabDetail() returns fun_fact_vi and sentence data
 import { MOCK_REFERENCE_VOCAB } from '../../store/mockData';
+import BackgroundParallax from './BackgroundParallax';
 
 interface VocabDetailProps {
     word: CapturedWord | null;
@@ -18,6 +19,8 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
     const { playPop, playChime } = useSoundEffects();
     const [isPracticing, setIsPracticing] = useState(false);
     const [justEvolved, setJustEvolved] = useState(false);
+
+    const [practiceStatus, setPracticeStatus] = useState<'idle' | 'listening' | 'success' | 'fail'>('idle');
 
     if (!word) return null;
 
@@ -128,85 +131,94 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                 <div className="w-12 h-12" />
             </header>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-10">
-                <div className="relative mb-8">
-                    <motion.div
-                        className={`rounded-[40px] overflow-hidden shadow-level-3 border-8 border-white aspect-square relative ${word.isEvolved ? 'ring-8 ring-sunshineYellow/20' : ''}`}
-                        animate={word.isEvolved ? { scale: [1, 1.02, 1] } : {}}
-                        transition={{ repeat: Infinity, duration: 3 }}
-                    >
-                        <img src={word.image} alt={word.word_en} className="w-full h-full object-cover" />
-                        {word.isEvolved && <div className="absolute inset-0 bg-gradient-to-t from-sunshineYellow/20 to-transparent" />}
-                    </motion.div>
-                </div>
+            <BackgroundParallax className="flex-1 flex flex-col overflow-hidden">
+                <div className="flex-1 overflow-y-auto px-6 pb-10">
+                    <div className="relative mb-8">
+                        <motion.div
+                            className={`rounded-[40px] overflow-hidden shadow-level-3 border-8 border-white aspect-square relative ${word.isEvolved ? 'ring-8 ring-sunshineYellow/20' : ''}`}
+                            animate={word.isEvolved ? { scale: [1, 1.02, 1] } : {}}
+                            transition={{ repeat: Infinity, duration: 3 }}
+                        >
+                            <img src={word.image} alt={word.word_en} className="w-full h-full object-cover" />
+                            {word.isEvolved && <div className="absolute inset-0 bg-gradient-to-t from-sunshineYellow/20 to-transparent" />}
 
-                <div className="text-center mb-8">
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center justify-center gap-3">
-                            <span className="text-xl">🇻🇳</span>
-                            <span className="text-2xl font-black text-deepNavy">{word.word_vi || ''}</span>
-                            <button onClick={() => mascotSpeak(word.word_vi, 'vi-VN')} className="p-3 rounded-full bg-deepNavy/5 text-deepNavy active:scale-95 transition-all">
-                                <Volume2 className="w-6 h-6" />
-                            </button>
+                            {/* Status Overlay */}
+                            <AnimatePresence>
+                                {(practiceStatus === 'success' || practiceStatus === 'fail') && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.5 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 1.2 }}
+                                        className={`absolute inset-0 flex flex-col items-center justify-center p-6 text-center ${practiceStatus === 'success' ? 'bg-mintGreen/60' : 'bg-coralRed/60'}`}
+                                    >
+                                        <div className="bg-white/90 backdrop-blur px-8 py-6 rounded-[32px] shadow-2xl">
+                                            <span className="text-5xl block mb-4">
+                                                {practiceStatus === 'success' ? '🎯' : '💪'}
+                                            </span>
+                                            <h4 className={`text-xl font-black ${practiceStatus === 'success' ? 'text-mintGreen' : 'text-coralRed'}`}>
+                                                {practiceStatus === 'success' ? 'TUYỆT VỜI!' : 'GẦN ĐÚNG RỒI!'}
+                                            </h4>
+                                            <p className="text-sm font-bold text-slate-600 mt-2">
+                                                {practiceStatus === 'success' ? '+20 XP Thưởng' : 'Hãy nói to hơn xíu nhé!'}
+                                            </p>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
+                    </div>
+
+
+                    <div className="flex items-center justify-center gap-3 mb-6">
+                        <span className="text-xl">🇻🇳</span>
+                        <span className="text-2xl font-black text-deepNavy">{word.word_vi || ''}</span>
+                        <button onClick={() => mascotSpeak(word.word_vi, 'vi-VN')} className="p-3 rounded-full bg-deepNavy/5 text-deepNavy active:scale-95 transition-all">
+                            <Volume2 className="w-6 h-6" />
+                        </button>
+                    </div>
+
+
+
+                    <section className="bg-white rounded-[32px] p-6 shadow-level-2 mb-6 border-b-4 border-slate-100">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold">🌱 Lớn lên nào!</h3>
+                            <span className="text-base font-black text-skyBlue">{word.practiceCount}/3</span>
                         </div>
-
-                        {target_language === 'en' && (
-                            <div className="flex items-center justify-center gap-3">
-                                <span className="text-xl">🇺🇸</span>
-                                <span className="text-xl font-black text-skyBlue">{word.word_en}</span>
-                                <button onClick={() => mascotSpeak(word.word_en, 'en-US')} className="p-3 rounded-full bg-skyBlue/10 text-skyBlue active:scale-95 transition-all">
-                                    <Volume2 className="w-6 h-6" />
-                                </button>
-                            </div>
-                        )}
-
-                        {target_language === 'zh' && (
-                            <div className="flex items-center justify-center gap-3">
-                                <span className="text-xl">🇨🇳</span>
-                                <span className="text-2xl font-black text-lang-zh">{word.word_zh}</span>
-                                <button onClick={() => mascotSpeak(word.word_zh, 'zh-CN')} className="p-3 rounded-full bg-lang-zh/10 text-lang-zh active:scale-95 transition-all">
-                                    <Volume2 className="w-6 h-6" />
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <section className="bg-white rounded-[32px] p-6 shadow-level-2 mb-6 border-b-4 border-slate-100">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold">🌱 Lớn lên nào!</h3>
-                        <span className="text-base font-black text-skyBlue">{word.practiceCount}/3</span>
-                    </div>
-                    <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
-                        <motion.div animate={{ width: `${progressPercent}%` }} className={`h-full rounded-full ${word.isEvolved ? 'bg-sunshineYellow' : 'bg-skyBlue'}`} />
-                    </div>
-                </section>
-
-                <section className={`rounded-[32px] p-6 ${word.isEvolved ? 'bg-lavenderPurple/10' : 'bg-slate-50 opacity-60'}`}>
-                    <h3 className="font-black uppercase text-sm mb-4">Bí mật thẻ bài {word.isEvolved ? '✨' : '🔒'}</h3>
-                    {word.isEvolved ? (
-                        <div className="space-y-4">
-                            <p className="font-bold text-indigo-900/80">{refVocab?.fun_fact_vi || "Bí ẩn..."}</p>
-                            {refVocab?.sentence_en && (
-                                <div className="bg-white/50 p-4 rounded-2xl border border-white">
-                                    <p className="font-black text-skyBlue text-sm">{refVocab.sentence_en}</p>
-                                    <p className="text-xs text-slate-500">{refVocab.sentence_vi}</p>
-                                </div>
-                            )}
+                        <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
+                            <motion.div animate={{ width: `${progressPercent}%` }} className={`h-full rounded-full ${word.isEvolved ? 'bg-sunshineYellow' : 'bg-skyBlue'}`} />
                         </div>
-                    ) : (
-                        <div className="flex justify-center py-4 text-slate-300"><BookOpen /></div>
-                    )}
-                </section>
-            </div>
+                    </section>
+
+                    <section className={`rounded-[32px] p-6 ${word.isEvolved ? 'bg-lavenderPurple/10' : 'bg-slate-50 opacity-60'}`}>
+                        <h3 className="font-black uppercase text-sm mb-4">Bí mật thẻ bài {word.isEvolved ? '✨' : '🔒'}</h3>
+                        {word.isEvolved ? (
+                            <div className="space-y-4">
+                                <p className="font-bold text-indigo-900/80">{refVocab?.fun_fact_vi || "Bí ẩn..."}</p>
+                                {refVocab?.sentence_en && (
+                                    <div className="bg-white/50 p-4 rounded-2xl border border-white">
+                                        <p className="font-black text-skyBlue text-sm">{refVocab.sentence_en}</p>
+                                        <p className="text-xs text-slate-500">{refVocab.sentence_vi}</p>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex justify-center py-4 text-slate-300"><BookOpen /></div>
+                        )}
+                    </section>
+                </div >
+            </BackgroundParallax >
 
             <div className="p-6 bg-white border-t border-slate-100 px-8">
                 <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={handlePractice}
-                    className={`w-full flex items-center justify-center gap-3 py-5 rounded-[32px] font-black text-white shadow-level-2 transition-all ${isPracticing ? 'bg-coralRed animate-pulse' : 'bg-skyBlue active:shadow-none'}`}
+                    disabled={isPracticing}
+                    className={`w-full flex items-center justify-center gap-3 py-5 rounded-[32px] font-black text-white shadow-level-2 transition-all ${practiceStatus === 'listening' ? 'bg-coralRed animate-pulse' :
+                        practiceStatus === 'success' ? 'bg-mintGreen' :
+                            practiceStatus === 'fail' ? 'bg-coralRed' : 'bg-skyBlue active:shadow-none'
+                        }`}
                 >
-                    {isPracticing ? (
+                    {practiceStatus === 'listening' ? (
                         <>
                             <div className="flex gap-1.5 h-6 items-center translate-y-[-1px]">
                                 {[1, 2, 3].map(i => (
@@ -220,10 +232,14 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                             </div>
                             <span>ĐANG NGHE...</span>
                         </>
+                    ) : practiceStatus === 'success' ? (
+                        <><span>✅ ĐÚNG RỒI!</span></>
+                    ) : practiceStatus === 'fail' ? (
+                        <><span>❌ THỬ LẠI NHÉ!</span></>
                     ) : (
                         <>
                             <Mic className="w-6 h-6" />
-                            <span>LUYỆN TẬP LẠI</span>
+                            <span>{word.practiceCount >= 3 ? 'LUYỆN TẬP THÊM' : 'LUYỆN TẬP ĐỂ TIẾN HÓA'}</span>
                         </>
                     )}
                 </motion.button>
@@ -239,7 +255,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </motion.div>
+        </motion.div >
     );
 };
 

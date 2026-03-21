@@ -21,7 +21,7 @@ const avatarEmoji = (id: string): string => {
 };
 
 const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }) => {
-    const { xp, level, userName } = useGameStore();
+    const { xp, userName } = useGameStore();
     const { playPop } = useSoundEffects();
     const [activeTab, setActiveTab] = useState('global');
     const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(null);
@@ -63,6 +63,11 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
         'global': '🌍 Thế giới',
     };
 
+    // Calculate dynamic rank for current user
+    const userRank = [...currentPlayers, { name: userName, points: xp }]
+        .sort((a, b) => b.points - a.points)
+        .findIndex(p => p.name === userName) + 1;
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -80,13 +85,12 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                 <X className="w-8 h-8 text-deepNavy" />
                             </button>
                             <h1 className="text-lg font-black text-deepNavy tracking-tight flex items-center gap-3">
-                                <img src="/icon-rank.png" alt="" className="w-10 h-10 object-contain mix-blend-multiply" />
                                 👑 Siêu nhân Snap
                             </h1>
                         </div>
                     </header>
 
-                    <div className="flex-1 overflow-y-auto px-6 pt-6 pb-24">
+                    <div className="flex-1 overflow-y-auto px-6 pt-6 pb-72">
                         {/* Tabs */}
                         <div className="flex bg-slate-100 p-1.5 rounded-2xl relative mb-8">
                             {['class', 'friends', 'global'].map((tab) => (

@@ -41,55 +41,67 @@ const AIProcessingLoading: React.FC<AIProcessingLoadingProps> = ({
               </p>
             </motion.div>
 
-            {/* Scanning Effect Circle with particles */}
+            {/* Scanning Effect Circle with Mascot */}
             <motion.div
-              className="relative w-48 h-48"
+              className="relative w-64 h-64 flex items-center justify-center"
               animate={{ rotate: 360 }}
-              transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+              transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
             >
               {/* Outer ring */}
               <motion.div
-                className="absolute inset-0 rounded-full border-4 border-transparent border-t-skyBlue border-r-sunshineYellow"
+                className="absolute inset-0 rounded-full border-4 border-transparent border-t-skyBlue border-r-sunshineYellow opacity-40"
                 animate={{ rotate: -360 }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
               />
 
               {/* Middle ring */}
               <motion.div
-                className="absolute inset-4 rounded-full border-2 border-transparent border-b-skyBlue border-l-sunshineYellow"
+                className="absolute inset-4 rounded-full border-2 border-transparent border-b-skyBlue border-l-sunshineYellow opacity-60"
                 animate={{ rotate: 360 }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
               />
 
               {/* Scanning particles */}
               {scanParticles.map((particle) => (
                 <motion.div
                   key={particle.id}
-                  className="absolute w-2 h-2 rounded-full bg-skyBlue"
+                  className="absolute w-2 h-2 rounded-full bg-skyBlue shadow-[0_0_8px_rgba(77,168,255,0.8)]"
                   style={{
                     left: '50%',
                     top: '0%',
                     originX: '0',
-                    originY: '5rem',
+                    originY: '8rem',
                   }}
                   animate={{
                     rotate: 360,
-                    opacity: [0, 1, 0],
+                    opacity: [0, 1, 1, 0],
                   }}
                   transition={{
-                    duration: 2,
+                    duration: 3,
                     delay: particle.delay,
                     repeat: Infinity,
                   }}
                 />
               ))}
 
-              {/* Central pulsing dot */}
+              {/* Pulser Center */}
               <motion.div
-                className="absolute top-1/2 left-1/2 w-4 h-4 rounded-full bg-sunshineYellow -translate-x-1/2 -translate-y-1/2 shadow-lg shadow-sunshineYellow"
-                animate={{ scale: [1, 1.5, 1] }}
+                className="relative z-10 w-4 h-4 bg-white rounded-full shadow-[0_0_20px_white]"
+                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               />
+
+              {/* Radar Scan Effect */}
+              <motion.div
+                className="absolute top-1/2 left-1/2 w-64 h-64 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden opacity-30 pointer-events-none"
+              >
+                <motion.div
+                  className="w-full h-1/2 bg-gradient-to-b from-transparent to-skyBlue/80 border-r border-skyBlue/50"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                  style={{ originY: 1 }}
+                />
+              </motion.div>
             </motion.div>
 
             {/* Progress Bar (if progress is provided) */}

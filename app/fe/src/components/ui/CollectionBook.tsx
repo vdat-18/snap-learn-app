@@ -8,6 +8,7 @@ import { CollectionSkeleton } from './Skeleton';
 // TODO: Remove once server provides full category vocab reference data via collectionApi.getCategoryDetail()
 import { MOCK_REFERENCE_VOCAB } from '../../store/mockData';
 import VocabDetail from './VocabDetail';
+import TradingCard from './TradingCard';
 
 interface CollectionBookProps {
     isOpen: boolean;
@@ -92,10 +93,10 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
         <AnimatePresence>
             {isOpen && (
                 <motion.div
-                    initial={{ x: '100%' }}
-                    animate={{ x: 0 }}
-                    exit={{ x: '100%' }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    initial={{ y: "100%", opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: "100%", opacity: 0 }}
+                    transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }}
                     className="fixed inset-0 z-[150] bg-snowWhite flex flex-col font-sans overflow-hidden"
                 >
                     {/* Header */}
@@ -123,8 +124,13 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                         </>
                                     ) : (
                                         <>
-                                            <img src="/icon-book.png" alt="" className="w-10 h-10 object-contain mix-blend-multiply" />
-                                            📖 Kho báu của Bạn
+                                            <motion.img
+                                                layoutId="book-icon"
+                                                src="/icon-book.png"
+                                                alt=""
+                                                className="w-10 h-10 object-contain mix-blend-multiply"
+                                            />
+                                            Kho báu của Bạn
                                         </>
                                     )}
                                 </h1>
@@ -199,9 +205,9 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                         )}
 
                         {!isLoading && !fetchError && selectedCategory && (
-                            /* Vocab Word Grid */
+                            /* Vocab Word Grid - Trading Card Style */
                             <div className="grid grid-cols-3 gap-4 pb-24">
-                                {MOCK_REFERENCE_VOCAB.filter(w => w.category === selectedCategory).map((refWord, i) => {
+                                {(MOCK_REFERENCE_VOCAB.filter(w => w.category === selectedCategory) as any[]).map((refWord) => {
                                     const word = collections.find(w => w.word_en === refWord.word_en);
                                     const isCaptured = !!word;
                                     const isEvolved = word?.isEvolved;
@@ -236,12 +242,8 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                     }
 
                                     return (
-                                        <motion.button
+                                        <TradingCard
                                             key={word.id}
-                                            initial={{ opacity: 0, scale: 0.8 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            transition={{ delay: i * 0.03 }}
-                                            whileTap={{ scale: 0.92 }}
                                             onClick={() => { playChime(); setSelectedWordId(word.id); }}
                                             className={`relative aspect-[3/4] rounded-[24px] bg-gradient-to-br ${rarityColors[word.rarity] || 'bg-white'} border-[3px] border-white shadow-level-2 overflow-hidden flex flex-col`}
                                         >
@@ -273,7 +275,7 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                                     ))}
                                                 </div>
                                             </div>
-                                        </motion.button>
+                                        </TradingCard>
                                     );
                                 })}
                             </div>
@@ -288,8 +290,9 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                         />
                     )}
                 </motion.div>
-            )}
-        </AnimatePresence>
+            )
+            }
+        </AnimatePresence >
     );
 };
 

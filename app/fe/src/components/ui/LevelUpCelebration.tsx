@@ -81,7 +81,7 @@ const LevelUpCelebration: React.FC = () => {
                             transition={{ duration: 1.5, repeat: Infinity }}
                             className="text-8xl mb-6"
                         >
-                            {levelInfo.icon}
+                            {levelInfo?.icon || '🎉'}
                         </motion.div>
 
                         {/* Level number */}
