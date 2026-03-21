@@ -20,7 +20,7 @@ from app.config import Settings, get_settings
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/tts/mascot", tags=["mascot-audio"])
+router = APIRouter(prefix="/mascot", tags=["mascot-audio"])
 
 VALID_LANGUAGES = {"en", "vi", "zh"}
 # Match keys like "app_shell__0", "login__10", "random_motivational__5"
@@ -35,7 +35,8 @@ def _mascot_cache_dir(settings: Settings) -> Path:
 def _voice_instructions_path() -> Path:
     """Return the path to voice_instructions.yml (project root)."""
     # Navigate from app/be/app/api/ up to project root
-    return Path(__file__).resolve().parent.parent.parent.parent.parent / "voice_instructions.yml"
+    path = Path(__file__).resolve().parent / "voice_instructions.yml"
+    return path
 
 
 def _load_voice_instructions() -> dict:

@@ -17,7 +17,7 @@ export interface MascotManifestEntry {
     vi: string;
     en: string;
     zh: string;
-    urls: Record<string, string>; // { vi: "/api/tts/mascot/...", en: "...", zh: "..." }
+    urls: Record<string, string>; // { vi: "/api/mascot/...", en: "...", zh: "..." }
     template: boolean;
 }
 
@@ -56,7 +56,7 @@ export function getRandomMotivationalEntries(): MascotManifestEntry[] {
  * Build the full audio URL for a mascot key + language.
  */
 export function getMascotAudioUrl(key: string, lang: string): string {
-    return `${BASE_URL}/tts/mascot/${key}/${lang}`;
+    return `${BASE_URL}/mascot/${key}/${lang}`;
 }
 
 /**
@@ -79,7 +79,7 @@ export async function fetchManifest(): Promise<MascotManifest | null> {
 
 async function _doFetchManifest(): Promise<MascotManifest | null> {
     try {
-        const response = await fetch(`${BASE_URL}/tts/mascot/manifest`);
+        const response = await fetch(`${BASE_URL}/mascot/manifest`);
         if (!response.ok) {
             console.warn(`[MascotAudio] Manifest fetch failed: ${response.status}`);
             return null;
