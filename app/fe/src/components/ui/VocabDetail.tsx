@@ -156,7 +156,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
         }
     };
 
-    const progressPercent = Math.min((masteryMax / 3) * 100, 100);
+    const progressPercent = Math.min((masteryMax / 2) * 100, 100);
 
     const tier = vocab.rarity_tier.toLowerCase();
     const rarityLabels: Record<string, string> = {
@@ -239,7 +239,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
                     <section className="bg-white rounded-[32px] p-6 shadow-level-2 mb-6 border-b-4 border-slate-100">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-bold">🌱 Lớn lên nào!</h3>
-                            <span className="text-base font-black text-skyBlue">{masteryMax}/3</span>
+                            <span className="text-base font-black text-skyBlue">{masteryMax}/2</span>
                         </div>
                         <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
                             <motion.div animate={{ width: `${progressPercent}%` }} className={`h-full rounded-full ${vocab.evolved ? 'bg-sunshineYellow' : 'bg-skyBlue'}`} />
@@ -340,7 +340,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
                     ) : (
                         <>
                             <Mic className="w-6 h-6" />
-                            <span>{masteryMax >= 3 ? 'LUYỆN TẬP THÊM' : 'LUYỆN TẬP ĐỂ TIẾN HÓA'}</span>
+                            <span>{masteryMax >= 2 ? 'LUYỆN TẬP THÊM' : 'LUYỆN TẬP ĐỂ TIẾN HÓA'}</span>
                         </>
                     )}
                 </motion.button>

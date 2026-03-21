@@ -40,7 +40,7 @@ const XPFlyManager: React.FC<XPFlyManagerProps> = ({ targetX, targetY }) => {
 
     const handleAnimationComplete = (id: number) => {
         removeParticle(id);
-        
+
         // Dispatch event to increment display XP
         window.dispatchEvent(new CustomEvent('xp-particle-arrived'));
 
@@ -70,7 +70,7 @@ const XPFlyManager: React.FC<XPFlyManagerProps> = ({ targetX, targetY }) => {
                             rotate: 360
                         }}
                         transition={{
-                            duration: 0.8 + Math.random() * 0.4,
+                            duration: 0.5 + Math.random() * 0.2, // Faster flight: 0.5s to 0.7s
                             ease: "easeInOut",
                             times: [0, 0.4, 1]
                         }}

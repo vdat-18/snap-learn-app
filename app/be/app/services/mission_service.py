@@ -91,10 +91,11 @@ async def generate_daily_missions(
 
     random.shuffle(templates)
     for template in templates[:num_missions]:
+        description_vi = template["description_vi"].replace("{n}", str(template["target_count"]))
         mission = Mission(
             child_id=child_id,
             type="daily",
-            description_vi=template["description_vi"],
+            description_vi=description_vi,
             target_count=template["target_count"],
             reward_xp=template["reward_xp"],
             match_criteria=template["match_criteria"],

@@ -92,6 +92,22 @@ async def get_profile(
     )
     missions_completed = missions_result.scalar() or 0
 
+    # Recent captures for the Home screen
+    recent_captures_result = await db.execute(
+        select(CapturedVocab)
+        .where(CapturedVocab.child_id == child_id)
+        .order_by(CapturedVocab.created_at.desc())
+        .limit(4)
+    )
+    recent_captures = [
+        {
+            "id": cv.id,
+            "word_en": cv.word_en,
+            "photo_url": cv.photo_url
+        }
+        for cv in recent_captures_result.scalars().all()
+    ]
+
     return ProfileResponse(
         id=child.id,
         name=child.name,
@@ -111,4 +127,5 @@ async def get_profile(
             pronunciations_total=pronunciations_total,
             missions_completed=missions_completed,
         ),
+        recent_captures=recent_captures,
     )

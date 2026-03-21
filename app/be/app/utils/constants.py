@@ -46,10 +46,10 @@ EVOLUTION_BONUS_XP = 50
 PRONUNCIATION_PERFECT_XP = 5
 
 # Max mastery level per language
-MAX_MASTERY = 3
+MAX_MASTERY = 2
 
 # Mastery threshold for evolution
-EVOLUTION_MASTERY_THRESHOLD = 3
+EVOLUTION_MASTERY_THRESHOLD = 2
 
 
 # ---------------------------------------------------------------------------

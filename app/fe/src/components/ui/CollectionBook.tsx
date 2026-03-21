@@ -109,7 +109,7 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                         </div>
                     </header>
 
-                    <div className="flex-1 overflow-y-auto p-6">
+                    <div className="flex-1 overflow-y-auto p-6 pb-32">
                         {isLoading && (
                             <CollectionSkeleton />
                         )}
@@ -142,9 +142,8 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                             transition={{ delay: i * 0.05 }}
                                             whileTap={{ scale: 0.95 }}
                                             onClick={() => { playPop(); setSelectedCategory(cat); }}
-                                            className={`bg-white rounded-[32px] p-5 shadow-level-2 border-b-[6px] border-slate-100 flex flex-col items-center text-center group relative overflow-hidden ${
-                                                cat.captured === 0 ? 'opacity-50' : ''
-                                            }`}
+                                            className={`bg-white rounded-[32px] p-5 shadow-level-2 border-b-[6px] border-slate-100 flex flex-col items-center text-center group relative overflow-hidden ${cat.captured === 0 ? 'opacity-50' : ''
+                                                }`}
                                         >
                                             <div className="w-24 h-24 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
                                                 <span className="text-5xl drop-shadow-lg">{cat.icon}</span>
@@ -211,12 +210,11 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                                         <Sparkles className="w-4 h-4 text-deepNavy" />
                                                     </div>
                                                 )}
-                                                <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[8px] font-black text-white shadow-md uppercase tracking-wide ${
-                                                    tier === 'legendary' ? 'bg-coralRed' :
-                                                    tier === 'epic' ? 'bg-lavenderPurple' :
-                                                    tier === 'rare' ? 'bg-sunshineYellow text-deepNavy' :
-                                                    tier === 'uncommon' ? 'bg-skyBlue' : 'bg-mintGreen'
-                                                }`}>
+                                                <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[8px] font-black text-white shadow-md uppercase tracking-wide ${tier === 'legendary' ? 'bg-coralRed' :
+                                                        tier === 'epic' ? 'bg-lavenderPurple' :
+                                                            tier === 'rare' ? 'bg-sunshineYellow text-deepNavy' :
+                                                                tier === 'uncommon' ? 'bg-skyBlue' : 'bg-mintGreen'
+                                                    }`}>
                                                     {rarityLabels[tier] || 'Thường'}
                                                 </div>
                                             </div>
