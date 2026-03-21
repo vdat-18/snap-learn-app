@@ -1,7 +1,7 @@
 # LotusHack 2026 Submission Checklist
 
 **SnapLearn — AI-Powered Vocabulary Camera**
-*Edtech Track | Submission Deadline: Sunday March 22, 8:00 AM*
+*Edtech Track | Submission Deadline: Sunday March 22, 9:00 AM*
 
 ---
 
@@ -12,7 +12,7 @@
 | 1 | Project title                    | ✅ Done        | -     | "SnapLearn — AI-Powered Vocabulary Camera"                                                 |
 | 2 | Tagline (one sentence)           | ✅ Done        | -     | "Turn passive screen time into active vocabulary building — Pokémon Go for English words" |
 | 3 | The Story (why, how, challenges) | ✅ Draft       |       | See `_docs/hackathon/project_story.md`                                                      |
-| 4 | Built With tags                  | ✅ Done        |       | Next.js, Python, BAML, GPT-4o, OpenAI Whisper, OpenAI TTS, Supabase, Tailwind CSS, Framer Motion |
+| 4 | Built With tags                  | ✅ Done        |       | Next.js, Python, BAML, GPT, Gemini, Claude, ElevenLabs TTS, OpenAI ASR, Supabase, Tailwind CSS, Framer Motion |
 | 5 | Demo video (2-3 min)             | 🔴 Not started |       | YouTube/Vimeo link                                                                          |
 | 6 | GitHub repo link                 | 🟡 Exists      |       | README updated                                                                              |
 | 7 | Track selection                  | ✅ Done        | -     | Edtech (by Etest)                                                                           |
@@ -102,41 +102,46 @@
 - [ ] GitHub link works (test in incognito)
 - [ ] Story section complete (300+ words)
 - [ ] Built With tags added
-- [ ] Submission saved/published before 8:00 AM Sunday
+- [ ] Submission saved/published before 9:00 AM Sunday
 
 ---
 
 ## Live Demo Preparation
 
-### Table Demo Script (60 seconds)
+### Round 1: Table Pitch (5 min, no Q&A)
 
-> "My daughter is two and a half — she already demands my phone for YouTube. We built SnapLearn so parents can hand over the phone and feel good about it.
->
-> It's Pokémon Go for vocabulary. Watch — [snap water bottle] — the AI identifies it, plays the pronunciation, and checks if the child can say it back. [snap earbuds] — this one's rarer, worth more points. Kids are motivated to explore, not scroll.
->
-> The real innovation is the interaction model — the camera creates shared context between child and AI. Today it's vocabulary. Tomorrow, the AI sees the same cat your child does and starts a conversation."
+See `round1_table_pitch.md` for full script. Key points:
+- 3 judges at your table, phone in hand, live demo
+- Personal hook → 3 captures → Innovation → Tech depth → Vision → Close
+- No Q&A — use all 5 minutes
 
-### Main Stage Pitch (3 minutes)
+### Round 2 Finals: Main Stage Pitch (5 min + 2 min Q&A)
 
-> Follow the pitch deck. Personal story → Problem → Solution → Demo → Innovation → Vision → Team.
+See `pitch_deck_plan.md` for full slide plan. Key points:
+- Projected slides + pre-recorded screen capture (never live demo on stage)
+- Same narrative structure as Round 1, expanded with slides
+- 2 min Q&A — see pitch_deck_plan.md for anticipated questions
 
 ### Practice Schedule
 
-- [ ] Practice table demo × 3 (time it — must be under 90 seconds)
-- [ ] Practice main stage pitch × 3 (time it — must be under 3 minutes)
+- [ ] Practice Round 1 table pitch × 3 (time it — must fill 4:45-5:00)
+- [ ] Practice Round 2 stage pitch × 3 (time it — must fill 4:45-5:00)
 - [ ] Practice with all demo objects (confirm AI identifies each correctly)
 - [ ] Practice the deliberate mispronunciation → retry flow
+- [ ] Practice narrating over screen recording (timing must match)
 
 ---
 
 ## Judging Criteria Alignment
 
-| Criterion                     | Our Angle                                                                         | Evidence                         |
-| ----------------------------- | --------------------------------------------------------------------------------- | -------------------------------- |
-| **Technical Execution** | Real-time multi-API pipeline (Vision + TTS + ASR) with graceful fallbacks         | Live demo with real AI           |
-| **Innovation**          | Shared visual context — new AI interaction paradigm. Camera as disguised prompt. | "Is that your cat?"              |
-| **Design/UX**           | Audio-first, icon-driven for pre-literate children. Encouraging retry.            | Demo shows a 6yo could use this  |
-| **Impact/Relevance**    | 8M Vietnamese kids. Transforms passive screen time. Personal story.               | Father building for his daughter |
+| Criterion | Weight | Our Angle | Evidence |
+|-----------|--------|-----------|----------|
+| **Technical Implementation & Complexity** | **25 pts** | Multi-model AI failover (GPT/Gemini/Claude) via BAML. ASR + LLM-as-judge for pronunciation. Hybrid semantic-keyword search (RAG) for collection matching. Real-time pipeline <5s. | Live demo, architecture diagram, GitHub repo |
+| **Innovation** | **20 pts** | Passive→Active (child creates curriculum). Gamified learning (Pokémon Go psychology). Audio-first UX for pre-literate children. | Demo shows a 6yo could use this without reading |
+| **Functionality & Reliability** | **20 pts** | Core loop works end-to-end. Graceful retry flow. 3-model fallback chain. Hard-coded demo object cache. | Live demo with real AI responses |
+| **Design & UX** | **15 pts** | Audio-first, icon-driven. Card reveal animations + rarity glow. Encouraging (not punishing) retry. | Demo UX speaks for itself |
+| **Presentation** | **10 pts** | Personal hook (dad building for daughter). Structured narrative. Confident delivery. | Practice × 3 minimum |
+| **Impact & Relevance** | **10 pts** | 8M Vietnamese kids. $2-3B tutoring market. Transforms passive screen time. | Personal story + market data |
 
 ---
 
