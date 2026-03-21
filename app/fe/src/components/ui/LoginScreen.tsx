@@ -5,7 +5,7 @@ import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { mascotSpeak } from '../../utils/feedbackUtils';
 import { authApi } from '../../services/authApi';
 import { AppError } from '../../services/api';
-import { Rocket, Volume2, Mail, Lock, UserPlus, LogIn, Globe } from 'lucide-react';
+import { Rocket, Volume2 } from 'lucide-react';
 
 // Animal avatars for child selection — static config, no backend needed
 const avatars: { id: string; emoji: string; sound: string }[] = [
@@ -17,7 +17,6 @@ const avatars: { id: string; emoji: string; sound: string }[] = [
     { id: 'panda', emoji: '🐼', sound: 'Gấu trúc tới đây!' },
 ];
 
-type AuthMode = 'login' | 'register';
 type Step = 'auth' | 'create-child';
 
 const LoginScreen: React.FC = () => {

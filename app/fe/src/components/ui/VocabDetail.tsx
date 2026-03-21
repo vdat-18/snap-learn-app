@@ -18,7 +18,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
     const { playPop, playChime } = useSoundEffects();
     const [isPracticing, setIsPracticing] = useState(false);
     const [justEvolved, setJustEvolved] = useState(false);
-    const [practiceStatus, setPracticeStatus] = useState<'idle' | 'listening' | 'success' | 'fail'>('idle');
+    const [practiceStatus] = useState<'idle' | 'listening' | 'success' | 'fail'>('idle');
 
     const [vocab, setVocab] = useState<VocabDetailData | null>(null);
     const [isLoadingDetail, setIsLoadingDetail] = useState(true);

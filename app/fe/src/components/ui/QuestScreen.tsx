@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, Trophy, Star, Sparkles, MessageCircle, Loader2 } from 'lucide-react';
+import { X, CheckCircle2, Trophy, Star, Sparkles, MessageCircle } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from '../../utils/feedbackUtils';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Crown, Timer, Loader2 } from 'lucide-react';
+import { X, Crown, Timer } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { leaderboardApi, type LeaderboardResponse } from '../../services/leaderboardApi';
@@ -62,11 +62,6 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
         'friends': '👫 Bạn bè',
         'global': '🌍 Thế giới',
     };
-
-    // Calculate dynamic rank for current user
-    const userRank = [...entries, { name: userName, points: xp }]
-        .sort((a, b) => b.points - a.points)
-        .findIndex(p => p.name === userName) + 1;
 
     return (
         <AnimatePresence>

@@ -252,7 +252,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
             setFeedbackText('');
             setHasPlayedAudio(false);
             setAttemptCount(0);
-            setShowAutoCloseMessage(false);
             setIsFlyingToCollection(false);
             setHasTriggeredXP(false);
             setAchievementImageUrl(null);
@@ -482,11 +481,10 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         </div>
 
                         {/* Card Image — flips from camera photo to achievement card on 3 stars */}
-                        <div className={`aspect-square w-full rounded-card overflow-hidden bg-slate-100 mb-6 border-4 relative ${
-                            showAchievementFlip
+                        <div className={`aspect-square w-full rounded-card overflow-hidden bg-slate-100 mb-6 border-4 relative ${showAchievementFlip
                                 ? 'border-sunshineYellow shadow-[0_0_30px_rgba(255,210,52,0.6)]'
                                 : `border-white ${rarityGlowMap[rarity]}`
-                        }`}
+                            }`}
                             style={{ perspective: '1200px' }}
                         >
                             {/* Background beams for Rare+ */}
