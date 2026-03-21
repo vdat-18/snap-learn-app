@@ -39,7 +39,9 @@ function CheckImageSafety(photo: image, filter_level: FilterLevel) -> ImageSafet
     - confidence: 0.0–1.0 how confident you are in the assessment
 
     {{ ctx.output_format }}
+  "#
 
+  @@user #"
     {{ photo }}
   "#
 }

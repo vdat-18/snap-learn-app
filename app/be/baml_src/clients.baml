@@ -31,7 +31,7 @@ client<llm> GPT4oMini {
 client<llm> GeminiFlash {
   provider "openai-generic"
   options {
-    model "google/gemini-flash-2.5"
+    model "google/gemini-2.5-flash"
     api_key env.OPENROUTER_API_KEY
     base_url "https://openrouter.ai/api/v1"
     temperature 0.2
