@@ -35,9 +35,9 @@ const ErrorOverlay: React.FC<ErrorOverlayProps> = ({
   }> = {
     'mic-denied': {
       emoji: '🎤',
-      title: 'Cho tớ nghe giọng bé nhé!',
-      message: 'SnapLearn cần quyền truy cập microphone để bé luyện phát âm nè.',
-      actionText: 'Cho bé nói nè'
+      title: 'Cho tớ nghe giọng bạn nhé!',
+      message: 'SnapLearn cần quyền truy cập microphone để bạn luyện phát âm nè.',
+      actionText: 'Cho bạn nói nè'
     },
     'api-error': {
       emoji: '😴',
@@ -48,7 +48,7 @@ const ErrorOverlay: React.FC<ErrorOverlayProps> = ({
     'low-confidence': {
       emoji: '🤔',
       title: 'Hơ... tớ thấy chưa rõ nè.',
-      message: 'Bé lại gần hơn hoặc xoay vật thể một chút nhé!',
+      message: 'Bạn lại gần hơn hoặc xoay vật thể một chút nhé!',
       actionText: 'Thử lại nè'
     },
     'no-internet': {
@@ -59,7 +59,7 @@ const ErrorOverlay: React.FC<ErrorOverlayProps> = ({
     },
     'time-limit': {
       emoji: '⏰',
-      title: 'Bé đã học đủ hôm nay rồi nè!',
+      title: 'Bạn đã học đủ hôm nay rồi nè!',
       message: 'Hãy nghỉ ngơi một chút. Ngày mai gặp lại nhé! 🌟',
       actionText: 'Xem kho báu'
     },
@@ -72,7 +72,7 @@ const ErrorOverlay: React.FC<ErrorOverlayProps> = ({
     'camera-denied': {
       emoji: '📸',
       title: 'Cho tớ xem thế giới nhé!',
-      message: 'SnapLearn cần quyền camera để tìm các từ vựng xung quanh bé.',
+      message: 'SnapLearn cần quyền camera để tìm các từ vựng xung quanh bạn.',
       actionText: 'Bật Camera nè'
     },
     'generic': {

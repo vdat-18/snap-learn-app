@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Settings } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
+import { MOCK_BADGES } from '../../store/mockData';
 
 interface ProfileScreenProps {
     isOpen: boolean;
@@ -29,14 +30,34 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
         }
     };
 
-    const badges = [
-        { id: '1', name: 'Dũng sĩ nhỏ', icon: '🏅', description: 'Bé đã bắt được từ đầu tiên!', earned: collections.length > 0 },
-        { id: '2', name: 'Bạn muôn loài', icon: '🐾', description: 'Bé đã tìm thấy 5 bạn động vật', earned: collections.filter(w => w.category === 'Animals').length >= 5 },
-        { id: '3', name: 'Bé chăm chỉ', icon: '🔥', description: 'Bé vào chơi 3 ngày liên tiếp', earned: streak >= 3 },
-        { id: '4', name: 'Học giả nhí', icon: '🎓', description: 'Bé đã luyện tập 10 lần rồi', earned: collections.filter(w => w.practiceCount >= 10).length > 0 },
-        { id: '5', name: 'Siêu thợ săn', icon: '📸', description: 'Bé đã săn được 100 tấm ảnh', earned: collections.length >= 100 },
-        { id: '6', name: 'Nhà thám hiểm', icon: '🌍', description: 'Bé khám phá 5 chủ đề khác nhau', earned: new Set(collections.map(w => w.category)).size >= 5 },
-    ];
+    const evaluateBadge = (id: string): boolean => {
+        switch (id) {
+            case 'first_capture': return collections.length > 0;
+            case 'ten_words': return collections.length >= 10;
+            case 'fifty_words': return collections.length >= 50;
+            case 'streak_7': return streak >= 7;
+            case 'streak_14': return streak >= 14;
+            case 'streak_30': return streak >= 30;
+            case 'animal_lover': return collections.filter(w => w.category === 'Animals').length >= 20;
+            case 'food_expert': return collections.filter(w => w.category === 'Food').length >= 15;
+            case 'nature_explorer': return collections.filter(w => w.category === 'Nature').length >= 25;
+            case 'school_star': return collections.filter(w => w.category === 'School').length >= 18;
+            case 'home_hero': return collections.filter(w => w.category === 'Home').length >= 22;
+            case 'vehicle_master': return collections.filter(w => w.category === 'Vehicles').length >= 12;
+            case 'first_evolution': return collections.some(w => w.isEvolved);
+            case 'pronunciation_star': return collections.filter(w => w.stars === 3).length >= 50;
+            case 'explorer': return new Set(collections.map(w => w.category)).size >= 5;
+            default: return false;
+        }
+    };
+
+    const badges = MOCK_BADGES.map((b: any) => ({
+        id: b.id,
+        name: b.name_vi,
+        icon: b.icon,
+        description: b.description_vi,
+        earned: evaluateBadge(b.id)
+    }));
 
     const rareCount = collections.filter(w => ['Rare', 'Epic', 'Legendary'].includes(w.rarity)).length;
 
@@ -72,7 +93,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                             </button>
                             <h1 className="text-lg font-black text-deepNavy tracking-tight flex items-center gap-3">
                                 <img src="/icon-me.png" alt="" className="w-10 h-10 object-contain mix-blend-multiply" />
-                                🌈 Nhà của Bé
+                                🌈 Nhà của Bạn
                             </h1>
                         </div>
                         <button
@@ -126,13 +147,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                                 <span className="text-xl">🎖️</span> Huy hiệu
                             </h3>
                             <div className="grid grid-cols-3 gap-6">
-                                {badges.map((badge) => (
+                                {badges.slice(0, 9).map((badge) => (
                                     <div key={badge.id} className="flex flex-col items-center text-center">
                                         <div
                                             className={`w-20 h-20 rounded-3xl flex items-center justify-center text-4xl mb-2 shadow-level-2 transition-all duration-500 ${badge.earned
                                                 ? 'bg-white border-2 border-sunshineYellow rotate-0'
                                                 : 'bg-slate-100 border-2 border-dashed border-slate-200 grayscale opacity-40 -rotate-3'
                                                 }`}
+                                            title={badge.description}
                                         >
                                             {badge.earned ? badge.icon : '🔒'}
                                         </div>
@@ -176,7 +198,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                                 >
                                     <div className="text-7xl mb-6">🛡️</div>
                                     <h3 className="text-xl font-black text-deepNavy mb-4">Phụ Huynh</h3>
-                                    <p className="text-slate-500 font-medium mb-8 leading-relaxed">Hãy giúp bé giải phép tính này để vào phần cài đặt nhé!</p>
+                                    <p className="text-slate-500 font-medium mb-8 leading-relaxed">Hãy giúp bạn giải phép tính này để vào phần cài đặt nhé!</p>
                                     <div className="bg-slate-50 rounded-3xl p-8 mb-8">
                                         <span className="text-3xl font-black text-sky-500 tracking-widest">7 + 8 = ?</span>
                                     </div>

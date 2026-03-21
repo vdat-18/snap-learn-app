@@ -154,7 +154,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                                     {level}
                                 </div>
                                 <div>
-                                    <h4 className="font-black text-white text-xs">BÉ ({userName})</h4>
+                                    <h4 className="font-black text-white text-xs">BẠN ({userName})</h4>
                                 </div>
                             </div>
                             <div className="text-right">

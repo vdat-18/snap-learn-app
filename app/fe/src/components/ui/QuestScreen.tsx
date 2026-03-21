@@ -77,11 +77,11 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                             </div>
                             <div className="flex-1">
                                 <p className="text-xs font-black text-skyBlue uppercase tracking-wider mb-1">Cú thông thái bảo là:</p>
-                                <p className="text-[13px] font-bold text-deepNavy leading-snug">Cố gắng lên bé ơi! Hoàn thành nhiệm vụ để nhận những ngôi sao lấp lánh nhé! ✨</p>
+                                <p className="text-[13px] font-bold text-deepNavy leading-snug">Cố gắng lên bạn ơi! Hoàn thành nhiệm vụ để nhận những ngôi sao lấp lánh nhé! ✨</p>
                             </div>
                             <motion.button
                                 whileTap={{ scale: 0.9 }}
-                                onClick={() => mascotSpeak("Bé hãy hoàn thành các thử thách này để nhận được thật nhiều sao may mắn nhé!", 'vi-VN')}
+                                onClick={() => mascotSpeak("Bạn hãy hoàn thành các thử thách này để nhận được thật nhiều sao may mắn nhé!", 'vi-VN')}
                                 className="absolute -top-2 -right-2 bg-white w-8 h-8 rounded-full shadow-md flex items-center justify-center text-skyBlue"
                             >
                                 <MessageCircle className="w-4 h-4 fill-skyBlue/10" />

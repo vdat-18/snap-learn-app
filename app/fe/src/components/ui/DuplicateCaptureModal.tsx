@@ -70,7 +70,7 @@ const DuplicateCaptureModal: React.FC = () => {
                                     <AlertCircle className="w-7 h-7 text-lavenderPurple" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black text-deepNavy">Bé đã có thẻ này rồi nè!</h2>
+                                    <h2 className="text-xl font-black text-deepNavy">Bạn đã có thẻ này rồi nè!</h2>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Thẻ bị trùng mất rồi</p>
                                 </div>
                             </div>
@@ -85,7 +85,7 @@ const DuplicateCaptureModal: React.FC = () => {
                         {/* Word Info */}
                         <div className="bg-slate-50 rounded-[28px] p-6 mb-6 border-2 border-slate-100">
                             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">
-                                Bé đã sưu tập được
+                                Bạn đã sưu tập được
                             </p>
                             <div className="flex items-baseline gap-2 mb-4">
                                 <span className="text-3xl font-black text-deepNavy">
@@ -111,7 +111,7 @@ const DuplicateCaptureModal: React.FC = () => {
 
                         {/* Description */}
                         <p className="text-sm font-bold text-slate-600 mb-8 leading-relaxed">
-                            Bé có thể tiếp tục chụp ảnh khác để thêm vào bộ sưu tập của từ này. Bé sẽ nhận được thêm sao may mắn khi chụp lại từ đã có nhé!
+                            Bạn có thể tiếp tục chụp ảnh khác để thêm vào bộ sưu tập của từ này. Bạn sẽ nhận được thêm sao may mắn khi chụp lại từ đã có nhé!
                         </p>
 
                         {/* XP Preview */}
@@ -148,7 +148,7 @@ const DuplicateCaptureModal: React.FC = () => {
 
                         {/* Tip */}
                         <p className="text-xs text-slate-400 text-center mt-6 font-medium">
-                            💡 Mẹo nhỏ nè: Bé hãy chụp từ nhiều hướng khác nhau để hình đẹp hơn nhé!
+                            💡 Mẹo nhỏ nè: Bạn hãy chụp từ nhiều hướng khác nhau để hình đẹp hơn nhé!
                         </p>
                     </motion.div>
                 </motion.div>

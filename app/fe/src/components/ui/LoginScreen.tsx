@@ -3,17 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { mascotSpeak } from '../../utils/feedbackUtils';
+import { MOCK_AVATARS } from '../../store/mockData';
 import { Rocket, Volume2 } from 'lucide-react';
 
 // Animal avatars for child selection — visual, not text
-const avatars = [
-    { emoji: '🦊', sound: 'Cáo tinh nghịch!' },
-    { emoji: '🦁', sound: 'Sư tử dũng cảm!' },
-    { emoji: '🐼', sound: 'Gấu trúc đáng yêu!' },
-    { emoji: '🐰', sound: 'Thỏ nhanh nhẹn!' },
-    { emoji: '🐯', sound: 'Hổ mạnh mẽ!' },
-    { emoji: '🐨', sound: 'Koala thông thái!' },
-];
+const avatars = MOCK_AVATARS.map((a: any) => ({
+    emoji: a.emoji,
+    sound: `${a.name_vi} tới đây!`
+}));
 
 // Local speak helper removed to use central feedbackUtils
 

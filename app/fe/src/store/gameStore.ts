@@ -1,17 +1,16 @@
 import { create } from 'zustand';
 // persist removed as per user request to start fresh on every reload
 
-// XP Milestones for levels as per Product Vision Section 2.6
-const LEVEL_REQUIREMENTS = [
-    { level: 1, xp: 0 },
-    { level: 5, xp: 500 },
-    { level: 10, xp: 2000 },
-    { level: 20, xp: 8000 },
-    { level: 35, xp: 25000 },
-    { level: 50, xp: 60000 },
-];
+import { MOCK_QUESTS, MOCK_LEVELS } from './mockData';
+
+// Generate LEVEL_REQUIREMENTS based on MOCK_LEVELS
+const LEVEL_REQUIREMENTS = (MOCK_LEVELS as any[]).map(l => ({
+    level: l.level,
+    xp: l.xp_required
+})).sort((a, b) => a.level - b.level);
 
 // XP rewards by rarity
+
 const RARITY_XP_MAP: Record<string, number> = {
     'Common': 10,
     'Uncommon': 25,
@@ -114,7 +113,13 @@ export interface CapturedWord {
     isEvolved: boolean;
 }
 
-import { MOCK_QUESTS } from './mockData';
+export interface LeaderboardEntry {
+    id: string;
+    name: string;
+    points: number;
+    rank: number;
+    avatar: string;
+}
 
 export const useGameStore = create<GameState>()((set, get) => ({
     xp: 0, // Reset for fresh start
@@ -192,47 +197,81 @@ export const useGameStore = create<GameState>()((set, get) => ({
         set({ lastStreakUpdateDate: new Date().toISOString() });
     },
 
-    addCollection: (word: CapturedWord) => set((state) => {
-        const existing = state.collections.find(w => w.word_en === word.word_en);
-        if (existing) {
-            return {
-                collections: state.collections.map(w =>
-                    w.word_en === word.word_en ? {
-                        ...w,
-                        stars: Math.max(w.stars, word.stars)
-                    } : w
-                )
-            };
-        }
-        return { collections: [...state.collections, { ...word, practiceCount: 1, isEvolved: false }] };
-    }),
+    addCollection: (word: CapturedWord) => {
+        set((state) => {
+            const existing = state.collections.find(w => w.word_en === word.word_en);
+            if (existing) {
+                return {
+                    collections: state.collections.map(w =>
+                        w.word_en === word.word_en ? {
+                            ...w,
+                            stars: Math.max(w.stars, word.stars)
+                        } : w
+                    )
+                };
+            }
+            return { collections: [...state.collections, { ...word, practiceCount: 1, isEvolved: false }] };
+        });
+
+        // Dynamic Quest Updates for Capture
+        const state = get();
+        // 1. Daily Capture 5 things
+        state.updateQuestProgress('mission_daily_002', state.collections.length);
+
+        // 2. Category Quests
+        const animalCount = state.collections.filter(w => w.category === 'Animals').length;
+        state.updateQuestProgress('mission_category_001', animalCount);
+
+        const foodCount = state.collections.filter(w => w.category === 'Food').length;
+        state.updateQuestProgress('mission_category_002', foodCount);
+
+        const vehicleCount = state.collections.filter(w => w.category === 'Vehicles').length;
+        state.updateQuestProgress('mission_category_003', vehicleCount);
+    },
 
     isDuplicate: (wordEn: string): boolean => {
         return get().collections.some(w => w.word_en === wordEn);
     },
 
-    practiceWord: (id: string, stars: number) => set((state) => {
-        const word = state.collections.find(w => w.id === id);
-        if (!word) return state;
+    practiceWord: (id: string, stars: number) => {
+        console.log('Action: practiceWord for ID:', id);
+        set((state) => {
+            const word = state.collections.find(w => String(w.id) === String(id));
+            if (!word) {
+                console.warn('practiceWord could not find word with ID:', id);
+                return state;
+            }
 
-        const newCount = word.practiceCount + 1;
-        const newlyEvolved = !word.isEvolved && newCount >= 5;
+            const newCount = word.practiceCount + 1;
+            const newlyEvolved = !word.isEvolved && newCount >= 3;
 
-        if (newlyEvolved) {
-            get().addXP(100); // Evolution bonus
-        }
+            if (newlyEvolved) {
+                get().addXP(100); // Evolution bonus
+            }
 
-        return {
-            collections: state.collections.map(w =>
-                w.id === id ? {
-                    ...w,
-                    practiceCount: newCount,
-                    stars: Math.max(w.stars, stars),
-                    isEvolved: word.isEvolved || newlyEvolved
-                } : w
-            )
-        };
-    }),
+            return {
+                collections: state.collections.map(w =>
+                    String(w.id) === String(id) ? {
+                        ...w,
+                        practiceCount: newCount,
+                        stars: Math.max(w.stars, stars),
+                        isEvolved: word.isEvolved || newlyEvolved
+                    } : w
+                )
+            };
+        });
+
+        // Dynamic Quest Updates for Practice
+        const state = get();
+
+        // 1. Daily Practice 3 words
+        const practicedTodayCount = state.collections.filter(w => w.practiceCount > 1).length;
+        state.updateQuestProgress('mission_daily_003', practicedTodayCount);
+
+        // 2. Evolve 3 cards
+        const evolvedCount = state.collections.filter(w => w.isEvolved).length;
+        state.updateQuestProgress('mission_pronunciation_001', evolvedCount);
+    },
 
     userAvatar: null,
     setUserAvatar: (avatar: string) => set({ userAvatar: avatar }),

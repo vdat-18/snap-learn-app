@@ -12,6 +12,7 @@ import AIProcessingLoading from './components/ui/AIProcessingLoading';
 import { useGameStore } from './store/gameStore';
 import { useSoundEffects } from './hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from './utils/feedbackUtils';
+import { MOCK_AI_RESPONSES } from './store/mockData';
 import { Scan, WifiOff, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -71,16 +72,16 @@ const App: React.FC = () => {
 
     const timer = setTimeout(() => {
       if (isBookOpen) {
-        mascotSpeak("Kho báu thẻ bài của bạn đây!", 'vi-VN');
+        mascotSpeak("Kho báu thẻ bài của bạn ở đây nè! Nhiều từ thú vị quá!", 'vi-VN');
       } else if (isQuestOpen) {
-        mascotSpeak("Làm nhiệm vụ để nhận quà nhé!", 'vi-VN');
+        mascotSpeak("Làm nhiệm vụ để nhận thêm quà xịn bạn nhé!", 'vi-VN');
       } else if (isRankOpen) {
-        mascotSpeak("Bạn hãy xem ai giỏi nhất nào!", 'vi-VN');
+        mascotSpeak("Cùng xem bạn nào đang dẫn đầu cuộc đua nào!", 'vi-VN');
       } else if (isProfileOpen) {
-        mascotSpeak("Góc cá nhân của bạn đây!", 'vi-VN');
+        mascotSpeak("Đây là góc bí mật của riêng bạn đó!", 'vi-VN');
       } else {
         // Camera / Main Screen
-        mascotSpeak("Bạn hãy dùng máy ảnh tìm từ mới nhé!", 'vi-VN');
+        mascotSpeak("Bạn hãy dùng máy ảnh tìm thêm những từ vựng mới nhé!", 'vi-VN');
       }
     }, 800);
     return () => clearTimeout(timer);
@@ -123,7 +124,7 @@ const App: React.FC = () => {
       setCameraError(null);
     } catch (err) {
       console.error('Camera Error:', err);
-      setCameraError('Bé ơi, hãy cho phép app dùng Camera để bắt học từ mới nhé!');
+      setCameraError('Bạn ơi, hãy cho phép app dùng Camera để bắt học từ mới nhé!');
     }
   }, []);
 
@@ -166,14 +167,23 @@ const App: React.FC = () => {
       setIsAIProcessing(true);
 
       setTimeout(() => {
-        const mockResults = [
-          { word_en: 'Cat', word_vi: 'Con mèo', word_zh: '猫', rarity: 'Common', category: 'Animals' },
-          { word_en: 'Dog', word_vi: 'Con chó', word_zh: '狗', rarity: 'Uncommon', category: 'Animals' },
-          { word_en: 'Apple', word_vi: 'Quả táo', word_zh: '苹果', rarity: 'Rare', category: 'Food' },
-          { word_en: 'Starry Night', word_vi: 'Đêm đầy sao', word_zh: '星月夜', rarity: 'Legendary', category: 'Nature' },
-        ];
+        const validResponses = MOCK_AI_RESPONSES.filter((r: any) => r.response.object_en);
+        const randomResp = validResponses[Math.floor(Math.random() * validResponses.length)];
 
-        const result = mockResults[Math.floor(Math.random() * mockResults.length)] as any;
+        const result = {
+          word_en: randomResp.response.object_en as string,
+          word_vi: randomResp.response.object_vi as string,
+          word_zh: randomResp.response.object_zh as string,
+          rarity: (randomResp.response.rarity === 'legendary' ? 'Legendary' :
+            randomResp.response.rarity === 'epic' ? 'Epic' :
+              randomResp.response.rarity === 'rare' ? 'Rare' :
+                randomResp.response.rarity === 'uncommon' ? 'Uncommon' : 'Common') as any,
+          category: randomResp.response.category === 'animals' ? 'Animals' :
+            randomResp.response.category === 'food' ? 'Food' :
+              randomResp.response.category === 'nature' ? 'Nature' :
+                randomResp.response.category === 'vehicles' ? 'Vehicles' :
+                  randomResp.response.category === 'school' ? 'School' : 'Home'
+        };
 
         setIsAIProcessing(false);
         setCapturedResult(result);
@@ -235,7 +245,7 @@ const App: React.FC = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => {
               playPop();
-              mascotSpeak("Chào mừng bé yêu... đến với thế giới Snap Learn! Chúng mình... cùng bắt đầu... hành trình khám phá nhé!", 'vi-VN');
+              mascotSpeak("Chào mừng bạn yêu... đến với thế giới Snap Learn! Chúng mình... cùng bắt đầu... hành trình khám phá nhé!", 'vi-VN');
               setShowSplash(false);
             }}
             className="bg-sunshineYellow text-deepNavy px-8 py-4 rounded-[28px] font-black text-lg shadow-[0_6px_0_rgb(161,98,7)] flex items-center gap-3 active:shadow-none active:translate-y-[6px] transition-all border-t-2 border-white/40"
@@ -264,27 +274,27 @@ const App: React.FC = () => {
         <div className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 pt-12 pb-4 pointer-events-none">
           <div className="flex-1 flex flex-col pointer-events-auto">
             {/* Profile - Visual only */}
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-4xl shadow-level-2 border-t-2 border-slate-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-3xl shadow-level-2 border-t-2 border-slate-100">
                 {userAvatar}
               </div>
               <div className="flex flex-col">
-                <div className="flex items-center gap-1.5 bg-skyBlue/90 backdrop-blur px-2 py-0.5 rounded-full w-fit mb-1 shadow-sm">
-                  <span className="text-[14px]">⭐</span>
-                  <span className="text-[12px] font-black text-white leading-none">Cấp {level}</span>
+                <div className="flex items-center gap-1 bg-skyBlue/90 backdrop-blur px-2 py-0.5 rounded-full w-fit mb-0.5 shadow-sm">
+                  <span className="text-[12px]">⭐</span>
+                  <span className="text-[10px] font-black text-white leading-none uppercase">Cấp {level}</span>
                 </div>
-                <span className="text-sm font-black text-white drop-shadow-md leading-none">{userName}</span>
+                <span className="text-xs font-black text-white drop-shadow-md leading-none">{userName}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 pointer-events-auto">
+          <div className="flex items-center gap-2 pointer-events-auto">
             {/* Stats - Visual only */}
-            <div className="flex items-center gap-2 bg-black/30 backdrop-blur-lg pl-2 pr-4 py-2 rounded-[24px] border border-white/20 shadow-xl">
-              <div className="w-10 h-10 rounded-full bg-sunshineYellow flex items-center justify-center shadow-[0_4px_0_rgb(161,98,7)] border-t-2 border-white/40">
-                <span className="text-lg">⚡</span>
+            <div className="flex items-center gap-2 bg-black/40 backdrop-blur-lg pl-1.5 pr-3 py-1.5 rounded-full border border-white/20 shadow-xl">
+              <div className="w-8 h-8 rounded-full bg-sunshineYellow flex items-center justify-center shadow-[0_3px_0_rgb(161,98,7)] border-t border-white/30">
+                <span className="text-sm">⚡</span>
               </div>
-              <span className="text-base font-black text-white leading-none">85</span>
+              <span className="text-sm font-black text-white leading-none">85</span>
             </div>
 
             <button
@@ -292,16 +302,16 @@ const App: React.FC = () => {
                 setIsBookOpen(true);
                 playPop();
               }}
-              className="w-13 h-13 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-level-2 border border-white pointer-events-auto transition-transform active:scale-90"
+              className="w-12 h-12 rounded-2xl bg-gradient-to-br from-white to-slate-50 flex items-center justify-center shadow-[0_4px_0_rgba(0,0,0,0.1),0_8px_15px_rgba(0,0,0,0.1)] border border-slate-200 transition-all active:translate-y-0.5 active:shadow-none"
             >
-              <img src="/icon-book.png" alt="Book" className="w-9 h-9 object-contain mix-blend-multiply" />
+              <img src="/icon-book.png" alt="Book" className="w-10 h-10 object-contain rounded-xl" />
             </button>
 
             <button
               onClick={() => playPop()}
-              className="w-13 h-13 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-level-2 border border-white pointer-events-auto transition-transform active:scale-90"
+              className="w-12 h-12 rounded-2xl bg-gradient-to-br from-white to-slate-50 flex items-center justify-center shadow-[0_4px_0_rgba(0,0,0,0.1),0_8px_15px_rgba(0,0,0,0.1)] border border-slate-200 transition-all active:translate-y-0.5 active:shadow-none"
             >
-              <img src="/icon-settings.png" alt="Settings" className="w-9 h-9 object-contain mix-blend-multiply" />
+              <img src="/icon-settings.png" alt="Settings" className="w-10 h-10 object-contain rounded-xl" />
             </button>
           </div>
         </div>
@@ -334,38 +344,60 @@ const App: React.FC = () => {
             <canvas ref={canvasRef} className="hidden" />
           </div>
 
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <motion.div
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="w-64 h-64 border-[3px] border-white/40 rounded-[48px] shadow-[0_0_0_9999px_rgba(0,0,0,0.3)] relative -translate-y-8"
-            >
-              <div className="absolute -top-1 -left-1 w-10 h-10 border-t-4 border-l-4 border-sunshineYellow rounded-tl-2xl" />
-              <div className="absolute -top-1 -right-1 w-10 h-10 border-t-4 border-r-4 border-sunshineYellow rounded-tr-2xl" />
-              <div className="absolute -bottom-1 -left-1 w-10 h-10 border-b-4 border-l-4 border-sunshineYellow rounded-bl-2xl" />
-              <div className="absolute -bottom-1 -right-1 w-10 h-10 border-b-4 border-r-4 border-sunshineYellow rounded-br-2xl" />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 overflow-hidden">
+            {/* 1. HIỆU ỨNG MẶT NẠ */}
+            <svg className="absolute inset-0 w-full h-full">
+              <defs>
+                <mask id="vignette-mask">
+                  <rect width="100%" height="100%" fill="white" />
+                  <rect x="50%" y="50%" width="280" height="280" rx="44" fill="black" transform="translate(-140, -180)" />
+                </mask>
+              </defs>
+              <rect width="100%" height="100%" fill="rgba(15, 23, 42, 0.6)" mask="url(#vignette-mask)" />
+            </svg>
 
-              <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2">
-                <Scan className="w-10 h-10 text-white opacity-40 animate-pulse" />
-                <span className="text-[10px] font-black text-white/40 uppercase tracking-[4px]">Đang tìm...</span>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-[280px] h-[280px] rounded-[44px] relative -translate-y-[40px]">
+                <div className="absolute inset-0 backdrop-brightness-110 backdrop-saturate-150 rounded-[44px] border-2 border-white/10" />
               </div>
-            </motion.div>
+            </div>
+
+            {/* 2. KHUNG BAO SỐNG & FLOATING CORNERS */}
+            <div className="absolute w-[280px] h-[280px] -translate-y-[40px] pointer-events-none">
+              <motion.div
+                animate={{ scale: [1, 1.04, 1] }}
+                transition={{ repeat: Infinity, duration: 2.5 }}
+                className="absolute inset-0 border-[1.5px] border-white/30 rounded-[44px]"
+              />
+
+              {/* Center Reticle */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-30">
+                <Scan className="w-10 h-10 text-sunshineYellow" />
+              </div>
+
+              {/* 4 CORNERS */}
+              <motion.div animate={{ x: [-3, 3, -3], y: [-3, 3, -3] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-3 -left-3 w-14 h-14 border-t-[7px] border-l-[7px] border-sunshineYellow rounded-tl-3xl shadow-[0_0_15px_rgba(255,210,52,0.5)]" />
+              <motion.div animate={{ x: [3, -3, 3], y: [-3, 3, -3] }} transition={{ repeat: Infinity, duration: 3.2 }} className="absolute -top-3 -right-3 w-14 h-14 border-t-[7px] border-r-[7px] border-sunshineYellow rounded-tr-3xl shadow-[0_0_15px_rgba(255,210,52,0.5)]" />
+              <motion.div animate={{ x: [-3, 3, -3], y: [3, -3, 3] }} transition={{ repeat: Infinity, duration: 2.8 }} className="absolute -bottom-3 -left-3 w-14 h-14 border-b-[7px] border-l-[7px] border-sunshineYellow rounded-bl-3xl shadow-[0_0_15px_rgba(255,210,52,0.5)]" />
+              <motion.div animate={{ x: [3, -3, 3], y: [3, -3, 3] }} transition={{ repeat: Infinity, duration: 3.1 }} className="absolute -bottom-3 -right-3 w-14 h-14 border-b-[7px] border-r-[7px] border-sunshineYellow rounded-br-3xl shadow-[0_0_15px_rgba(255,210,52,0.5)]" />
+
+            </div>
           </div>
         </main>
 
-        {/* 3. CAPTURE / ACTION CONTROLS */}
-        <div className="fixed bottom-36 left-0 w-full z-50 px-8 flex items-center justify-between pointer-events-none">
+        {/* 3. CAPTURE / ACTION CONTROLS (Moved down to bottom-12) */}
+        <div className="fixed bottom-12 left-0 w-full z-50 px-8 flex items-center justify-between pointer-events-none">
           <div className="flex-1 flex justify-center items-center gap-8 translate-x-12">
             <motion.button
               whileTap={{ scale: 0.85 }}
               onClick={handleCaptureClick}
               disabled={isAIProcessing}
-              className="relative w-24 h-24 pointer-events-auto"
+              className="relative w-28 h-28 pointer-events-auto"
             >
               <div className="absolute inset-0 bg-white rounded-full shadow-2xl scale-110" />
               <div className="absolute inset-1.5 border-[6px] border-black rounded-full" />
               <div className="absolute inset-3.5 bg-black rounded-full flex items-center justify-center">
-                <div className="w-14 h-14 bg-white/20 rounded-full" />
+                <div className="w-16 h-16 bg-white/20 rounded-full" />
               </div>
             </motion.button>
             <motion.button
@@ -375,9 +407,9 @@ const App: React.FC = () => {
                 playPop();
                 setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
               }}
-              className="w-14 h-14 rounded-full bg-black/30 backdrop-blur-md border border-white/20 flex items-center justify-center text-white pointer-events-auto"
+              className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white pointer-events-auto"
             >
-              <RefreshCw className="w-7 h-7" />
+              <RefreshCw className="w-6 h-6" />
             </motion.button>
           </div>
         </div>
@@ -429,7 +461,7 @@ const App: React.FC = () => {
                     setIsProfileOpen(false);
                     setIsRevealOpen(false);
                     playPop();
-                    mascotSpeak("Nơi này có nhiều bí mật quá... Bạn hãy dùng máy ảnh tìm xem những người bạn từ vựng đang trốn ở đâu nhé!", 'vi-VN');
+                    mascotSpeak("Nơi này có nhiều bí mật lắm đó! Bạn hãy dùng máy ảnh tìm xem những người bạn từ vựng đang trốn ở đâu nhé!", 'vi-VN');
                   } else {
                     // Action: Capture!
                     handleCaptureClick();
@@ -476,24 +508,26 @@ const App: React.FC = () => {
       <ProfileScreen isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
       <LeaderboardScreen isOpen={isRankOpen} onClose={() => setIsRankOpen(false)} />
 
-      {capturedResult && (
-        <RevealCard
-          isOpen={isRevealOpen}
-          onClose={() => setIsRevealOpen(false)}
-          word_vi={capturedResult.word_vi}
-          word_en={capturedResult.word_en}
-          word_zh={capturedResult.word_zh}
-          rarity={capturedResult.rarity}
-          imageUrl={capturedImage || ''}
-          category={capturedResult.category}
-          pinyin=""
-          phonetic_en=""
-          onCardFlyToCollection={() => {
-            setIsBookOpen(true);
-            playPop();
-          }}
-        />
-      )}
+      {
+        capturedResult && (
+          <RevealCard
+            isOpen={isRevealOpen}
+            onClose={() => setIsRevealOpen(false)}
+            word_vi={capturedResult.word_vi}
+            word_en={capturedResult.word_en}
+            word_zh={capturedResult.word_zh}
+            rarity={capturedResult.rarity}
+            imageUrl={capturedImage || ''}
+            category={capturedResult.category}
+            pinyin=""
+            phonetic_en=""
+            onCardFlyToCollection={() => {
+              setIsBookOpen(true);
+              playPop();
+            }}
+          />
+        )
+      }
 
       <LevelUpCelebration />
       <ErrorOverlay
@@ -504,15 +538,17 @@ const App: React.FC = () => {
 
       <AIProcessingLoading isVisible={isAIProcessing} />
 
-      {devMode && (
-        <button
-          onClick={() => setDevMode(false)}
-          className="fixed top-24 right-4 z-[100] bg-red-500 text-white p-2 rounded text-xs"
-        >
-          DEV MODE
-        </button>
-      )}
-    </div>
+      {
+        devMode && (
+          <button
+            onClick={() => setDevMode(false)}
+            className="fixed top-24 right-4 z-[100] bg-red-500 text-white p-2 rounded text-xs"
+          >
+            DEV MODE
+          </button>
+        )
+      }
+    </div >
   );
 };
 

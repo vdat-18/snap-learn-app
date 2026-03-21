@@ -15,7 +15,7 @@ const slides = [
     {
         id: 'welcome',
         type: 'standard',
-        title: "Chào mừng Bé yêu! 🦉",
+        title: "Chào mừng Bạn yêu! 🦉",
         description: "Cùng tớ khám phá bí mật của thế giới nhé!",
         image: "/owl-mascot.png",
         bgClass: "from-sky-300 to-sky-500",
@@ -24,8 +24,8 @@ const slides = [
     {
         id: 'language',
         type: 'language-select',
-        title: "Bé thích tiếng gì nhất? 🌈",
-        description: "Chọn ngôn ngữ bé muốn học nha!",
+        title: "Bạn thích tiếng gì nhất? 🌈",
+        description: "Chọn ngôn ngữ bạn muốn học nha!",
         image: null,
         bgClass: "from-purple-300 to-purple-500",
         btnLabel: null
@@ -34,7 +34,7 @@ const slides = [
         id: 'secondary-language',
         type: 'secondary-language-select',
         title: "Học song ngữ thật ngầu? 🚀",
-        description: "Bé có muốn học thêm một thứ tiếng nữa không?",
+        description: "Bạn có muốn học thêm một thứ tiếng nữa không?",
         image: null,
         bgClass: "from-indigo-400 to-indigo-600",
         btnLabel: null
@@ -52,7 +52,7 @@ const slides = [
         id: 'pronunciation',
         type: 'standard',
         title: "Nói to để thu thập! 🎤",
-        description: "Bé hãy phát âm thật chuẩn để bắt bài nhé!",
+        description: "Bạn hãy phát âm thật chuẩn để bắt bài nhé!",
         image: "/mic-waves.png",
         bgClass: "from-sky-300 to-sky-500",
         btnLabel: "TIẾP TỤC"
@@ -82,17 +82,17 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
         const activeSlide = slides[currentSlide];
         const timer = setTimeout(() => {
             if (activeSlide.id === 'welcome') {
-                mascotSpeak("Chào mừng bạn đến với vương quốc SnapLearn! Hãy cùng tôi khám phá nhé.", 'vi-VN');
+                mascotSpeak("Chào mừng bạn đến với vương quốc SnapLearn! Tụi mình cùng đi thám hiểm nhé!", 'vi-VN');
             } else if (activeSlide.id === 'language') {
-                mascotSpeak("Bạn hãy lựa chọn ngôn ngữ mà mình muốn học nhất nào.", 'vi-VN');
+                mascotSpeak("Bạn thích học tiếng gì nhất nào? Chọn một cái nhé!", 'vi-VN');
             } else if (activeSlide.id === 'secondary-language') {
-                mascotSpeak("Học thêm một ngôn ngữ nữa sẽ giúp bạn giỏi hơn đấy. Bạn thấy sao?", 'vi-VN');
+                mascotSpeak("Học thêm một ngôn ngữ nữa sẽ siêu cấp hay ho luôn đó! Bạn thấy sao?", 'vi-VN');
             } else if (activeSlide.id === 'camera') {
-                mascotSpeak("Dùng máy ảnh chụp mọi vật xung quanh để thu thập thẻ bài nhé.", 'vi-VN');
+                mascotSpeak("Dùng máy ảnh để săn tìm những đồ vật bí ẩn xung quanh bạn nhé!", 'vi-VN');
             } else if (activeSlide.id === 'pronunciation') {
-                mascotSpeak("Hãy phát âm chính xác để nâng cấp thẻ bài của bạn.", 'vi-VN');
+                mascotSpeak("Tập đọc thật chuẩn để giúp những thẻ bài của bạn tiến hóa mạnh mẽ hơn nha!", 'vi-VN');
             } else if (activeSlide.id === 'collection') {
-                mascotSpeak("Kho báu thẻ bài đang đợi bạn. Chúng ta bắt đầu thôi!", 'vi-VN');
+                mascotSpeak("Kho báu thẻ bài đang đợi bạn đó. Chúng mình bắt đầu thôi!", 'vi-VN');
             }
         }, 500);
         return () => clearTimeout(timer);
@@ -152,7 +152,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                 </button>
                 <h1 className="text-deepNavy font-black text-xl tracking-tight">SnapLearn</h1>
                 <button onClick={() => { playPop(); onFinish(); }} className="text-deepNavy/40 font-bold text-base hover:text-deepNavy px-2">
-                    Bỏ qua nè
+                    Bỏ qua
                 </button>
             </div>
 
@@ -340,7 +340,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
                                             : 'bg-white/20 backdrop-blur-sm text-white/60 hover:bg-white/40'
                                             }`}
                                     >
-                                        <span>Dạ thôi, bé chỉ học một cái thôi à</span>
+                                        <span>Mình chỉ học 1 ngôn ngữ thôi</span>
                                     </motion.button>
                                 </div>
                             </div>

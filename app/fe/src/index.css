@@ -7,7 +7,11 @@
 
 @layer base {
 
-  html,
+  html {
+    font-size: 14px;
+    /* Base scale for mobile */
+  }
+
   body {
     @apply h-full overflow-hidden font-sans bg-snowWhite text-deepNavy selection:bg-skyBlue selection:text-white;
     -webkit-tap-highlight-color: transparent;

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, Star, Lock, Sparkles } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
-import type { CapturedWord } from '../../store/gameStore';
+import { MOCK_REFERENCE_VOCAB } from '../../store/mockData';
 import VocabDetail from './VocabDetail';
 
 interface CollectionBookProps {
@@ -13,18 +13,19 @@ interface CollectionBookProps {
 }
 
 const categories = [
-    { id: 'Animals', name: 'Động vật', icon: '/icon-cat-animals.png', total: 20 },
-    { id: 'Food', name: 'Đồ ăn', icon: '/icon-cat-food.png', total: 15 },
-    { id: 'Nature', name: 'Tự nhiên', icon: '🌿', total: 25 },
-    { id: 'School', name: 'Trường học', icon: '🏫', total: 18 },
-    { id: 'Home', name: 'Nhà cửa', icon: '🏠', total: 22 },
-    { id: 'Transportation', name: 'Giao thông', icon: '🚗', total: 12 },
+    { id: 'Animals', name: 'Động vật', icon: '/icon-cat-animals.png' },
+    { id: 'Food', name: 'Đồ ăn', icon: '/icon-cat-food.png' },
+    { id: 'Nature', name: 'Tự nhiên', icon: '🌿' },
+    { id: 'School', name: 'Trường học', icon: '🏫' },
+    { id: 'Home', name: 'Nhà cửa', icon: '🏠' },
+    { id: 'Vehicles', name: 'Giao thông', icon: '🚗' },
 ];
 
 const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCategorySelectChange }) => {
     const { collections } = useGameStore();
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-    const [selectedWord, setSelectedWord] = useState<CapturedWord | null>(null);
+    const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
+    const selectedWord = collections.find(w => w.id === selectedWordId) || null;
     const { playPop, playChime } = useSoundEffects();
 
     // Notify parent about category selection to show/hide nav
@@ -36,10 +37,6 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
 
     const getCategoryProgress = (catId: string) => {
         return collections.filter(w => w.category === catId).length;
-    };
-
-    const getCategoryWords = (catId: string) => {
-        return collections.filter(w => w.category === catId);
     };
 
     return (
@@ -78,7 +75,7 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                     ) : (
                                         <>
                                             <img src="/icon-book.png" alt="" className="w-10 h-10 object-contain mix-blend-multiply" />
-                                            📖 Kho báu của Bé
+                                            📖 Kho báu của Bạn
                                         </>
                                     )}
                                 </h1>
@@ -94,8 +91,9 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                             /* Category Grid */
                             <div className="grid grid-cols-2 gap-5 pb-20">
                                 {categories.map((cat, i) => {
+                                    const total = MOCK_REFERENCE_VOCAB.filter(w => w.category === cat.id).length;
                                     const count = getCategoryProgress(cat.id);
-                                    const progressPercent = (count / cat.total) * 100;
+                                    const progressPercent = total > 0 ? (count / total) * 100 : 0;
 
                                     return (
                                         <motion.button
@@ -117,7 +115,7 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                             <h3 className="font-black text-deepNavy text-base mb-1">{cat.name}</h3>
                                             <div className="w-full mt-2">
                                                 <div className="flex justify-between text-[10px] font-black text-slate-400 mb-1.5 px-1">
-                                                    <span>{count}/{cat.total}</span>
+                                                    <span>{count}/{total}</span>
                                                     <span>{Math.round(progressPercent)}%</span>
                                                 </div>
                                                 <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
@@ -135,7 +133,11 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                         ) : (
                             /* Vocab Word Grid - Trading Card Style */
                             <div className="grid grid-cols-3 gap-4 pb-24">
-                                {getCategoryWords(selectedCategory).map((word, i) => {
+                                {MOCK_REFERENCE_VOCAB.filter(w => w.category === selectedCategory).map((refWord, i) => {
+                                    const word = collections.find(w => w.word_en === refWord.word_en);
+                                    const isCaptured = !!word;
+                                    const isEvolved = word?.isEvolved;
+
                                     const rarityColors: any = {
                                         'Common': 'from-mintGreen/20 to-mintGreen/5',
                                         'Uncommon': 'from-skyBlue/20 to-skyBlue/5',
@@ -150,6 +152,21 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                         'Legendary': 'Huyền thoại luôn'
                                     };
 
+                                    if (!isCaptured) {
+                                        return (
+                                            <div
+                                                key={refWord.id}
+                                                className="relative aspect-[3/4] rounded-[24px] bg-slate-100 border-[3px] border-slate-200 shadow-inner overflow-hidden flex flex-col items-center justify-center opacity-60"
+                                            >
+                                                <Lock className="w-6 h-6 text-slate-400 mb-2" />
+                                                <span className="text-[10px] font-black text-slate-400 tracking-wider">BÍ MẬT</span>
+                                                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[8px] font-black bg-slate-300 text-white shadow-md uppercase">
+                                                    {rarityLabels[refWord.rarity_tier] || 'Thường'}
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
                                     return (
                                         <motion.button
                                             key={word.id}
@@ -157,14 +174,14 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                             animate={{ opacity: 1, scale: 1 }}
                                             transition={{ delay: i * 0.03 }}
                                             whileTap={{ scale: 0.92 }}
-                                            onClick={() => { playChime(); setSelectedWord(word); }}
+                                            onClick={() => { playChime(); setSelectedWordId(word.id); }}
                                             className={`relative aspect-[3/4] rounded-[24px] bg-gradient-to-br ${rarityColors[word.rarity] || 'bg-white'} border-[3px] border-white shadow-level-2 overflow-hidden flex flex-col`}
                                         >
                                             <div className="flex-1 w-full relative p-2">
                                                 <div className="w-full h-full rounded-[18px] overflow-hidden bg-white/50 backdrop-blur-sm shadow-inner">
                                                     <img src={word.image} alt={word.word_en} className="w-full h-full object-cover" />
                                                 </div>
-                                                {word.isEvolved && (
+                                                {isEvolved && (
                                                     <div className="absolute top-3 left-3 bg-sunshineYellow p-1 rounded-full shadow-lg">
                                                         <Sparkles className="w-4 h-4 text-deepNavy" />
                                                     </div>
@@ -191,23 +208,17 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                         </motion.button>
                                     );
                                 })}
-
-                                {/* Locked Placeholders */}
-                                {Array.from({ length: Math.max(0, 12 - getCategoryWords(selectedCategory).length) }).map((_, i) => (
-                                    <div key={`lock-${i}`} className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[16px] aspect-square flex flex-col items-center justify-center opacity-40 grayscale">
-                                        <Lock className="w-5 h-5 text-slate-300" />
-                                        <span className="text-[8px] font-black mt-1 text-slate-300">BÍ MẬT</span>
-                                    </div>
-                                ))}
                             </div>
                         )}
                     </div>
 
-                    <VocabDetail
-                        word={selectedWord}
-                        isOpen={!!selectedWord}
-                        onClose={() => setSelectedWord(null)}
-                    />
+                    {selectedWord && (
+                        <VocabDetail
+                            key={selectedWord.id}
+                            word={selectedWord}
+                            onClose={() => setSelectedWordId(null)}
+                        />
+                    )}
                 </motion.div>
             )}
         </AnimatePresence>

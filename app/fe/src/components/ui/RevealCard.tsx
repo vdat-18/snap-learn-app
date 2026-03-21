@@ -4,6 +4,8 @@ import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { ArrowLeft, Book } from 'lucide-react';
 import { triggerSparkles, triggerLegendaryBurst } from '../../utils/confetti';
+import { mascotSpeak } from '../../utils/feedbackUtils';
+import { MOCK_PRON_RESULTS } from '../../store/mockData';
 
 export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
 
@@ -37,30 +39,7 @@ const rarityBadgeColor: Record<Rarity, string> = {
     Legendary: 'bg-rarity-legendary',
 };
 
-// Levenshtein distance for fuzzy matching
-const levenshteinDistance = (a: string, b: string): number => {
-    const matrix: number[][] = [];
-    for (let i = 0; i <= b.length; i++) {
-        matrix[i] = [i];
-    }
-    for (let j = 0; j <= a.length; j++) {
-        matrix[0][j] = j;
-    }
-    for (let i = 1; i <= b.length; i++) {
-        for (let j = 1; j <= a.length; j++) {
-            if (b.charAt(i - 1) === a.charAt(j - 1)) {
-                matrix[i][j] = matrix[i - 1][j - 1];
-            } else {
-                matrix[i][j] = Math.min(
-                    matrix[i - 1][j - 1] + 1,
-                    matrix[i][j - 1] + 1,
-                    matrix[i - 1][j] + 1
-                );
-            }
-        }
-    }
-    return matrix[b.length][a.length];
-};
+
 
 type PronunciationTier = 3 | 2 | 1; // 3 stars, 2 stars, 1 star
 
@@ -160,51 +139,40 @@ const RevealCard: React.FC<RevealCardProps> = ({
         // Reset stars if starting over
         if (stars === 3) setStars(null);
 
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        setIsListening(true);
+        setTranscript('Tớ đang nghe...');
 
-        if (!SpeechRecognition) {
-            alert("Speech recognition not supported in this browser.");
-            return;
-        }
+        // Mock AI Speech Processing
+        setTimeout(() => {
+            const targetWord = target_language === 'zh' ? word_zh : word_en;
 
-        // Determine language based on target_language
-        const langCode = target_language === 'zh' ? 'zh-CN' : 'en-US';
-        const targetWord = target_language === 'zh' ? word_zh.toLowerCase() : word_en.toLowerCase();
+            // Find mock data for this word, else fallback to a generic random result
+            const wordMock = MOCK_PRON_RESULTS.find((m: any) =>
+                m.expected_word_en === targetWord || m.expected_word_zh === targetWord
+            );
 
-        const recognition = new SpeechRecognition();
-        recognition.lang = langCode;
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
+            let resultScenario: any;
 
-        recognition.onstart = () => {
-            setIsListening(true);
-            setTranscript('Tớ đang nghe...');
-        };
+            if (wordMock && wordMock.scenarios.length > 0) {
+                // Randomly pick a scenario from the mock data
+                resultScenario = wordMock.scenarios[Math.floor(Math.random() * wordMock.scenarios.length)];
+            } else {
+                // Fallback for words not in the mock list
+                resultScenario = {
+                    asr_result: targetWord,
+                    match_type: Math.random() > 0.3 ? 'exact' : 'partial',
+                    stars: Math.random() > 0.3 ? 3 : 2
+                };
+            }
 
-        recognition.onresult = (event: any) => {
-            const speechResult = event.results[0][0].transcript.toLowerCase();
+            const speechResult = resultScenario.asr_result || '...';
             setTranscript(speechResult);
 
-            // 3-tier Scoring Logic
-            let scoredStars: PronunciationTier;
+            setIsListening(false);
 
-            // Exact match: ★★★
-            if (speechResult === targetWord) {
-                scoredStars = 3;
-            }
-            // Fuzzy match: includes target word OR Levenshtein distance ≤ 2 → ★★
-            else if (
-                speechResult.includes(targetWord) ||
-                levenshteinDistance(speechResult, targetWord) <= 2
-            ) {
-                scoredStars = 2;
-            }
-            // No match: ★ (encouraging)
-            else {
-                scoredStars = 1;
-            }
-
+            let scoredStars: PronunciationTier = resultScenario.stars as PronunciationTier;
             setStars(scoredStars);
+
             const newAttemptCount = attemptCount + 1;
             setAttemptCount(newAttemptCount);
 
@@ -236,20 +204,9 @@ const RevealCard: React.FC<RevealCardProps> = ({
                     }, 1200);
                 }, 1500);
             }
-        };
-
-        recognition.onerror = (event: any) => {
-            console.error("Speech Recognition Error:", event.error);
-            setIsListening(false);
-            setTranscript('Bé nói lại nhé!');
-        };
-
-        recognition.onend = () => {
-            setIsListening(false);
-        };
-
-        recognition.start();
+        }, 1500); // Simulate 1.5s recording/processing time
     };
+
 
     return (
         <AnimatePresence>
@@ -305,7 +262,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         >
                             <ArrowLeft className="w-5 h-5 text-skyBlue" />
                             <Book className="w-5 h-5 text-skyBlue" />
-                            <span className="text-[10px] font-black text-skyBlue uppercase tracking-widest hidden sm:inline">Sổ của Bé</span>
+                            <span className="text-[10px] font-black text-skyBlue uppercase tracking-widest hidden sm:inline">Sổ của Bạn</span>
                         </button>
 
                         {/* Rarity Badge */}
@@ -324,21 +281,27 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         {/* Multilingual Details — filtered by target_language */}
                         <div className="text-center space-y-3 mb-8">
                             {/* Vietnamese — always shown as scaffold */}
-                            <h2 className="text-xl font-bold text-lang-vi">{word_vi}</h2>
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                                <span className="text-xl mr-1">🇻🇳</span>
+                                <h2 className="text-xl font-bold text-lang-vi">{word_vi}</h2>
+                                <button
+                                    onClick={() => mascotSpeak(word_vi, 'vi-VN')}
+                                    className="w-8 h-8 rounded-full bg-lang-vi/5 flex items-center justify-center text-lang-vi text-sm"
+                                >
+                                    🔊
+                                </button>
+                            </div>
 
                             <div className="flex flex-col gap-1">
                                 {/* Target Language (Primary) */}
                                 {target_language === 'en' && (
                                     <div className="flex items-center justify-center gap-2">
+                                        <span className="text-xl mr-1">🇺🇸</span>
                                         <span className="text-base font-bold text-lang-en">{word_en}</span>
                                         <span className="text-xs font-medium text-slate-400">{phonetic_en}</span>
                                         <button
-                                            onClick={() => {
-                                                const utterance = new SpeechSynthesisUtterance(word_en);
-                                                utterance.lang = 'en-US';
-                                                window.speechSynthesis.speak(utterance);
-                                            }}
-                                            className="w-8 h-8 rounded-full bg-skyBlue/10 flex items-center justify-center text-skyBlue text-sm"
+                                            onClick={() => mascotSpeak(word_en, 'en-US')}
+                                            className="w-10 h-10 rounded-full bg-skyBlue/10 flex items-center justify-center text-skyBlue text-base"
                                         >
                                             🔊
                                         </button>
@@ -346,15 +309,12 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                 )}
                                 {target_language === 'zh' && (
                                     <div className="flex items-center justify-center gap-2">
+                                        <span className="text-xl mr-1">🇨🇳</span>
                                         <span className="text-base font-bold text-lang-zh">{word_zh}</span>
                                         <span className="text-xs font-medium text-slate-400">{pinyin}</span>
                                         <button
-                                            onClick={() => {
-                                                const utterance = new SpeechSynthesisUtterance(word_zh);
-                                                utterance.lang = 'zh-CN';
-                                                window.speechSynthesis.speak(utterance);
-                                            }}
-                                            className="w-8 h-8 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-sm"
+                                            onClick={() => mascotSpeak(word_zh, 'zh-CN')}
+                                            className="w-10 h-10 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-base"
                                         >
                                             🔊
                                         </button>
@@ -406,13 +366,13 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         <div className={`transition-all duration-300 rounded-[24px] p-6 border ${stars === 3 ? 'bg-mintGreen/10 border-mintGreen/20' : stars ? 'bg-skyBlue/10 border-skyBlue/20' : 'bg-softCream border-sunshineYellow/20'}`}>
                             {showAutoCloseMessage ? (
                                 <div className="text-center space-y-3">
-                                    <span className="block text-base font-bold text-coralRed">👏 Bé giỏi lắm! Làm lại sau nhé!</span>
-                                    <p className="text-xs text-slate-600">Bé đã luyện tập {attemptCount} lần rồi đấy, thật tuyệt!</p>
+                                    <span className="block text-base font-bold text-coralRed">👏 Bạn giỏi lắm! Làm lại sau nhé!</span>
+                                    <p className="text-xs text-slate-600">Bạn đã luyện tập {attemptCount} lần rồi đấy, thật tuyệt!</p>
                                 </div>
                             ) : (
                                 <>
                                     <span className={`block text-center text-xs font-bold mb-4 uppercase tracking-wider ${stars === 3 ? 'text-mintGreen' : stars ? 'text-skyBlue' : isListening ? 'text-coralRed' : 'text-skyBlue'}`}>
-                                        {stars === 3 ? 'Tuyệt vời! Bé nói đúng rồi.' : stars === 2 ? 'Gần đúng rồi! 👍' : stars === 1 ? 'Cùng tớ tập nói nhé! 🎯' : isListening ? 'Tớ đang nghe bé nè...' : `Nói thật to để bắt bài nhé! (Lần ${attemptCount}/3)`}
+                                        {stars === 3 ? 'Tuyệt vời! Bạn nói đúng rồi.' : stars === 2 ? 'Gần đúng rồi! 👍' : stars === 1 ? 'Cùng tớ tập nói nhé! 🎯' : isListening ? 'Tớ đang nghe bạn nè...' : `Nói thật to để bắt bài nhé! (Lần ${attemptCount}/3)`}
                                     </span>
 
                                     <div className="flex flex-col items-center gap-4">
@@ -430,7 +390,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
 
                                         {transcript && !isListening && (
                                             <p className={`text-xs font-bold animate-in fade-in slide-in-from-bottom-1 ${stars === 3 ? 'text-mintGreen' : stars === 2 ? 'text-skyBlue' : stars === 1 ? 'text-amber-500' : 'text-coralRed'}`}>
-                                                Bé vừa nói: "{transcript}"
+                                                Bạn vừa nói: "{transcript}"
                                             </p>
                                         )}
 
