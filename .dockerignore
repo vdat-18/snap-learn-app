@@ -1,0 +1,80 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+coverage.xml
+*.cover
+
+# Next.js
+.next/
+out/
+.vercel
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# OS specific
+Thumbs.db
+.DS_Store
+*.bak
+
+# Documentation
+docs/
+_docs/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+azure-pipelines.yml
+
+# Docker files (from context)
+docker-compose*.yml
+Dockerfile*
+
+# Development
+.opencode/
+.claude/
+openspec/

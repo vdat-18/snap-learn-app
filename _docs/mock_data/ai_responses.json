@@ -15,8 +15,7 @@
         "fun_fact_vi": "Mèo có thể ngủ 16 giờ mỗi ngày!",
         "difficulty_en": 1,
         "difficulty_zh": 2,
-        "confidence": 0.95,
-        "rarity": "common"
+        "confidence": 0.95
       }
     },
     {
@@ -33,8 +32,7 @@
         "fun_fact_vi": "Chiếc ghế cổ nhất thế giới hơn 5000 năm tuổi!",
         "difficulty_en": 1,
         "difficulty_zh": 2,
-        "confidence": 0.92,
-        "rarity": "common"
+        "confidence": 0.92
       }
     },
     {
@@ -51,8 +49,7 @@
         "fun_fact_vi": "Cuốn sách nhỏ nhất thế giới chỉ bằng hạt bụi!",
         "difficulty_en": 1,
         "difficulty_zh": 1,
-        "confidence": 0.97,
-        "rarity": "common"
+        "confidence": 0.97
       }
     },
     {
@@ -69,8 +66,7 @@
         "fun_fact_vi": "Chuối chín nhanh hơn khi để cạnh táo!",
         "difficulty_en": 2,
         "difficulty_zh": 3,
-        "confidence": 0.93,
-        "rarity": "common"
+        "confidence": 0.93
       }
     },
     {
@@ -87,8 +83,7 @@
         "fun_fact_vi": "Chiếc xe đầu tiên trên thế giới chạy chậm hơn người đi bộ!",
         "difficulty_en": 1,
         "difficulty_zh": 3,
-        "confidence": 0.91,
-        "rarity": "common"
+        "confidence": 0.91
       }
     },
     {
@@ -105,8 +100,7 @@
         "fun_fact_vi": "Có hơn 1 tỷ chiếc xe đạp trên thế giới!",
         "difficulty_en": 3,
         "difficulty_zh": 4,
-        "confidence": 0.89,
-        "rarity": "uncommon"
+        "confidence": 0.89
       }
     },
     {
@@ -123,8 +117,7 @@
         "fun_fact_vi": "Đồng hồ cổ nhất còn hoạt động đã hơn 600 năm tuổi!",
         "difficulty_en": 2,
         "difficulty_zh": 3,
-        "confidence": 0.88,
-        "rarity": "uncommon"
+        "confidence": 0.88
       }
     },
     {
@@ -141,8 +134,7 @@
         "fun_fact_vi": "Kính thiên văn giúp ta nhìn thấy các ngôi sao cách hàng triệu năm ánh sáng!",
         "difficulty_en": 4,
         "difficulty_zh": 5,
-        "confidence": 0.85,
-        "rarity": "rare"
+        "confidence": 0.85
       }
     },
     {
@@ -159,8 +151,7 @@
         "fun_fact_vi": "Bác sĩ dùng ống nghe để nghe tim đập — tim bạn đập khoảng 100,000 lần mỗi ngày!",
         "difficulty_en": 5,
         "difficulty_zh": 5,
-        "confidence": 0.82,
-        "rarity": "epic"
+        "confidence": 0.82
       }
     },
     {
@@ -177,8 +168,7 @@
         "fun_fact_vi": "Hóa thạch có thể hàng triệu năm tuổi — già hơn cả khủng long!",
         "difficulty_en": 4,
         "difficulty_zh": 4,
-        "confidence": 0.78,
-        "rarity": "legendary"
+        "confidence": 0.78
       }
     },
     {
@@ -196,7 +186,6 @@
         "difficulty_en": null,
         "difficulty_zh": null,
         "confidence": 0.45,
-        "rarity": null,
         "error_type": "blurry",
         "error_message_vi": "🤔 Hmm, mình chưa nhìn rõ lắm. Lại gần hơn nha!",
         "error_message_en": "Hmm, I can't see clearly. Get closer!"
@@ -217,7 +206,6 @@
         "difficulty_en": null,
         "difficulty_zh": null,
         "confidence": 0.35,
-        "rarity": null,
         "error_type": "too_dark",
         "error_message_vi": "🌙 Tối quá! Bật đèn hoặc ra chỗ sáng hơn nha!",
         "error_message_en": "Too dark! Turn on a light or move somewhere brighter!"
@@ -225,51 +213,7 @@
     },
     {
       "id": "ai_resp_013",
-      "scenario": "blocked_content",
-      "trigger_description": "Photo contains a weapon",
-      "response": {
-        "object_vi": null,
-        "object_en": null,
-        "phonetic_en": null,
-        "object_zh": null,
-        "pinyin": null,
-        "category": null,
-        "fun_fact_vi": null,
-        "difficulty_en": null,
-        "difficulty_zh": null,
-        "confidence": null,
-        "rarity": null,
-        "blocked": true,
-        "block_reason": "weapon",
-        "error_message_vi": "😊 Hãy chụp thứ khác vui hơn nha!",
-        "error_message_en": "Let's find something more fun to capture!"
-      }
-    },
-    {
-      "id": "ai_resp_014",
-      "scenario": "blocked_content",
-      "trigger_description": "Photo contains alcohol",
-      "response": {
-        "object_vi": null,
-        "object_en": null,
-        "phonetic_en": null,
-        "object_zh": null,
-        "pinyin": null,
-        "category": null,
-        "fun_fact_vi": null,
-        "difficulty_en": null,
-        "difficulty_zh": null,
-        "confidence": null,
-        "rarity": null,
-        "blocked": true,
-        "block_reason": "alcohol",
-        "error_message_vi": "😊 Hãy chụp thứ khác vui hơn nha!",
-        "error_message_en": "Let's find something more fun to capture!"
-      }
-    },
-    {
-      "id": "ai_resp_015",
-      "scenario": "novel_object_not_cached",
+      "scenario": "novel_object",
       "trigger_description": "Photo of Vietnamese rice paper (bánh tráng)",
       "response": {
         "object_vi": "bánh tráng",
@@ -281,10 +225,7 @@
         "fun_fact_vi": "Bánh tráng được làm từ bột gạo và phơi nắng — món đặc trưng của Việt Nam!",
         "difficulty_en": 4,
         "difficulty_zh": 3,
-        "confidence": 0.80,
-        "rarity": "rare",
-        "in_reference_cache": false,
-        "needs_verification": true
+        "confidence": 0.80
       }
     }
   ]

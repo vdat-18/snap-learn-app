@@ -1,0 +1,56 @@
+version: '3.8'
+
+# Production Docker Compose configuration
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  postgres:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 512M
+
+  redis:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  backend:
+    restart: always
+    command: gunicorn app.main:app --bind 0.0.0.0:8000 --workers 4 --worker-class uvicorn.workers.UvicornWorker --max-requests 1000 --timeout 60
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1.5G
+        reservations:
+          cpus: '1'
+          memory: 512M
+    environment:
+      ENVIRONMENT: production
+      DEBUG: 'false'
+      LOG_LEVEL: WARNING
+
+  frontend:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    environment:
+      NODE_ENV: production

@@ -18,7 +18,7 @@ The core experience is modeled on **Pokémon Go**: the child explores the real w
 - **Vietnamese-first pedagogy:** UI, narration, and scaffolding in Vietnamese, aligned to MOET curriculum standards for English and Chinese as foreign languages.
 - **Dual target languages, one at a time:** English and Mandarin Chinese in one product — Vietnam's two most in-demand foreign languages. The child selects one target language during onboarding; the other can be added or swapped at any time in Settings. This keeps the UI simple and the cognitive load low, while the backend retains data for all supported languages.
 - **Audio-first, icon-driven UX:** The target users are 6–10 year-olds who may not read fluently in any language. Everything that can be read is also spoken aloud via TTS. Navigation, actions, and feedback use icons and illustrated figures as the primary signifiers — text is secondary. The child can operate the app with ears and taps alone.
-- **Exploration-first, not list-first:** No pre-defined vocabulary syllabus. The child captures the world freely. Every real object is a potential vocabulary item. A reference word list exists for verification only, never as a curriculum constraint.
+- **Exploration-first, not list-first:** No pre-defined vocabulary syllabus. The child captures the world freely. Every real object is a potential vocabulary item.
 - **Collection & gamification:** Vocabulary is collectible. Rare and difficult words are worth more. Diversity of captures is rewarded. Leaderboards create social motivation.
 
 ---
@@ -148,8 +148,8 @@ The vision component identifies objects from photos. For the POC, we use a cloud
 
 | Option              | Pros                                                      | Cons                                              | POC recommendation       |
 | ------------------- | --------------------------------------------------------- | ------------------------------------------------- | ------------------------ |
-| Claude (Sonnet)     | Strong object ID, structured JSON output, safety built-in | Higher latency (~2–3s), cost per call            | **Primary choice** |
-| GPT-4o mini         | Fast, cheap, good vision                                  | Less controllable safety, need prompt engineering | Fallback                 |
+| Claude (Sonnet)     | Strong object ID, structured JSON output                  | Higher latency (~2–3s), cost per call            | **Primary choice** |
+| GPT-4o mini         | Fast, cheap, good vision                                  | Need prompt engineering                           | Fallback                 |
 | Google Gemini Flash | Very fast, free tier generous                             | Inconsistent object labeling                      | Benchmark only           |
 
 **Vision prompt design:** The LLM returns structured JSON:
@@ -173,9 +173,9 @@ The vision component identifies objects from photos. For the POC, we use a cloud
 - Low confidence (<0.7) triggers a retry: "Hmm, I'm not sure what that is — try getting closer!"
 - The LLM also assigns the category, which feeds into the Collection Book.
 
-**Language-agnostic backend:** The LLM always returns data for *all* supported languages (EN + ZH) regardless of the child's selected target language. This keeps the reference vocab cache complete and allows instant language switching without re-capturing. The frontend filters the response and displays only the child's selected language(s).
+**Language-agnostic backend:** The LLM always returns data for *all* supported languages (EN + ZH) regardless of the child's selected target language. This allows instant language switching without re-capturing. The frontend filters the response and displays only the child's selected language(s).
 
-**No maintained vocab list required.** The LLM handles identification and translation on the fly. A reference word list (~1,000 verified entries) exists as a verification cache: if the object matches a known entry, we serve the verified translation instantly (faster, cheaper, guaranteed correct). If it's a novel object, the LLM generates it live. Over time, the reference list grows organically from verified LLM outputs.
+**No maintained vocab list required.** The LLM handles identification and translation on the fly.
 
 ### 3.2 Speech: ASR-as-pronunciation-judge
 
@@ -214,8 +214,6 @@ This is elegant because:
 
 Safety for 6–10 year-olds requires multiple layers:
 
-- **Vision-level filtering:** The LLM prompt includes explicit instructions to refuse identification of weapons, alcohol, tobacco, adult content, and other inappropriate objects. Returns a safe fallback message in Vietnamese.
-- **Content stop-list:** A curated list of Vietnamese, English, and Chinese words/topics that are blocked from appearing in any output.
 - **No free-form chat:** The POC does not include an AI chatbot. All interactions are structured (photo → word, mission → action, quiz → answer).
 - **Parental controls:** Parent can view all captured words, missions completed, and usage time. No data persisted without explicit opt-in.
 
@@ -231,7 +229,7 @@ Safety for 6–10 year-olds requires multiple layers:
 | UI framework     | Tailwind CSS + custom Vietnamese-friendly typography | Fast iteration, good CJK support                                                                                                   |
 | Backend          | Python (FastAPI)                                     | Natural fit for AI orchestration (Claude SDK, Google Cloud client libs are Python-first); async for concurrent speech/vision calls |
 | AI orchestration | Custom routing layer                                 | Routes to Claude for vision, Google/Azure for speech, handles fallbacks                                                            |
-| Database         | PostgreSQL + Redis cache                             | User progress, vocab reference cache, session data, leaderboard                                                                    |
+| Database         | PostgreSQL + Redis cache                             | User progress, session data, leaderboard                                                                    |
 | Storage          | S3-compatible (MinIO or AWS S3)                      | Audio files, story assets, captured photos (opt-in only)                                                                           |
 | Auth             | Firebase Auth or Supabase Auth                       | Phone number or social login (parents); child profile is sub-account                                                               |
 | Hosting          | Vercel (frontend) + Railway or Fly.io (backend)      | Low-cost, Vietnam-accessible, auto-scaling                                                                                         |
@@ -315,11 +313,6 @@ LeaderboardEntry
 ├── user_id, period (weekly/monthly), scope (class/friends/global)
 ├── total_points, rank
 └── category_points (jsonb — per-category breakdown)
-
-ReferenceVocab (verification cache, NOT a curriculum)
-├── word_vi, word_en, word_zh, pinyin, phonetic_en
-├── category, verified (boolean), source (curated/llm_verified)
-└── difficulty_en, difficulty_zh
 ```
 
 ---
@@ -344,7 +337,7 @@ The reference vocabulary list (~1,000 verified entries) maps loosely to:
 - **Chinese:** HSK 1 (150 words) and HSK 2 (300 words) vocabulary. Topics: numbers, family, time, food, places, basic verbs.
 - **Early learners (Grade 1–2):** Pre-curriculum tier focused on concrete nouns with heavy Vietnamese scaffolding.
 
-This list is used for **verification** (fast, cheap, guaranteed-correct lookups) and for **mission generation** (ensuring missions target age-appropriate vocabulary). It is never presented to the child as "the words you must learn."
+This list is used for **mission generation** (ensuring missions target age-appropriate vocabulary). It is never presented to the child as "the words you must learn."
 
 ### 5.3 Content types for POC
 
@@ -495,7 +488,6 @@ This feed lets parents have a conversation with their child about learning: "I s
 | **Photo storage opt-in**       | Whether captured photos are stored server-side or processed and discarded                                                                                                                | Off (privacy-first)                             |
 | **Language selection**         | Change the child's target learning language or enable a second language. The child selects their primary language during onboarding; parents can override or add a second language here. | As selected during onboarding (single language) |
 | **Leaderboard visibility**     | Whether the child can see class/friends/global leaderboards                                                                                                                              | Class + friends only                            |
-| **Content filter sensitivity** | Standard (blocks weapons, alcohol, adult content) or Strict (also blocks insects, medical imagery, anything potentially scary)                                                           | Standard                                        |
 | **Data export**                | Download child's full vocabulary list as CSV (Vietnamese, English, Chinese, pinyin, date captured, mastery level)                                                                        | Available on demand                             |
 | **Account deletion**           | Delete all child data permanently                                                                                                                                                        | Available                                       |
 
@@ -518,7 +510,6 @@ If SnapLearn is deployed through a school, teachers get an additional layer:
 | Daily time limit reached                       | "[Child] has used their 30 minutes for today"                          | Push          |
 | Weekly summary (Sunday evening)                | "This week: 23 words captured, 4 missions completed, Rank #3 in class" | Push + in-app |
 | Inactivity (3+ days without use)               | "It's been a few days — want to set a mission for [Child]?"           | Push          |
-| LLM flagged a translation for review           | "SnapLearn wasn't sure about a translation — tap to review"           | In-app only   |
 
 ---
 
@@ -527,9 +518,9 @@ If SnapLearn is deployed through a school, teachers get an additional layer:
 | Severity         | Risk                                                                                                               | Mitigation                                                                                                                                                             | Owner              |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
 | **High**   | Vietnamese children's speech patterns cause ASR to fail frequently, making the "ASR-as-judge" heuristic too strict | Calibrate ASR confidence thresholds on children's voices during beta; use fuzzy matching with configurable tolerance; collect anonymized failure cases for tuning      | AI/Speech engineer |
-| **High**   | LLM produces incorrect translations for novel objects (no curated list to fall back on)                            | Reference vocab cache for common objects; LLM outputs include confidence score — low confidence triggers "I'm not sure, let me check!" flow; flagged for human review | Content lead       |
-| **Medium** | Leaderboard gaming (photographing the same object repeatedly, gaming diversity scores)                             | Anti-gaming: image similarity detection (perceptual hash), diminishing returns on same-category captures, duplicate detection via CLIP embeddings                      | Backend engineer   |
-| **Medium** | Latency too high on mobile networks in Vietnam                                                                     | Optimize image compression before upload; pre-cache TTS audio for reference vocab; use Singapore-region cloud                                                          | Backend engineer   |
+| **High**   | LLM produces incorrect translations for novel objects                            | LLM outputs include confidence score — low confidence triggers "I'm not sure, let me check!" flow; flagged for human review | Content lead       |
+| **Medium** | Leaderboard gaming (photographing the same object repeatedly, gaming diversity scores)                             | Anti-gaming: diminishing returns on same-category captures, rate limiting per day                      | Backend engineer   |
+| **Medium** | Latency too high on mobile networks in Vietnam                                                                     | Optimize image compression before upload; pre-cache TTS audio; use Singapore-region cloud                                                          | Backend engineer   |
 | **Medium** | Children lose interest after initial novelty (Pokémon Go retention curve problem)                                 | Mission variety, seasonal events, class competitions, evolving cards, new category unlocks over time                                                                   | Product lead       |
 | **Low**    | Parents resistant to children using phone cameras                                                                  | Position as educational tool; parent controls prominent; school partnership validation; dedicated device removes concern (hardware phase)                              | Product lead       |
 
@@ -539,9 +530,8 @@ If SnapLearn is deployed through a school, teachers get an additional layer:
 
 1. **Set up AI sandbox (Week 0):** Claude API for vision, Google Cloud STT/TTS for 3 languages. Test the snap → identify → speak → ASR-judge loop with 20 common Vietnamese household objects.
 2. **Design the capture card UI (Week 0–1):** The card reveal animation is the emotional core of the product. Prototype rarity glow effects, card layouts for trilingual display, and the "Say it!" interaction.
-3. **Build reference vocab cache (Week 1):** 200 verified Vietnamese ↔ English ↔ Chinese entries covering the most common household/school objects. This is a verification cache, not a curriculum.
-4. **PWA scaffold (Week 1):** React + TypeScript + camera access + audio recording. Camera-first home screen. Deploy to Vercel with Vietnamese UI strings.
-5. **Define beta cohort (Week 2):** Identify 10 families in HCMC with children aged 6–10 who are learning English or Chinese.
+3. **PWA scaffold (Week 1):** React + TypeScript + camera access + audio recording. Camera-first home screen. Deploy to Vercel with Vietnamese UI strings.
+4. **Define beta cohort (Week 2):** Identify 10 families in HCMC with children aged 6–10 who are learning English or Chinese.
 
 ---
 
