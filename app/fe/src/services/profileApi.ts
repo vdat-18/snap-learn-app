@@ -32,6 +32,7 @@ export interface ProfileResponse {
     longest_streak: number;
     badges: Badge[];
     stats: ProfileStats;
+    recent_captures: Array<{ id: string; word_en: string; photo_url: string | null }>;
 }
 
 // --- Profile API ---

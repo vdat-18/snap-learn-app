@@ -8,6 +8,12 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
+class RecentCapture(BaseModel):
+    id: UUID
+    word_en: str
+    photo_url: str | None = None
+
+
 class BadgeResponse(BaseModel):
     badge_type: str
     badge_name_vi: str
@@ -36,3 +42,4 @@ class ProfileResponse(BaseModel):
     longest_streak: int
     badges: list[BadgeResponse] = []
     stats: ProfileStats
+    recent_captures: list[RecentCapture] = []

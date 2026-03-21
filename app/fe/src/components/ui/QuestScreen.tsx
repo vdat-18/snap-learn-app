@@ -25,8 +25,8 @@ interface DisplayQuest {
 
 const mapMissionToQuest = (m: Mission, category: 'Today' | 'Weekly' | 'Challenge'): DisplayQuest => ({
     id: m.id,
-    title: m.description_vi,
-    description: m.description_en,
+    title: m.description_vi.replace('{n}', m.target_count.toString()),
+    description: m.description_en?.replace('{n}', m.target_count.toString()) || '',
     progress: m.current_count,
     total: m.target_count,
     rewardXP: m.reward_xp,
@@ -146,7 +146,7 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                         </div>
                     </header>
 
-                    <div className="flex-1 overflow-y-auto px-6 py-8 space-y-10 relative z-10">
+                    <div className="flex-1 overflow-y-auto px-6 pt-8 pb-32 space-y-10 relative z-10">
                         {/* Mascot Greeting */}
                         <motion.div
                             initial={{ x: -50, opacity: 0 }}
@@ -303,7 +303,7 @@ const QuestCard: React.FC<{ quest: DisplayQuest; onClaim: (e: React.MouseEvent) 
                             <motion.div
                                 animate={{ y: [0, -4, 0], rotate: [0, -10, 10, 0] }}
                                 transition={{ repeat: Infinity, duration: 0.4 }}
-                                className="text-2xl inline-block scale-x-[-1]"
+                                className="text-2xl inline-block"
                             >
                                 🏃
                             </motion.div>

@@ -375,7 +375,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
             if (!word) return state;
 
             const newCount = word.practiceCount + 1;
-            const newlyEvolved = !word.isEvolved && newCount >= 3;
+            const newlyEvolved = !word.isEvolved && newCount >= 2;
 
             return {
                 collections: state.collections.map(w =>
