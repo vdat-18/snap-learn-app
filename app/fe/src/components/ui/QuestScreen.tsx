@@ -1,18 +1,86 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, Trophy, Star, Sparkles, MessageCircle } from 'lucide-react';
-import { useGameStore, type Quest } from '../../store/gameStore';
+import { X, CheckCircle2, Trophy, Star, Sparkles, MessageCircle, Loader2 } from 'lucide-react';
+import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from '../../utils/feedbackUtils';
+import { missionApi, type Mission } from '../../services/missionApi';
+import { QuestSkeleton } from './Skeleton';
 
 interface QuestScreenProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
+interface DisplayQuest {
+    id: string;
+    title: string;
+    description: string;
+    progress: number;
+    total: number;
+    rewardXP: number;
+    status: 'in-progress' | 'completed' | 'claimed';
+    category: 'Today' | 'Weekly' | 'Challenge';
+}
+
+const mapMissionToQuest = (m: Mission, category: 'Today' | 'Weekly' | 'Challenge'): DisplayQuest => ({
+    id: m.id,
+    title: m.description_vi,
+    description: m.description_en,
+    progress: m.current_count,
+    total: m.target_count,
+    rewardXP: m.reward_xp,
+    status: m.status === 'claimed' ? 'claimed' : m.status === 'completed' ? 'completed' : 'in-progress',
+    category,
+});
+
 const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
-    const { xp, quests, completeQuest } = useGameStore();
+    const { xp } = useGameStore();
     const { playPop } = useSoundEffects();
+    const [quests, setQuests] = useState<DisplayQuest[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [fetchError, setFetchError] = useState(false);
+
+    const loadMissions = () => {
+        setIsLoading(true);
+        setFetchError(false);
+        missionApi.getMissions()
+            .then(data => {
+                const mapped: DisplayQuest[] = [
+                    ...data.daily.map(m => mapMissionToQuest(m, 'Today')),
+                    ...data.weekly.map(m => mapMissionToQuest(m, 'Weekly')),
+                    ...data.category_challenges.map(m => mapMissionToQuest(m, 'Challenge')),
+                ];
+                setQuests(mapped);
+            })
+            .catch(() => setFetchError(true))
+            .finally(() => setIsLoading(false));
+    };
+
+    // Fetch missions from API when opened
+    useEffect(() => {
+        if (isOpen) {
+            loadMissions();
+        }
+    }, [isOpen]);
+
+    const handleClaim = async (questId: string) => {
+        try {
+            const result = await missionApi.claimMission(questId);
+            // Update local quest state
+            setQuests(prev => prev.map(q =>
+                q.id === questId ? { ...q, status: 'claimed' as const } : q
+            ));
+            // Update gameStore with new XP/level from server
+            useGameStore.setState({
+                xp: result.total_xp,
+                level: result.level,
+                levelUpMessage: result.level_up ? { newLevel: result.level, xpGained: result.xp_earned } : null,
+            });
+        } catch (err) {
+            console.error('Failed to claim mission:', err);
+        }
+    };
 
     return (
         <AnimatePresence>
@@ -31,15 +99,8 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                                 key={i}
                                 className="absolute text-yellow-400"
                                 style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%` }}
-                                animate={{
-                                    scale: [0, 1, 0],
-                                    rotate: [0, 180],
-                                } as any}
-                                transition={{
-                                    duration: 3 + Math.random() * 2,
-                                    repeat: Infinity,
-                                    delay: Math.random() * 2,
-                                }}
+                                animate={{ scale: [0, 1, 0], rotate: [0, 180] } as any}
+                                transition={{ duration: 3 + Math.random() * 2, repeat: Infinity, delay: Math.random() * 2 }}
                             >
                                 <Star fill="currentColor" />
                             </motion.div>
@@ -66,7 +127,7 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                     </header>
 
                     <div className="flex-1 overflow-y-auto px-6 py-8 space-y-10 relative z-10">
-                        {/* Mascot Greeting / Tip */}
+                        {/* Mascot Greeting */}
                         <motion.div
                             initial={{ x: -50, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
@@ -87,33 +148,51 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                                 <MessageCircle className="w-4 h-4 fill-skyBlue/10" />
                             </motion.button>
                         </motion.div>
-                        {/* Categories */}
-                        {['Today', 'Weekly', 'Challenge'].map((cat) => (
-                            <section key={cat} className={`space-y-4 p-5 -mx-5 rounded-[40px] transition-colors ${cat === 'Today' ? 'bg-orange-50/50' : cat === 'Weekly' ? 'bg-purple-50/50' : 'bg-blue-50/50'
-                                }`}>
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-14 h-14 flex items-center justify-center bg-white rounded-2xl shadow-level-2 border-b-4 ${cat === 'Today' ? 'border-orange-200' : cat === 'Weekly' ? 'border-purple-200' : 'border-blue-200'
-                                        }`}>
-                                        <span className="text-3xl drop-shadow-sm">
-                                            {cat === 'Today' ? '🌅' : cat === 'Weekly' ? '📅' : '🏆'}
-                                        </span>
-                                    </div>
-                                    <h2 className="text-lg font-black text-deepNavy tracking-tight">
-                                        {cat === 'Today' ? '🌅 Mỗi ngày mới' : cat === 'Weekly' ? '📅 Cả tuần vui' : '🏆 Siêu thợ săn'}
-                                    </h2>
-                                </div>
 
-                                <div className="space-y-5">
-                                    {quests.filter(q => q.category === cat).map((quest) => (
-                                        <QuestCard
-                                            key={quest.id}
-                                            quest={quest}
-                                            onClaim={() => completeQuest(quest.id)}
-                                        />
-                                    ))}
-                                </div>
-                            </section>
-                        ))}
+                        {isLoading && (
+                            <QuestSkeleton />
+                        )}
+
+                        {fetchError && !isLoading && (
+                            <div className="flex flex-col items-center justify-center py-16 gap-4">
+                                <span className="text-5xl">😴</span>
+                                <p className="text-base font-black text-deepNavy">Ối! Không tải được nhiệm vụ</p>
+                                <p className="text-sm text-slate-400 font-bold">Kiểm tra kết nối mạng rồi thử lại nhé!</p>
+                                <button onClick={loadMissions} className="bg-skyBlue text-white px-6 py-3 rounded-2xl font-black text-sm shadow-level-2">
+                                    🔄 Thử lại
+                                </button>
+                            </div>
+                        )}
+
+                        {!isLoading && !fetchError && ['Today', 'Weekly', 'Challenge'].map((cat) => {
+                            const categoryQuests = quests.filter(q => q.category === cat);
+                            if (categoryQuests.length === 0) return null;
+
+                            return (
+                                <section key={cat} className={`space-y-4 p-5 -mx-5 rounded-[40px] transition-colors ${cat === 'Today' ? 'bg-orange-50/50' : cat === 'Weekly' ? 'bg-purple-50/50' : 'bg-blue-50/50'}`}>
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-14 h-14 flex items-center justify-center bg-white rounded-2xl shadow-level-2 border-b-4 ${cat === 'Today' ? 'border-orange-200' : cat === 'Weekly' ? 'border-purple-200' : 'border-blue-200'}`}>
+                                            <span className="text-3xl drop-shadow-sm">
+                                                {cat === 'Today' ? '🌅' : cat === 'Weekly' ? '📅' : '🏆'}
+                                            </span>
+                                        </div>
+                                        <h2 className="text-lg font-black text-deepNavy tracking-tight">
+                                            {cat === 'Today' ? '🌅 Mỗi ngày mới' : cat === 'Weekly' ? '📅 Cả tuần vui' : '🏆 Siêu thợ săn'}
+                                        </h2>
+                                    </div>
+
+                                    <div className="space-y-5">
+                                        {categoryQuests.map((quest) => (
+                                            <QuestCard
+                                                key={quest.id}
+                                                quest={quest}
+                                                onClaim={() => handleClaim(quest.id)}
+                                            />
+                                        ))}
+                                    </div>
+                                </section>
+                            );
+                        })}
                     </div>
                 </motion.div>
             )}
@@ -121,7 +200,7 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
     );
 };
 
-const QuestCard: React.FC<{ quest: Quest; onClaim: () => void }> = ({ quest, onClaim }) => {
+const QuestCard: React.FC<{ quest: DisplayQuest; onClaim: () => void }> = ({ quest, onClaim }) => {
     const isCompleted = quest.status === 'completed';
     const isClaimed = quest.status === 'claimed';
     const progressPercent = (quest.progress / quest.total) * 100;
@@ -137,7 +216,6 @@ const QuestCard: React.FC<{ quest: Quest; onClaim: () => void }> = ({ quest, onC
                     : 'bg-white border-slate-100 active:border-b-4'
                 }`}
         >
-            {/* Completion Sparkle Background */}
             {isCompleted && (
                 <div className="absolute top-0 right-0 p-2 text-mintGreen">
                     <Sparkles className="w-12 h-12 opacity-20 animate-pulse" />
@@ -174,7 +252,6 @@ const QuestCard: React.FC<{ quest: Quest; onClaim: () => void }> = ({ quest, onC
                             className={`h-full rounded-full relative ${isCompleted ? 'bg-gradient-to-r from-mintGreen to-emerald-500 shadow-[0_0_12px_rgba(52,211,153,0.6)]' : 'bg-gradient-to-r from-skyBlue to-blue-500'}`}
                         />
                     </div>
-                    {/* Running Emoji based on progress */}
                     <motion.span
                         animate={{ left: `${Math.max(0, progressPercent - 5)}%` }}
                         className="absolute -top-1.5 text-2xl transition-all duration-500 pointer-events-none"
@@ -199,11 +276,7 @@ const QuestCard: React.FC<{ quest: Quest; onClaim: () => void }> = ({ quest, onC
                         }}
                         className="w-full mt-4 bg-sunshineYellow text-deepNavy font-black py-4 rounded-[32px] shadow-[0_10px_0_rgb(161,98,7)] active:shadow-none active:translate-y-[10px] transition-all flex items-center justify-center gap-2 border-t-2 border-white/40 group overflow-hidden"
                     >
-                        <motion.span
-                            animate={{ rotate: [0, 10, -10, 0] }}
-                            transition={{ repeat: Infinity, duration: 2 }}
-                            className="text-2xl"
-                        >
+                        <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="text-2xl">
                             🎁
                         </motion.span>
                         NHẬN QUÀ NGAY!
@@ -211,7 +284,7 @@ const QuestCard: React.FC<{ quest: Quest; onClaim: () => void }> = ({ quest, onC
                     </motion.button>
                 )}
             </div>
-        </motion.div >
+        </motion.div>
     );
 };
 

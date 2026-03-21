@@ -12,9 +12,9 @@ SnapLearn's AI pipeline has two core responsibilities:
 1. **Vision** — Identify objects from photos, translate to English + Vietnamese + Chinese, categorize, and assess difficulty.
 2. **Speech** — Play vocabulary pronunciation (TTS) and judge the child's pronunciation attempt (ASR-as-judge).
 
-All AI services go through **OpenAI** (primary) or **OpenRouter** (fallback). No other AI providers are used.
+All LLM-based AI services go through **OpenAI** (primary) or **OpenRouter** (fallback). TTS uses **ElevenLabs** (`eleven_v3` model).
 
-All LLM-based inference (vision, pronunciation feedback, rarity classification, safety checks) is orchestrated through **[BAML](https://docs.boundaryml.com/)** — a domain-specific language for structured LLM function definitions. BAML provides **type-safe outputs** (Pydantic v2 models), **declarative fallback chains**, and **prompt-as-code** versioning. Non-LLM speech APIs (Whisper ASR, OpenAI TTS) are called directly in Python.
+All LLM-based inference (vision, pronunciation feedback, rarity classification, safety checks) is orchestrated through **[BAML](https://docs.boundaryml.com/)** — a domain-specific language for structured LLM function definitions. BAML provides **type-safe outputs** (Pydantic v2 models), **declarative fallback chains**, and **prompt-as-code** versioning. Non-LLM speech APIs (ASR via `gpt-4o-transcribe`, TTS via ElevenLabs) are called directly in Python.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -24,17 +24,17 @@ All LLM-based inference (vision, pronunciation feedback, rarity classification, 
 │  │          BAML-ORCHESTRATED            │   │  DIRECT API CALLS   │ │
 │  │                                       │   │                     │ │
 │  │  ┌────────┐ ┌────────┐ ┌──────────┐  │   │  ┌───────────────┐  │ │
-│  │  │ VISION │ │ SPEECH │ │ SAFETY   │  │   │  │ OpenAI Whisper│  │ │
-│  │  │        │ │FEEDBACK│ │          │  │   │  │ (ASR/STT)     │  │ │
-│  │  │ GPT-4o │ │        │ │ Image &  │  │   │  └───────────────┘  │ │
-│  │  │   ↓    │ │ GPT-4o │ │ Word     │  │   │                     │ │
-│  │  │ Gemini │ │ Mini   │ │ Checks   │  │   │  ┌───────────────┐  │ │
-│  │  │   ↓    │ │   ↓    │ │          │  │   │  │ OpenAI TTS    │  │ │
-│  │  │ Claude │ │ Gemini │ │ GPT-4o   │  │   │  │ (text-to-     │  │ │
-│  │  │        │ │        │ │ Mini     │  │   │  │  speech)       │  │ │
-│  │  └────────┘ └────────┘ └──────────┘  │   │  └───────────────┘  │ │
-│  │         ┌──────────┐                  │   │                     │ │
-│  │         │ RARITY   │                  │   │                     │ │
+│  │  │ VISION │ │ SPEECH │ │ SAFETY   │  │   │  │ OpenAI        │  │ │
+│  │  │        │ │FEEDBACK│ │          │  │   │  │ gpt-4o-       │  │ │
+│  │  │ GPT-4o │ │        │ │ Image &  │  │   │  │ transcribe    │  │ │
+│  │  │   ↓    │ │ GPT-4o │ │ Word     │  │   │  │ (ASR/STT)     │  │ │
+│  │  │ Gemini │ │ Mini   │ │ Checks   │  │   │  └───────────────┘  │ │
+│  │  │   ↓    │ │   ↓    │ │          │  │   │                     │ │
+│  │  │ Claude │ │ Gemini │ │ GPT-4o   │  │   │  ┌───────────────┐  │ │
+│  │  │        │ │        │ │ Mini     │  │   │  │ ElevenLabs    │  │ │
+│  │  └────────┘ └────────┘ └──────────┘  │   │  │ eleven_v3     │  │ │
+│  │         ┌──────────┐                  │   │  │ (TTS)         │  │ │
+│  │         │ RARITY   │                  │   │  └───────────────┘  │ │
 │  │         │ GPT-4o   │                  │   │                     │ │
 │  │         │ Mini     │                  │   │                     │ │
 │  │         └──────────┘                  │   │                     │ │
@@ -448,15 +448,15 @@ class ImageProcessor:
 
 ### 4.1 Text-to-Speech (TTS)
 
-TTS is used to play the correct pronunciation of vocabulary words. All TTS goes through **OpenAI's TTS API** (`tts-1` or `tts-1-hd`).
+TTS is used to play the correct pronunciation of vocabulary words. All TTS goes through **ElevenLabs** (`eleven_v3` model).
 
-| Language | Provider | Voice | Rationale |
-|---|---|---|---|
-| English (en) | OpenAI TTS | `alloy` or `nova` | Clear, natural, child-friendly |
-| Vietnamese (vi) | OpenAI TTS | `nova` | Best multilingual voice for Vietnamese |
-| Mandarin (zh) | OpenAI TTS | `nova` | Good Mandarin pronunciation with tones |
+| Language | Provider | Model | Voice config | Rationale |
+|---|---|---|---|---|
+| English (en) | ElevenLabs | `eleven_v3` | Multilingual voice, speed 0.85 | High-quality, natural synthesis |
+| Vietnamese (vi) | ElevenLabs | `eleven_v3` | Same voice, speed 0.80 | 70+ language support including Vietnamese |
+| Mandarin (zh) | ElevenLabs | `eleven_v3` | Same voice, speed 0.75 | Correct tone handling for Mandarin |
 
-> **Note:** OpenAI's TTS voices are multilingual — a single voice like `nova` can pronounce English, Vietnamese, and Mandarin. We pass the word with a language hint in the prompt to ensure correct pronunciation.
+> **Note:** A single ElevenLabs multilingual voice (`ELEVENLABS_VOICE_ID`) handles all three languages. Per-language speed adjustment (EN=0.85, VI=0.80, ZH=0.75) is passed via the `speed` parameter in voice settings. The voice ID is configurable without code changes.
 
 **TTS caching strategy:**
 
@@ -464,71 +464,41 @@ TTS audio for any given word+language combination never changes. We aggressively
 
 ```
 Request for TTS("cat", "en") →
-  1. Check Redis: tts:en:{hash("cat")} → local file path?
+  1. Check local filesystem: tts_cache/en/{hash("cat")}.mp3 exists?
      YES → serve file from local filesystem (~5ms)
      NO  →
-  2. Call OpenAI TTS API → receive audio bytes
-  3. Save to local file: tts_cache/en/cat_abc123.mp3
-  4. Set Redis key: tts:en:{hash("cat")} = tts_cache/en/cat_abc123.mp3 (TTL: 90 days)
-  5. Serve the file
+  2. Call ElevenLabs text_to_speech.convert() → receive audio bytes
+  3. Save to local file: tts_cache/en/{hash}.mp3
+  4. Serve the file
 ```
 
 ```python
-class TTSService:
+# In speech_service.py — synthesize_speech() uses AsyncElevenLabs client
+async def synthesize_speech(text: str, language: Language, cache_dir: Path | None = None) -> bytes:
     """
-    Text-to-Speech with aggressive local file caching.
-    Generates on-demand for words (cached after first generation).
+    Text-to-Speech with aggressive local file caching via ElevenLabs eleven_v3.
     """
+    cache_root = cache_dir or TTS_CACHE_DIR
+    lang_dir = cache_root / language.value
+    lang_dir.mkdir(parents=True, exist_ok=True)
+    text_hash = hashlib.sha256(text.encode()).hexdigest()[:16]
+    cache_file = lang_dir / f"{text_hash}.mp3"
 
-    VOICE_CONFIG = {
-        "en": {"voice": "nova", "speed": 0.85},       # Slightly slower for children
-        "vi": {"voice": "nova", "speed": 0.80},       # Slower for clarity
-        "zh": {"voice": "nova", "speed": 0.75},       # Slowest for tone clarity
-    }
+    if cache_file.exists():
+        return cache_file.read_bytes()  # Cache hit
 
-    TTS_CACHE_DIR = Path("tts_cache")
-
-    async def get_audio_path(self, word: str, language: str) -> str:
-        """Get TTS audio file path. Returns cached path or generates new."""
-        cache_key = f"tts:{language}:{hashlib.md5(word.encode()).hexdigest()}"
-
-        # Check Redis cache for local file path
-        cached_path = await self.redis.get(cache_key)
-        if cached_path:
-            path = cached_path.decode()
-            if Path(path).exists():
-                return path
-
-        # Generate audio via OpenAI TTS
-        config = self.VOICE_CONFIG[language]
-        response = await self.openai_client.audio.speech.create(
-            model="tts-1",
-            voice=config["voice"],
-            input=word,
-            speed=config["speed"],
-            response_format="mp3",
-        )
-
-        # Save to local filesystem
-        file_name = f"{cache_key.replace(':', '_')}.mp3"
-        file_path = self.TTS_CACHE_DIR / language / file_name
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-
-        async with aiofiles.open(file_path, "wb") as f:
-            await f.write(response.content)
-
-        # Cache path in Redis (90-day TTL)
-        await self.redis.set(cache_key, str(file_path), ex=90 * 86400)
-
-        return str(file_path)
-
-    async def ensure_cached(self, vocab_data: VisionResult):
-        """Pre-generate TTS for all languages of a word. Called async after capture."""
-        await asyncio.gather(
-            self.get_audio_path(vocab_data.object_en, "en"),
-            self.get_audio_path(vocab_data.object_vi, "vi"),
-            self.get_audio_path(vocab_data.object_zh, "zh"),
-        )
+    speed = TTS_SPEED.get(language, 0.85)  # EN=0.85, VI=0.80, ZH=0.75
+    client = _get_elevenlabs_client()
+    audio_iterator = await client.text_to_speech.convert(
+        text=text,
+        voice_id=ELEVENLABS_VOICE_ID,
+        model_id=ELEVENLABS_MODEL,        # "eleven_v3"
+        output_format=TTS_OUTPUT_FORMAT,  # "mp3_44100_128"
+        voice_settings={"speed": speed},
+    )
+    audio_bytes = b"".join([chunk async for chunk in audio_iterator])
+    cache_file.write_bytes(audio_bytes)
+    return audio_bytes
 ```
 
 ### 4.2 Speech-to-Text (ASR) — Pronunciation judge
@@ -537,14 +507,14 @@ The core insight: **instead of a pronunciation scoring API, we use ASR as a bina
 
 | Language | ASR Provider | Model | Config |
 |---|---|---|---|
-| English | OpenAI | whisper-1 | language="en", prompt hint |
-| Vietnamese | OpenAI | whisper-1 | language="vi", prompt hint |
-| Mandarin | OpenAI | whisper-1 | language="zh", prompt hint |
+| English | OpenAI | gpt-4o-transcribe | language="en", response_format="text" |
+| Vietnamese | OpenAI | gpt-4o-transcribe | language="vi", response_format="text" |
+| Mandarin | OpenAI | gpt-4o-transcribe | language="zh", response_format="text" |
 
 ```python
 class SpeechService:
     """
-    ASR-as-pronunciation-judge using OpenAI Whisper.
+    ASR-as-pronunciation-judge using OpenAI gpt-4o-transcribe.
     Converts child's audio to text, then does exact match against expected word.
     No fuzzy matching — simple and pedagogically appropriate for 6-10 year-olds.
     """
@@ -556,7 +526,7 @@ class SpeechService:
         Evaluate child's pronunciation attempt.
         Returns 3 stars (exact match) or 1 star (no match).
         """
-        # 1. Send audio to OpenAI Whisper
+        # 1. Send audio to OpenAI gpt-4o-transcribe
         transcript = await self._transcribe(audio_bytes, language, hint=expected_word)
 
         if not transcript:
@@ -583,7 +553,7 @@ class SpeechService:
     async def _transcribe(
         self, audio_bytes: bytes, language: str, hint: str
     ) -> str | None:
-        """Call OpenAI Whisper for transcription."""
+        """Call OpenAI gpt-4o-transcribe for transcription."""
         language_codes = {"en": "en", "vi": "vi", "zh": "zh"}
 
         try:
@@ -593,7 +563,7 @@ class SpeechService:
 
             response = await asyncio.wait_for(
                 self.openai_client.audio.transcriptions.create(
-                    model="whisper-1",
+                    model="gpt-4o-transcribe",
                     file=audio_file,
                     language=language_codes[language],
                     prompt=hint,  # Boost expected word recognition
@@ -601,7 +571,7 @@ class SpeechService:
                 timeout=5.0,
             )
         except asyncio.TimeoutError:
-            logger.warning("Whisper ASR timeout")
+            logger.warning("ASR timeout (gpt-4o-transcribe)")
             return None
 
         if not response.text:
@@ -631,8 +601,8 @@ class SpeechService:
 
 **Why no fuzzy matching?**
 - **Simplicity:** Exact match is trivial to implement, test, and debug. No Levenshtein distance, no pinyin conversion libraries.
-- **Pedagogically sound:** For 6–10 year-olds learning new words, the bar should be clear — either Whisper understood you, or it didn't. This avoids confusing "partial" scores.
-- **Whisper handles variability:** Whisper's own model already accounts for accent/pronunciation variations. If it transcribes "cat" from the child's audio, the pronunciation was close enough.
+- **Pedagogically sound:** For 6–10 year-olds learning new words, the bar should be clear — either the ASR understood you, or it didn't. This avoids confusing "partial" scores.
+- **ASR handles variability:** `gpt-4o-transcribe` already accounts for accent/pronunciation variations. If it transcribes "cat" from the child's audio, the pronunciation was close enough.
 - **Star system is binary:** ★★★ (3 stars = match) or ★ (1 star = no match). After 3 failed attempts, the app moves on encouragingly. No ambiguous 2-star middle ground.
 
 ### 4.3 Audio preprocessing
@@ -647,7 +617,7 @@ class AudioProcessor:
     MAX_DURATION_SECONDS = 5.0     # Max recording length
     MIN_DURATION_SECONDS = 0.3     # Min recording length (too short = accidental)
     MAX_FILE_SIZE = 1_000_000      # 1MB
-    TARGET_SAMPLE_RATE = 48000     # Whisper optimal
+    TARGET_SAMPLE_RATE = 48000     # gpt-4o-transcribe optimal
 
     async def process(self, audio_bytes: bytes) -> ProcessedAudio:
         # 1. Validate format (WebM/Opus from MediaRecorder, or WAV)
@@ -668,8 +638,8 @@ class AudioProcessor:
 |---|---|---|---|
 | **OpenAI GPT-4o** (live) | ~$0.01–0.03 | $0 | ~$0.02 |
 | **OpenRouter fallback** (Gemini Flash 2.5) | ~$0.003–0.008 | $0 | ~$0.005 |
-| **With pronunciation** (per attempt) | $0 | ~$0.006 (Whisper) | ~$0.006 |
-| **With TTS** (per word, first time) | $0 | ~$0.015 (OpenAI TTS) | ~$0.015 |
+| **With pronunciation** (per attempt) | $0 | ~$0.006 (gpt-4o-transcribe) | ~$0.006 |
+| **With TTS** (per word, first time) | $0 | ~$0.003 (ElevenLabs, ~10 chars) | ~$0.003 |
 | **With TTS** (cached) | $0 | $0 | ~$0 |
 
 ### 5.2 Monthly cost projection (100 beta users)
@@ -684,8 +654,8 @@ class AudioProcessor:
 | Cost item | Month 1 | Month 3 |
 |---|---|---|
 | OpenAI GPT-4o (vision) | $600 (30K calls × $0.02) | $600 |
-| OpenAI Whisper (ASR) | $27 (45K attempts × $0.006/min) | $27 |
-| OpenAI TTS | $45 (first-time generation) | $15 (mostly cached) |
+| OpenAI gpt-4o-transcribe (ASR) | $27 (45K attempts × $0.006/min) | $27 |
+| ElevenLabs TTS | ~$10 (first-time generation, ~10 chars/word) | ~$3 (mostly cached) |
 | **Total AI costs** | **~$672** | **~$642** |
 
 ### 5.3 Cost reduction roadmap
@@ -704,8 +674,8 @@ class AudioProcessor:
 |---|---|---|
 | OpenAI GPT-4o (vision) | < 4s | 2-4s |
 | OpenRouter fallback (vision) | < 3s | 1-3s |
-| OpenAI Whisper (pronunciation) | < 3s | 1-3s |
-| OpenAI TTS (generation) | < 1s | 300-600ms |
+| OpenAI gpt-4o-transcribe (pronunciation) | < 3s | 1-3s |
+| ElevenLabs TTS (generation) | < 2s | 500-1500ms |
 | TTS (cached, local file) | < 10ms | 1-5ms |
 | **Full capture flow (AI call)** | **< 4.5s** | **~3s** |
 | **Pronunciation check** | **< 3.5s** | **~2s** |
@@ -776,7 +746,7 @@ tests/fixtures/
 | Sprint | Weeks | AI deliverables |
 |---|---|---|
 | **1** | 1-2 | BAML type definitions + client configuration, vision prompt design + testing (via `baml-cli test`), `IdentifyObject` + `IdentifyObjectFiltered` functions, `CheckImageSafety` + `CheckWordSafety` safety gates, OpenAI GPT-4o integration via BAML, OpenRouter fallback setup via BAML, capture endpoint returning structured JSON |
-| **2** | 3-4 | OpenAI Whisper integration (EN + VI + ZH) — direct API, ASR-as-judge exact match logic, OpenAI TTS integration — direct API, local filesystem TTS caching, `GeneratePronunciationFeedback` + `GeneratePronunciationHint` BAML functions, pronunciation endpoint |
+| **2** | 3-4 | OpenAI gpt-4o-transcribe integration (EN + VI + ZH) — direct API, ASR-as-judge exact match logic, ElevenLabs eleven_v3 TTS integration — direct API, local filesystem TTS caching, `GeneratePronunciationFeedback` + `GeneratePronunciationHint` BAML functions, pronunciation endpoint |
 | **3** | 5-6 | `ClassifyRarity` BAML function, category diversity modifier |
 | **4** | 7-8 | Mission-aware capture context (e.g., "red objects" mission influences category matching) |
 | **5** | 9-10 | Parent dashboard, parent gate integration |

@@ -5,7 +5,7 @@ import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { ArrowLeft, Book } from 'lucide-react';
 import { triggerSparkles, triggerLegendaryBurst } from '../../utils/confetti';
 import { mascotSpeak } from '../../utils/feedbackUtils';
-import { MOCK_PRON_RESULTS } from '../../store/mockData';
+import { speechApi } from '../../services/speechApi';
 
 export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
 
@@ -20,6 +20,8 @@ interface RevealCardProps {
     rarity: Rarity;
     imageUrl: string;
     category: string;
+    vocabId?: string;
+    tts_urls?: { en: string; vi: string; zh: string };
     onCardFlyToCollection?: () => void;
 }
 
@@ -39,9 +41,7 @@ const rarityBadgeColor: Record<Rarity, string> = {
     Legendary: 'bg-rarity-legendary',
 };
 
-
-
-type PronunciationTier = 3 | 2 | 1; // 3 stars, 2 stars, 1 star
+type PronunciationTier = 3 | 2 | 1;
 
 const RevealCard: React.FC<RevealCardProps> = ({
     isOpen,
@@ -54,6 +54,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
     rarity,
     imageUrl,
     category,
+    vocabId,
+    tts_urls,
     onCardFlyToCollection,
 }) => {
     const [isListening, setIsListening] = useState(false);
@@ -61,9 +63,12 @@ const RevealCard: React.FC<RevealCardProps> = ({
     const [hasPlayedAudio, setHasPlayedAudio] = useState(false);
     const [attemptCount, setAttemptCount] = useState(0);
     const [stars, setStars] = useState<PronunciationTier | null>(null);
+    const [feedbackText, setFeedbackText] = useState('');
     const [showAutoCloseMessage, setShowAutoCloseMessage] = useState(false);
     const [isFlyingToCollection, setIsFlyingToCollection] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
     const { addCollection, target_language, secondary_language } = useGameStore();
     const { playChime, playPop } = useSoundEffects();
     const rarityLabels: Record<string, string> = {
@@ -74,10 +79,10 @@ const RevealCard: React.FC<RevealCardProps> = ({
         'Legendary': 'Huyền thoại luôn'
     };
 
-    // Helper to save common word data
+    // Helper to save word to collection
     const handleSaveCollection = (scoredStars: PronunciationTier, practiceCount: number) => {
         addCollection({
-            id: Date.now().toString(),
+            id: vocabId || Date.now().toString(),
             word_en,
             word_vi,
             word_zh,
@@ -91,21 +96,51 @@ const RevealCard: React.FC<RevealCardProps> = ({
         });
     };
 
-    // TTS Sequence: VI → Scaffolding → Target Language
-    const playTTSSequence = useCallback(() => {
-        // Cancel any ongoing speech
+    // TTS playback — prefer server TTS, fallback to Web Speech API
+    const playTTSSequence = useCallback(async () => {
         window.speechSynthesis.cancel();
 
         const targetWord = target_language === 'zh' ? word_zh : word_en;
         const targetLang = target_language === 'zh' ? 'zh-CN' : 'en-US';
+        const ttsLangKey = target_language === 'zh' ? 'zh' : 'en';
 
+        // Try server TTS URL from capture response first
+        if (tts_urls && tts_urls[ttsLangKey]) {
+            try {
+                const audio = new Audio(tts_urls[ttsLangKey]);
+                audio.play().catch(() => {
+                    // Fallback to Web Speech API
+                    const utterance = new SpeechSynthesisUtterance(targetWord);
+                    utterance.lang = targetLang;
+                    utterance.rate = 0.8;
+                    window.speechSynthesis.speak(utterance);
+                });
+                return;
+            } catch {
+                // Fall through to Web Speech API
+            }
+        }
+
+        // Try on-demand server TTS
+        if (vocabId) {
+            try {
+                const blobUrl = await speechApi.getTTSAudio(vocabId, ttsLangKey);
+                const audio = new Audio(blobUrl);
+                await audio.play();
+                return;
+            } catch {
+                // Fall through to Web Speech API
+            }
+        }
+
+        // Fallback: Web Speech API
         const utterance = new SpeechSynthesisUtterance(targetWord);
         utterance.lang = targetLang;
-        utterance.rate = 0.8; // Slightly slower for better clarity for kids
+        utterance.rate = 0.8;
         window.speechSynthesis.speak(utterance);
-    }, [target_language, word_en, word_zh]);
+    }, [target_language, word_en, word_zh, tts_urls, vocabId]);
 
-    // Auto-play TTS sequence when card opens (audio-first principle)
+    // Auto-play TTS when card opens
     useEffect(() => {
         if (isOpen && !hasPlayedAudio) {
             setHasPlayedAudio(true);
@@ -118,11 +153,12 @@ const RevealCard: React.FC<RevealCardProps> = ({
         if (isOpen) {
             setStars(null);
             setTranscript('');
+            setFeedbackText('');
             setHasPlayedAudio(false);
             setAttemptCount(0);
             setShowAutoCloseMessage(false);
+            setIsFlyingToCollection(false);
 
-            // Trigger Legendary celebration if rarity is Legendary
             if (rarity === 'Legendary') {
                 setTimeout(() => {
                     triggerLegendaryBurst();
@@ -132,81 +168,105 @@ const RevealCard: React.FC<RevealCardProps> = ({
         }
     }, [isOpen, rarity, playChime]);
 
-
-
-
-    const startSpeechRecognition = () => {
-        // Reset stars if starting over
+    // Real speech recognition via MediaRecorder + backend API
+    const startSpeechRecognition = async () => {
         if (stars === 3) setStars(null);
 
         setIsListening(true);
         setTranscript('Tớ đang nghe...');
+        setFeedbackText('');
 
-        // Mock AI Speech Processing
-        setTimeout(() => {
-            const targetWord = target_language === 'zh' ? word_zh : word_en;
+        try {
+            // Start recording
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+            audioChunksRef.current = [];
 
-            // Find mock data for this word, else fallback to a generic random result
-            const wordMock = MOCK_PRON_RESULTS.find((m: any) =>
-                m.expected_word_en === targetWord || m.expected_word_zh === targetWord
-            );
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
 
-            let resultScenario: any;
+            mediaRecorder.onstop = async () => {
+                // Stop all audio tracks
+                stream.getTracks().forEach(track => track.stop());
 
-            if (wordMock && wordMock.scenarios.length > 0) {
-                // Randomly pick a scenario from the mock data
-                resultScenario = wordMock.scenarios[Math.floor(Math.random() * wordMock.scenarios.length)];
-            } else {
-                // Fallback for words not in the mock list
-                resultScenario = {
-                    asr_result: targetWord,
-                    match_type: Math.random() > 0.3 ? 'exact' : 'partial',
-                    stars: Math.random() > 0.3 ? 3 : 2
-                };
-            }
+                // Convert to base64
+                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const base64 = (reader.result as string).split(',')[1];
+                    const language = target_language === 'zh' ? 'zh' : 'en';
 
-            const speechResult = resultScenario.asr_result || '...';
-            setTranscript(speechResult);
+                    try {
+                        const result = await speechApi.pronounce(
+                            vocabId || '',
+                            language,
+                            base64
+                        );
 
-            setIsListening(false);
+                        setTranscript(result.transcript || '...');
+                        setIsListening(false);
 
-            let scoredStars: PronunciationTier = resultScenario.stars as PronunciationTier;
-            setStars(scoredStars);
+                        const scoredStars = result.stars as PronunciationTier;
+                        setStars(scoredStars);
+                        setFeedbackText(result.feedback_vi || '');
 
-            const newAttemptCount = attemptCount + 1;
-            setAttemptCount(newAttemptCount);
+                        const newAttemptCount = attemptCount + 1;
+                        setAttemptCount(newAttemptCount);
 
-            // If all 3 attempts used and not yet 3-star, show auto-close message
-            if (newAttemptCount >= 3 && scoredStars < 3) {
-                setShowAutoCloseMessage(true);
-                // Auto-close after 2 seconds
-                setTimeout(() => {
-                    handleSaveCollection(scoredStars, newAttemptCount);
-                    onClose();
-                }, 2000);
-            }
-            // If got 3 stars, save and allow card to stay for celebration
-            else if (scoredStars === 3) {
-                handleSaveCollection(scoredStars, newAttemptCount);
-
-                // Trigger card fly-to-collection animation after 1.5 seconds
-                setTimeout(() => {
-                    setIsFlyingToCollection(true);
-                    playChime();
-                    triggerSparkles(window.innerWidth / 2, window.innerHeight / 2);
-
-                    // Close after flight animation completes (1.2 seconds)
-                    setTimeout(() => {
-                        if (onCardFlyToCollection) {
-                            onCardFlyToCollection();
+                        // If evolved, trigger celebration
+                        if (result.evolved) {
+                            triggerLegendaryBurst();
+                            playChime();
                         }
-                        onClose();
-                    }, 1200);
-                }, 1500);
-            }
-        }, 1500); // Simulate 1.5s recording/processing time
-    };
 
+                        // If all 3 attempts used and not 3-star
+                        if (newAttemptCount >= 3 && scoredStars < 3) {
+                            setShowAutoCloseMessage(true);
+                            setTimeout(() => {
+                                handleSaveCollection(scoredStars, newAttemptCount);
+                                onClose();
+                            }, 2000);
+                        }
+                        // If got 3 stars
+                        else if (scoredStars === 3) {
+                            handleSaveCollection(scoredStars, newAttemptCount);
+                            setTimeout(() => {
+                                setIsFlyingToCollection(true);
+                                playChime();
+                                triggerSparkles(window.innerWidth / 2, window.innerHeight / 2);
+                                setTimeout(() => {
+                                    if (onCardFlyToCollection) onCardFlyToCollection();
+                                    onClose();
+                                }, 1200);
+                            }, 1500);
+                        }
+                    } catch (err) {
+                        console.error('Pronunciation API error:', err);
+                        setIsListening(false);
+                        setTranscript('Có lỗi xảy ra, thử lại nhé!');
+                    }
+                };
+                reader.readAsDataURL(audioBlob);
+            };
+
+            mediaRecorder.start();
+
+            // Auto-stop after 3 seconds of recording
+            setTimeout(() => {
+                if (mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+            }, 3000);
+        } catch (err) {
+            console.error('Microphone error:', err);
+            setIsListening(false);
+            setTranscript('Cho tớ nghe giọng bạn nhé!');
+        }
+    };
 
     return (
         <AnimatePresence>
@@ -253,9 +313,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         {/* Navigation Arrow to Collection */}
                         <button
                             onClick={() => {
-                                if (onCardFlyToCollection) {
-                                    onCardFlyToCollection();
-                                }
+                                if (onCardFlyToCollection) onCardFlyToCollection();
                                 onClose();
                             }}
                             className="absolute top-6 left-6 flex items-center gap-2 bg-skyBlue/10 hover:bg-skyBlue/20 px-3 py-2 rounded-2xl transition-all"
@@ -278,9 +336,9 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             {!imageUrl && <div className="w-full h-full flex items-center justify-center text-4xl">📸</div>}
                         </div>
 
-                        {/* Multilingual Details — filtered by target_language */}
+                        {/* Multilingual Details */}
                         <div className="text-center space-y-3 mb-8">
-                            {/* Vietnamese — always shown as scaffold */}
+                            {/* Vietnamese — always shown */}
                             <div className="flex items-center justify-center gap-2 mb-2">
                                 <span className="text-xl mr-1">🇻🇳</span>
                                 <h2 className="text-xl font-bold text-lang-vi">{word_vi}</h2>
@@ -293,14 +351,14 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             </div>
 
                             <div className="flex flex-col gap-1">
-                                {/* Target Language (Primary) */}
+                                {/* Target Language */}
                                 {target_language === 'en' && (
                                     <div className="flex items-center justify-center gap-2">
                                         <span className="text-xl mr-1">🇺🇸</span>
                                         <span className="text-base font-bold text-lang-en">{word_en}</span>
                                         <span className="text-xs font-medium text-slate-400">{phonetic_en}</span>
                                         <button
-                                            onClick={() => mascotSpeak(word_en, 'en-US')}
+                                            onClick={() => playTTSSequence()}
                                             className="w-10 h-10 rounded-full bg-skyBlue/10 flex items-center justify-center text-skyBlue text-base"
                                         >
                                             🔊
@@ -313,7 +371,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                         <span className="text-base font-bold text-lang-zh">{word_zh}</span>
                                         <span className="text-xs font-medium text-slate-400">{pinyin}</span>
                                         <button
-                                            onClick={() => mascotSpeak(word_zh, 'zh-CN')}
+                                            onClick={() => playTTSSequence()}
                                             className="w-10 h-10 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-base"
                                         >
                                             🔊
@@ -321,7 +379,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                     </div>
                                 )}
 
-                                {/* Secondary Language (if enabled) */}
+                                {/* Secondary Language */}
                                 {secondary_language && (
                                     <>
                                         <div className="h-px bg-slate-200 my-2" />
@@ -330,11 +388,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                                 <span className="text-base font-semibold text-lang-en">{word_en}</span>
                                                 <span className="text-xs font-medium text-slate-400">{phonetic_en}</span>
                                                 <button
-                                                    onClick={() => {
-                                                        const utterance = new SpeechSynthesisUtterance(word_en);
-                                                        utterance.lang = 'en-US';
-                                                        window.speechSynthesis.speak(utterance);
-                                                    }}
+                                                    onClick={() => mascotSpeak(word_en, 'en-US')}
                                                     className="w-7 h-7 rounded-full bg-skyBlue/10 flex items-center justify-center text-skyBlue text-xs"
                                                 >
                                                     🔊
@@ -346,11 +400,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                                 <span className="text-base font-semibold text-lang-zh">{word_zh}</span>
                                                 <span className="text-xs font-medium text-slate-400">{pinyin}</span>
                                                 <button
-                                                    onClick={() => {
-                                                        const utterance = new SpeechSynthesisUtterance(word_zh);
-                                                        utterance.lang = 'zh-CN';
-                                                        window.speechSynthesis.speak(utterance);
-                                                    }}
+                                                    onClick={() => mascotSpeak(word_zh, 'zh-CN')}
                                                     className="w-7 h-7 rounded-full bg-mintGreen/10 flex items-center justify-center text-mintGreen text-xs"
                                                 >
                                                     🔊
@@ -375,6 +425,11 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                         {stars === 3 ? 'Tuyệt vời! Bạn nói đúng rồi.' : stars === 2 ? 'Gần đúng rồi! 👍' : stars === 1 ? 'Cùng tớ tập nói nhé! 🎯' : isListening ? 'Tớ đang nghe bạn nè...' : `Nói thật to để bắt bài nhé! (Lần ${attemptCount}/3)`}
                                     </span>
 
+                                    {/* Feedback from server */}
+                                    {feedbackText && !isListening && (
+                                        <p className="text-center text-xs font-bold text-skyBlue mb-3">{feedbackText}</p>
+                                    )}
+
                                     <div className="flex flex-col items-center gap-4">
                                         <motion.button
                                             whileTap={{ scale: 0.9 }}
@@ -394,7 +449,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                             </p>
                                         )}
 
-                                        {/* 3-tier Stars with Staggered Pop-in Animation */}
+                                        {/* Stars display */}
                                         {stars && (
                                             <div className="flex gap-2">
                                                 {[1, 2, 3].map((starIdx) => (
@@ -430,4 +485,3 @@ const RevealCard: React.FC<RevealCardProps> = ({
 };
 
 export default RevealCard;
-

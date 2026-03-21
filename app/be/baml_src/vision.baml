@@ -49,6 +49,10 @@ function IdentifyObject(photo: image) -> VisionResult {
 
     {{ ctx.output_format }}
   "#
+
+  @@user #"
+    {{ photo }}
+  "#
 }
 
 // ── Identify Object with Filter Level ─────────────────────────
@@ -91,5 +95,9 @@ function IdentifyObjectFiltered(photo: image, filter_level: FilterLevel) -> Visi
     - Confidence 0.0–1.0
 
     {{ ctx.output_format }}
+  "#
+
+  @@user #"
+    {{ photo }}
   "#
 }

@@ -3,13 +3,20 @@
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
+
+from dotenv import load_dotenv
+
+# Load .env into os.environ BEFORE any module reads env vars (e.g. BAML clients).
+load_dotenv()
 
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.db.redis import close_redis_pool, init_redis_pool
@@ -133,6 +140,23 @@ def create_app() -> FastAPI:
     from app.api.router import api_router
 
     application.include_router(api_router, prefix="/api")
+
+    # -- Serve static files --
+    # Uploaded photos (user-captured images)
+    uploads_dir = settings.UPLOAD_DIR
+    os.makedirs(uploads_dir, exist_ok=True)
+    application.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+
+    # Reference vocabulary images (static_images/)
+    static_images_dir = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "static_images"
+    )
+    if os.path.isdir(static_images_dir):
+        application.mount(
+            "/static_images",
+            StaticFiles(directory=static_images_dir),
+            name="static_images",
+        )
 
     return application
 

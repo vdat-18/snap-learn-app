@@ -4,6 +4,8 @@ import { X, Volume2, BookOpen, Mic } from 'lucide-react';
 import { useGameStore, type CapturedWord } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from '../../utils/feedbackUtils';
+import { speechApi } from '../../services/speechApi';
+// TODO: Remove once collectionApi.getVocabDetail() returns fun_fact_vi and sentence data
 import { MOCK_REFERENCE_VOCAB } from '../../store/mockData';
 
 interface VocabDetailProps {
@@ -12,7 +14,7 @@ interface VocabDetailProps {
 }
 
 const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
-    const { practiceWord, addXP, target_language } = useGameStore();
+    const { practiceWord, target_language } = useGameStore();
     const { playPop, playChime } = useSoundEffects();
     const [isPracticing, setIsPracticing] = useState(false);
     const [justEvolved, setJustEvolved] = useState(false);
@@ -24,31 +26,78 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
         v.word_en && v.word_en.toLowerCase() === wordEnLower
     );
 
-    const handlePractice = () => {
+    const handlePractice = async () => {
         setIsPracticing(true);
-        const wasEvolved = word.isEvolved;
 
-        mascotSpeak(word.word_en, 'en-US');
+        try {
+            // Record audio via MediaRecorder
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            const audioChunks: Blob[] = [];
 
-        setTimeout(() => {
-            try {
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                stream.getTracks().forEach(track => track.stop());
+
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const base64 = (reader.result as string).split(',')[1];
+                    const language = target_language === 'zh' ? 'zh' : 'en';
+
+                    try {
+                        const result = await speechApi.pronounce(word.id, language, base64);
+
+                        // Update local practice word state
+                        practiceWord(word.id, result.stars);
+
+                        if (result.evolved) {
+                            setJustEvolved(true);
+                            playChime();
+                            triggerHaptic(200);
+                        } else {
+                            playPop();
+                            triggerHaptic(50);
+                        }
+                    } catch (err) {
+                        console.error('Practice API error:', err);
+                        // Fallback: still count as local practice
+                        practiceWord(word.id, 1);
+                        playPop();
+                        triggerHaptic(50);
+                    } finally {
+                        setIsPracticing(false);
+                    }
+                };
+                reader.readAsDataURL(audioBlob);
+            };
+
+            // Play TTS first, then record
+            mascotSpeak(word.word_en, 'en-US');
+
+            setTimeout(() => {
+                mediaRecorder.start();
+                // Record for 3 seconds
+                setTimeout(() => {
+                    if (mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                }, 3000);
+            }, 1200);
+        } catch (err) {
+            console.error('Microphone error:', err);
+            // Fallback to local practice without mic
+            mascotSpeak(word.word_en, 'en-US');
+            setTimeout(() => {
                 practiceWord(word.id, 1);
-                addXP(10);
-
-                if (!wasEvolved && word.practiceCount >= 2) {
-                    setJustEvolved(true);
-                    playChime();
-                    triggerHaptic(200);
-                } else {
-                    playPop();
-                    triggerHaptic(50);
-                }
-            } catch (err) {
-                console.error('Practice error:', err);
-            } finally {
+                playPop();
+                triggerHaptic(50);
                 setIsPracticing(false);
-            }
-        }, 1200);
+            }, 1200);
+        }
     };
 
     const progressPercent = Math.min((word.practiceCount / 3) * 100, 100);
@@ -101,7 +150,6 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                             </button>
                         </div>
 
-                        {/* If English is chosen */}
                         {target_language === 'en' && (
                             <div className="flex items-center justify-center gap-3">
                                 <span className="text-xl">🇺🇸</span>
@@ -112,7 +160,6 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                             </div>
                         )}
 
-                        {/* If Chinese is chosen */}
                         {target_language === 'zh' && (
                             <div className="flex items-center justify-center gap-3">
                                 <span className="text-xl">🇨🇳</span>

@@ -217,3 +217,7 @@ __marimo__/
 .DS_Store
 
 # Node.js
+baml_client/
+
+ignore/
+chromadb_disk/

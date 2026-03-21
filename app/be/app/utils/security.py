@@ -6,24 +6,36 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
+import bcrypt
 from jose import jwt
-from passlib.context import CryptContext
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 # ---------------------------------------------------------------------------
 # Password hashing
 # ---------------------------------------------------------------------------
 
+def _pre_hash(password: str) -> bytes:
+    """SHA-256 pre-hash so bcrypt always receives ≤64 bytes.
+
+    bcrypt has a hard 72-byte input limit. Pre-hashing with SHA-256 produces
+    a fixed 64-char hex digest that is safe for any input length while still
+    being a one-way transformation of the original secret.
+
+    Returns bytes ready for bcrypt.
+    """
+    return hashlib.sha256(password.encode()).hexdigest().encode("utf-8")
+
+
 def hash_password(password: str) -> str:
-    """Hash a plain-text password using bcrypt."""
-    return pwd_context.hash(password)
+    """Hash a plain-text password using bcrypt (with SHA-256 pre-hash)."""
+    return bcrypt.hashpw(_pre_hash(password), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its bcrypt hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        _pre_hash(plain_password), hashed_password.encode("utf-8")
+    )
 
 
 # ---------------------------------------------------------------------------
