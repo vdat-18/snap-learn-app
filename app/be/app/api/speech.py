@@ -66,7 +66,6 @@ async def pronounce(
     # Determine target word for the language
     target_word = vocab.word_en if body.language == "en" else vocab.word_vi
 
-    # Call BAML speech service
     from baml_client.types import Language as BamlLanguage
 
     lang_map = {"en": BamlLanguage.En, "vi": BamlLanguage.Vi}
@@ -79,7 +78,7 @@ async def pronounce(
         target_word=target_word,
         audio_bytes=audio_bytes,
         language=baml_lang,
-        attempt_number=1,
+        attempt_number=body.attempt_number,
         openai_client=openai_client,
     )
 
@@ -99,10 +98,10 @@ async def pronounce(
         redis=redis,
     )
 
-    # Determine match type
-    match_type = "exact" if pronunciation_result.is_match else "no_match"
+    # Determine match type from star rating
+    _MATCH_TYPE = {3: "exact", 2: "close", 1: "no_match"}
+    match_type = _MATCH_TYPE[pronunciation_result.stars]
 
-    # Look up vocab image on exact match
     image_url = lookup_vocab_image(target_word) if match_type == "exact" else None
 
     return PronounceResponse(

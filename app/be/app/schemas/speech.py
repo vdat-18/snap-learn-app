@@ -11,11 +11,12 @@ class PronounceRequest(BaseModel):
     vocab_id: UUID
     language: str = Field(..., pattern="^(en|vi)$")
     audio_base64: str = Field(..., description="Base64-encoded WebM or WAV audio")
+    attempt_number: int = Field(1, ge=1, le=3, description="Which attempt (1-3)")
 
 
 class PronounceResponse(BaseModel):
-    stars: int  # 1 or 3
-    match_type: str  # "exact", "contains", "no_match"
+    stars: int  # 3 = great, 2 = close, 1 = needs practice
+    match_type: str  # "exact", "close", "no_match"
     transcript: str
     feedback_vi: str
     mastery: int  # updated mastery level for this language
