@@ -29,13 +29,17 @@ KEY_PATTERN = re.compile(r"^[a-z_]+__\d+$")
 
 def _mascot_cache_dir(settings: Settings) -> Path:
     """Return the mascot audio cache directory."""
-    return Path(settings.TTS_CACHE_DIR) / "mascot"
+    mascot_path = Path(settings.TTS_CACHE_DIR) / "mascot"
+    return mascot_path
 
 
 def _voice_instructions_path() -> Path:
     """Return the path to voice_instructions.yml (project root)."""
-    # Navigate from app/be/app/api/ up to project root
-    path = Path(__file__).resolve().parent / "voice_instructions.yml"
+    # Navigate from app/be/app/api/ up to the actual project root
+    # __file__ = /Users/.../snap-learn-app/app/be/app/api/mascot_audio.py
+    # We need to go up 4 levels to reach /Users/.../snap-learn-app/
+    path = Path(__file__).resolve().parent.parent.parent / "voice_instructions.yml"
+    print(f"Looking for voice_instructions.yml at: {path}")
     return path
 
 
@@ -78,7 +82,7 @@ async def get_manifest(
             for lang in VALID_LANGUAGES:
                 audio_path = cache_dir / lang / f"{key}.mp3"
                 if audio_path.exists():
-                    urls[lang] = f"/api/tts/mascot/{key}/{lang}"
+                    urls[lang] = f"/api/mascot/{key}/{lang}"
 
             item = {
                 "key": key,

@@ -39,7 +39,8 @@ from baml_client.types import Language  # noqa: E402
 logger = logging.getLogger(__name__)
 
 # ── Constants ────────────────────────────────────────────────────
-VOICE_INSTRUCTIONS_PATH = PROJECT_ROOT.parent / "voice_instructions.yml"
+# Point to the trilingual voice_instructions.yml with keys and translations
+VOICE_INSTRUCTIONS_PATH = PROJECT_ROOT / "app" / "api" / "voice_instructions.yml"
 MASCOT_CACHE_DIR = Path("tts_cache") / "mascot"
 LANG_MAP = {"vi": Language.Vi, "en": Language.En, "zh": Language.Zh}
 LANG_CODES = ["vi", "en", "zh"]
