@@ -13,7 +13,7 @@ import { useGameStore } from './store/gameStore';
 import { useSoundEffects } from './hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from './utils/feedbackUtils';
 import { MOCK_AI_RESPONSES } from './store/mockData';
-import { Scan, WifiOff, RefreshCw } from 'lucide-react';
+import { Scan, WifiOff, RefreshCw, Image } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const App: React.FC = () => {
@@ -43,6 +43,7 @@ const App: React.FC = () => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Connect to global state
   const {
@@ -140,6 +141,44 @@ const App: React.FC = () => {
     };
   }, [showSplash, userName, hasSeenOnboarding, setupCamera, facingMode]);
 
+  const processImage = (imageData: string) => {
+    setCapturedImage(imageData);
+
+    // Start "AI Processing" mock
+    setIsAIProcessing(true);
+
+    setTimeout(() => {
+      const validResponses = MOCK_AI_RESPONSES.filter((r: any) => r.response.object_en);
+      const randomResp = validResponses[Math.floor(Math.random() * validResponses.length)];
+
+      const result = {
+        word_en: randomResp.response.object_en as string,
+        word_vi: randomResp.response.object_vi as string,
+        word_zh: randomResp.response.object_zh as string,
+        rarity: (randomResp.response.rarity === 'legendary' ? 'Legendary' :
+          randomResp.response.rarity === 'epic' ? 'Epic' :
+            randomResp.response.rarity === 'rare' ? 'Rare' :
+              randomResp.response.rarity === 'uncommon' ? 'Uncommon' : 'Common') as any,
+        category: randomResp.response.category === 'animals' ? 'Animals' :
+          randomResp.response.category === 'food' ? 'Food' :
+            randomResp.response.category === 'nature' ? 'Nature' :
+              randomResp.response.category === 'vehicles' ? 'Vehicles' :
+                randomResp.response.category === 'school' ? 'School' : 'Home'
+      };
+
+      setIsAIProcessing(false);
+      setCapturedResult(result);
+      setIsRevealOpen(true);
+
+      if (result.rarity === 'Legendary') {
+        playChime();
+      }
+
+      addXP(10);
+      recordCapture(result.rarity);
+    }, 2500);
+  };
+
   const handleCaptureClick = async () => {
     if (isTimeLimitExceeded()) {
       setShowTimeLimitError(true);
@@ -161,41 +200,19 @@ const App: React.FC = () => {
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const imageData = canvas.toDataURL('image/jpeg');
-      setCapturedImage(imageData);
+      processImage(imageData);
+    }
+  };
 
-      // Start "AI Processing" mock
-      setIsAIProcessing(true);
-
-      setTimeout(() => {
-        const validResponses = MOCK_AI_RESPONSES.filter((r: any) => r.response.object_en);
-        const randomResp = validResponses[Math.floor(Math.random() * validResponses.length)];
-
-        const result = {
-          word_en: randomResp.response.object_en as string,
-          word_vi: randomResp.response.object_vi as string,
-          word_zh: randomResp.response.object_zh as string,
-          rarity: (randomResp.response.rarity === 'legendary' ? 'Legendary' :
-            randomResp.response.rarity === 'epic' ? 'Epic' :
-              randomResp.response.rarity === 'rare' ? 'Rare' :
-                randomResp.response.rarity === 'uncommon' ? 'Uncommon' : 'Common') as any,
-          category: randomResp.response.category === 'animals' ? 'Animals' :
-            randomResp.response.category === 'food' ? 'Food' :
-              randomResp.response.category === 'nature' ? 'Nature' :
-                randomResp.response.category === 'vehicles' ? 'Vehicles' :
-                  randomResp.response.category === 'school' ? 'School' : 'Home'
-        };
-
-        setIsAIProcessing(false);
-        setCapturedResult(result);
-        setIsRevealOpen(true);
-
-        if (result.rarity === 'Legendary') {
-          playChime();
-        }
-
-        addXP(10);
-        recordCapture(result.rarity);
-      }, 2500);
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const imageData = reader.result as string;
+        processImage(imageData);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -411,6 +428,24 @@ const App: React.FC = () => {
             >
               <RefreshCw className="w-6 h-6" />
             </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.8 }}
+              onClick={() => {
+                triggerHaptic(30);
+                playPop();
+                fileInputRef.current?.click();
+              }}
+              className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white pointer-events-auto ml-4"
+            >
+              <Image className="w-6 h-6" />
+            </motion.button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="image/*"
+              className="hidden"
+            />
           </div>
         </div>
 
