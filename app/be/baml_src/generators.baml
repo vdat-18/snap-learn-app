@@ -17,5 +17,5 @@ generator target {
   default_client_mode "async"
 
   // Pin to installed baml-py version for reproducibility
-  version "0.76.2"
+  version "0.220.0"
 }

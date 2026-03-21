@@ -15,12 +15,29 @@ from baml_client import b
 from baml_client.types import (
     BlockedResult,
     FilterLevel,
+    ImageSafetyResult,
     SafetyCheckResult,
     VisionResult,
 )
 from baml_py import Image
+from baml_py.errors import BamlValidationError
 
 logger = logging.getLogger(__name__)
+
+# Phrases that indicate an LLM refusal (provider-level content filter)
+_REFUSAL_PHRASES = (
+    "i'm sorry",
+    "i cannot",
+    "i can't",
+    "i am not able",
+    "i'm not able",
+    "as an ai",
+    "cannot assist",
+    "can't assist",
+    "unable to process",
+    "not able to assist",
+    "i apologize",
+)
 
 
 async def identify_object(
@@ -50,25 +67,43 @@ async def identify_object(
     # ── Step 1: Pre-flight safety check (fast model) ──────────
     if run_safety_preflight:
         try:
-            safety: SafetyCheckResult = await b.CheckImageSafety(
+            safety: ImageSafetyResult = await b.CheckImageSafety(
                 photo=image,
                 filter_level=filter_level,
             )
             if safety.status.value == "blocked":
-                logger.info("Pre-flight safety blocked: %s", safety.reason)
+                logger.info("Pre-flight safety blocked")
                 return BlockedResult(
                     status="blocked",
-                    reason=safety.reason,
+                    reason="inappropriate_content",
                 )
         except Exception:
             # Safety check failure should NOT block the pipeline
             logger.warning("Pre-flight safety check failed, proceeding", exc_info=True)
 
     # ── Step 2: Vision identification (fallback chain) ────────
-    result = await b.IdentifyObjectFiltered(
-        photo=image,
-        filter_level=filter_level,
-    )
+    try:
+        result = await b.IdentifyObjectFiltered(
+            photo=image,
+            filter_level=filter_level,
+        )
+    except BamlValidationError as e:
+        # LLM refused to process the image (e.g. "I'm sorry, I can't assist
+        # with that request.") — the raw text doesn't match VisionResult or
+        # BlockedResult.  Treat provider-level refusals as blocked content.
+        raw = e.raw_output
+        raw_lower = raw.lower()
+        if any(phrase in raw_lower for phrase in _REFUSAL_PHRASES):
+            logger.warning(
+                "LLM refused image, treating as blocked: %s",
+                raw[:200],
+            )
+            return BlockedResult(
+                status="blocked",
+                reason="inappropriate_content",
+            )
+        # Not a recognisable refusal — re-raise so the caller can handle it
+        raise
 
     # Handle union return: could be VisionResult or BlockedResult
     if isinstance(result, BlockedResult):

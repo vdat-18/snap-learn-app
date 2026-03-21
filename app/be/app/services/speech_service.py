@@ -2,37 +2,57 @@
 SnapLearn Speech Service — BAML Integration
 ============================================
 Wraps BAML-generated async client for pronunciation feedback.
-Whisper STT and OpenAI TTS are called via the OpenAI SDK directly
-(they are REST APIs, not LLM inference). BAML handles the feedback
-generation and pronunciation hints.
+ASR uses OpenAI gpt-4o-transcribe via the OpenAI SDK directly.
+TTS uses ElevenLabs eleven_v3 via the elevenlabs SDK.
+BAML handles the feedback generation and pronunciation hints.
 """
 
 from __future__ import annotations
 
 import hashlib
 import logging
+import os
 from pathlib import Path
 from typing import Optional
 
 import openai
 from baml_client import b
 from baml_client.types import Language, PronunciationResult
+from elevenlabs import AsyncElevenLabs
 
 logger = logging.getLogger(__name__)
 
-# ── TTS Configuration ──────────────────────────────────────────
-TTS_MODEL = "tts-1"
-TTS_VOICE = "nova"
+# ── ElevenLabs TTS Configuration ─────────────────────────────
+ELEVENLABS_MODEL = "eleven_v3"
+ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "")
 TTS_SPEED = {
     Language.En: 0.85,
     Language.Vi: 0.80,
     Language.Zh: 0.75,
 }
+TTS_OUTPUT_FORMAT = "mp3_44100_128"
 TTS_CACHE_DIR = Path("tts_cache")
 TTS_CACHE_TTL_DAYS = 90
 
+# ── ElevenLabs async client (module-level singleton) ─────────
+_elevenlabs_client: AsyncElevenLabs | None = None
 
-# ── Whisper STT (direct OpenAI SDK) ───────────────────────────
+
+def _get_elevenlabs_client() -> AsyncElevenLabs:
+    """Lazily initialise and return the ElevenLabs async client."""
+    global _elevenlabs_client
+    if _elevenlabs_client is None:
+        api_key = os.environ.get("ELEVENLABS_API_KEY", "")
+        if not api_key:
+            raise RuntimeError(
+                "ELEVENLABS_API_KEY environment variable is required for TTS"
+            )
+        _elevenlabs_client = AsyncElevenLabs(api_key=api_key)
+    return _elevenlabs_client
+
+
+# ── ASR (OpenAI gpt-4o-transcribe) ──────────────────────────
+
 
 async def transcribe_audio(
     audio_bytes: bytes,
@@ -40,7 +60,7 @@ async def transcribe_audio(
     openai_client: openai.AsyncOpenAI,
 ) -> str:
     """
-    Transcribe child's pronunciation attempt via Whisper.
+    Transcribe child's pronunciation attempt via gpt-4o-transcribe.
 
     Args:
         audio_bytes: Audio blob (WebM/WAV, 0.3-5s, max 1MB)
@@ -53,7 +73,7 @@ async def transcribe_audio(
     lang_code = language.value  # "en", "vi", "zh"
 
     response = await openai_client.audio.transcriptions.create(
-        model="whisper-1",
+        model="gpt-4o-transcribe",
         file=("audio.webm", audio_bytes, "audio/webm"),
         language=lang_code if lang_code != "zh" else "zh",
         response_format="text",
@@ -62,6 +82,7 @@ async def transcribe_audio(
 
 
 # ── Pronunciation Judging (BAML) ──────────────────────────────
+
 
 async def judge_pronunciation(
     target_word: str,
@@ -72,7 +93,7 @@ async def judge_pronunciation(
 ) -> PronunciationResult:
     """
     Full pronunciation judging pipeline:
-    1. Transcribe audio via Whisper
+    1. Transcribe audio via gpt-4o-transcribe
     2. Generate feedback via BAML (includes match logic + Vietnamese encouragement)
 
     Args:
@@ -87,7 +108,7 @@ async def judge_pronunciation(
     """
     # Step 1: Transcribe
     transcribed = await transcribe_audio(audio_bytes, language, openai_client)
-    logger.info("Whisper transcribed: '%s' (target: '%s')", transcribed, target_word)
+    logger.info("ASR transcribed: '%s' (target: '%s')", transcribed, target_word)
 
     # Step 2: Generate feedback via BAML
     result: PronunciationResult = await b.GeneratePronunciationFeedback(
@@ -101,6 +122,7 @@ async def judge_pronunciation(
 
 
 # ── Pronunciation Hints (BAML) ────────────────────────────────
+
 
 async def get_pronunciation_hint(word: str, language: Language) -> str:
     """
@@ -116,21 +138,20 @@ async def get_pronunciation_hint(word: str, language: Language) -> str:
     return await b.GeneratePronunciationHint(word=word, language=language)
 
 
-# ── TTS (direct OpenAI SDK with caching) ──────────────────────
+# ── TTS (ElevenLabs with filesystem caching) ─────────────────
+
 
 async def synthesize_speech(
     text: str,
     language: Language,
-    openai_client: openai.AsyncOpenAI,
     cache_dir: Optional[Path] = None,
 ) -> bytes:
     """
-    Generate TTS audio with local filesystem caching.
+    Generate TTS audio via ElevenLabs with local filesystem caching.
 
     Args:
         text: Text to synthesize
         language: Target language (affects speed)
-        openai_client: Async OpenAI client
         cache_dir: Override cache directory (default: tts_cache/)
 
     Returns:
@@ -149,18 +170,31 @@ async def synthesize_speech(
         logger.debug("TTS cache hit: %s", cache_file)
         return cache_file.read_bytes()
 
-    # Cache miss: generate
+    # Cache miss: generate via ElevenLabs
     speed = TTS_SPEED.get(language, 0.85)
+    voice_id = ELEVENLABS_VOICE_ID or os.environ.get("ELEVENLABS_VOICE_ID", "")
+    if not voice_id:
+        raise RuntimeError(
+            "ELEVENLABS_VOICE_ID environment variable is required for TTS"
+        )
 
-    response = await openai_client.audio.speech.create(
-        model=TTS_MODEL,
-        voice=TTS_VOICE,
-        input=text,
-        speed=speed,
-        response_format="mp3",
+    client = _get_elevenlabs_client()
+    audio_iterator = client.text_to_speech.convert(
+        text=text,
+        voice_id=voice_id,
+        model_id=ELEVENLABS_MODEL,
+        output_format=TTS_OUTPUT_FORMAT,
+        voice_settings={
+            "speed": speed,
+        },
     )
 
-    audio_bytes = response.content
+    # Collect audio bytes from the async iterator
+    audio_chunks: list[bytes] = []
+    async for chunk in audio_iterator:
+        audio_chunks.append(chunk)
+    audio_bytes = b"".join(audio_chunks)
+
     cache_file.write_bytes(audio_bytes)
     logger.info("TTS generated and cached: %s (%d bytes)", cache_file, len(audio_bytes))
 

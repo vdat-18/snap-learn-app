@@ -1,3 +1,11 @@
+/**
+ * @deprecated This file is being phased out. All data now comes from backend APIs.
+ * Remaining usages:
+ *   - MOCK_REFERENCE_VOCAB: used by CollectionBook.tsx and VocabDetail.tsx for
+ *     undiscovered cards and fun facts. Will be removed once collectionApi provides this data.
+ *
+ * DO NOT add new mock data consumers. Use services/ API modules instead.
+ */
 import type { CapturedWord, Quest, LeaderboardEntry } from './gameStore';
 // @ts-ignore
 import capturedVocabJSON from '../../../../_docs/mock_data/captured_vocab.json';

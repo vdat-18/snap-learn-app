@@ -4,6 +4,8 @@ import { X, Volume2, BookOpen, Mic } from 'lucide-react';
 import { useGameStore, type CapturedWord } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from '../../utils/feedbackUtils';
+import { speechApi } from '../../services/speechApi';
+// TODO: Remove once collectionApi.getVocabDetail() returns fun_fact_vi and sentence data
 import { MOCK_REFERENCE_VOCAB } from '../../store/mockData';
 import BackgroundParallax from './BackgroundParallax';
 
@@ -13,7 +15,7 @@ interface VocabDetailProps {
 }
 
 const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
-    const { practiceWord, addXP, target_language } = useGameStore();
+    const { practiceWord, target_language } = useGameStore();
     const { playPop, playChime } = useSoundEffects();
     const [isPracticing, setIsPracticing] = useState(false);
     const [justEvolved, setJustEvolved] = useState(false);
@@ -27,51 +29,78 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
         v.word_en && v.word_en.toLowerCase() === wordEnLower
     );
 
-    const handlePractice = () => {
-        if (isPracticing) return;
-
+    const handlePractice = async () => {
         setIsPracticing(true);
-        setPracticeStatus('listening');
-        const wasEvolved = word.isEvolved;
 
-        mascotSpeak(word.word_en, 'en-US');
+        try {
+            // Record audio via MediaRecorder
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            const audioChunks: Blob[] = [];
 
-        // Simulate AI Processing (1.5s)
-        setTimeout(() => {
-            // Randomly determine stars (1, 2, or 3)
-            // 80% chance for success (2-3 stars), 20% for 1 star
-            const rand = Math.random();
-            const scoredStars = rand > 0.4 ? 3 : rand > 0.2 ? 2 : 1;
-            const isCorrect = scoredStars >= 2;
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) audioChunks.push(event.data);
+            };
 
-            if (isCorrect) {
-                setPracticeStatus('success');
-                try {
-                    practiceWord(word.id, scoredStars);
-                    addXP(20);
+            mediaRecorder.onstop = async () => {
+                stream.getTracks().forEach(track => track.stop());
 
-                    if (!wasEvolved && word.practiceCount >= 2) {
-                        setJustEvolved(true);
-                        playChime();
-                        triggerHaptic(200);
-                    } else {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const base64 = (reader.result as string).split(',')[1];
+                    const language = target_language === 'zh' ? 'zh' : 'en';
+
+                    try {
+                        const result = await speechApi.pronounce(word.id, language, base64);
+
+                        // Update local practice word state
+                        practiceWord(word.id, result.stars);
+
+                        if (result.evolved) {
+                            setJustEvolved(true);
+                            playChime();
+                            triggerHaptic(200);
+                        } else {
+                            playPop();
+                            triggerHaptic(50);
+                        }
+                    } catch (err) {
+                        console.error('Practice API error:', err);
+                        // Fallback: still count as local practice
+                        practiceWord(word.id, 1);
                         playPop();
                         triggerHaptic(50);
+                    } finally {
+                        setIsPracticing(false);
                     }
-                } catch (err) {
-                    console.error('Practice error:', err);
-                }
-            } else {
-                setPracticeStatus('fail');
-                triggerHaptic(100);
-            }
+                };
+                reader.readAsDataURL(audioBlob);
+            };
 
-            // Reset UI status after 1.5s reward/feedback display
+            // Play TTS first, then record
+            mascotSpeak(word.word_en, 'en-US');
+
             setTimeout(() => {
+                mediaRecorder.start();
+                // Record for 3 seconds
+                setTimeout(() => {
+                    if (mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                }, 3000);
+            }, 1200);
+        } catch (err) {
+            console.error('Microphone error:', err);
+            // Fallback to local practice without mic
+            mascotSpeak(word.word_en, 'en-US');
+            setTimeout(() => {
+                practiceWord(word.id, 1);
+                playPop();
+                triggerHaptic(50);
                 setIsPracticing(false);
-                setPracticeStatus('idle');
-            }, 1500);
-        }, 1500);
+            }, 1200);
+        }
     };
 
     const progressPercent = Math.min((word.practiceCount / 3) * 100, 100);
@@ -139,39 +168,39 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                         </motion.div>
                     </div>
 
-                    <div className="text-center mb-8">
-                        <div className="flex flex-col gap-4">
-                            <div className="flex items-center justify-center gap-3">
-                                <span className="text-xl">🇻🇳</span>
-                                <span className="text-2xl font-black text-deepNavy">{word.word_vi || ''}</span>
-                                <button onClick={() => mascotSpeak(word.word_vi, 'vi-VN')} className="p-3 rounded-full bg-deepNavy/5 text-deepNavy active:scale-95 transition-all">
-                                    <Volume2 className="w-6 h-6" />
-                                </button>
-                            </div>
-
-                            {/* If English is chosen */}
-                            {target_language === 'en' && (
-                                <div className="flex items-center justify-center gap-3">
-                                    <span className="text-xl">🇺🇸</span>
-                                    <span className="text-xl font-black text-skyBlue">{word.word_en}</span>
-                                    <button onClick={() => mascotSpeak(word.word_en, 'en-US')} className="p-3 rounded-full bg-skyBlue/10 text-skyBlue active:scale-95 transition-all">
-                                        <Volume2 className="w-6 h-6" />
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* If Chinese is chosen */}
-                            {target_language === 'zh' && (
-                                <div className="flex items-center justify-center gap-3">
-                                    <span className="text-xl">🇨🇳</span>
-                                    <span className="text-2xl font-black text-lang-zh">{word.word_zh}</span>
-                                    <button onClick={() => mascotSpeak(word.word_zh, 'zh-CN')} className="p-3 rounded-full bg-lang-zh/10 text-lang-zh active:scale-95 transition-all">
-                                        <Volume2 className="w-6 h-6" />
-                                    </button>
-                                </div>
-                            )}
+                    {target_language === 'en' && (
+                        <div className="flex items-center justify-center gap-3">
+                            <span className="text-xl">🇻🇳</span>
+                            <span className="text-2xl font-black text-deepNavy">{word.word_vi || ''}</span>
+                            <button onClick={() => mascotSpeak(word.word_vi, 'vi-VN')} className="p-3 rounded-full bg-deepNavy/5 text-deepNavy active:scale-95 transition-all">
+                                <Volume2 className="w-6 h-6" />
+                            </button>
                         </div>
-                    </div>
+
+                        {target_language === 'zh' && (
+                        <div className="flex items-center justify-center gap-3">
+                            <span className="text-xl">🇨🇳</span>
+                            <span className="text-2xl font-black text-lang-zh">{word.word_zh}</span>
+                            <button onClick={() => mascotSpeak(word.word_zh, 'zh-CN')} className="p-3 rounded-full bg-lang-zh/10 text-lang-zh active:scale-95 transition-all">
+                                <Volume2 className="w-6 h-6" />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* If Chinese is chosen */}
+            {target_language === 'zh' && (
+                <div className="flex items-center justify-center gap-3">
+                    <span className="text-xl">🇨🇳</span>
+                    <span className="text-2xl font-black text-lang-zh">{word.word_zh}</span>
+                    <button onClick={() => mascotSpeak(word.word_zh, 'zh-CN')} className="p-3 rounded-full bg-lang-zh/10 text-lang-zh active:scale-95 transition-all">
+                        <Volume2 className="w-6 h-6" />
+                    </button>
+                </div>
+            )}
+        </div>
+                    </div >
 
                     <section className="bg-white rounded-[32px] p-6 shadow-level-2 mb-6 border-b-4 border-slate-100">
                         <div className="flex items-center justify-between mb-4">
@@ -199,8 +228,8 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                             <div className="flex justify-center py-4 text-slate-300"><BookOpen /></div>
                         )}
                     </section>
-                </div>
-            </BackgroundParallax>
+                </div >
+            </BackgroundParallax >
 
             <div className="p-6 bg-white border-t border-slate-100 px-8">
                 <motion.button
@@ -249,7 +278,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </motion.div>
+        </motion.div >
     );
 };
 

@@ -29,9 +29,9 @@ client<llm> GPT4oMini {
 
 // ── OpenRouter Fallback: Gemini Flash 2.5 ─────────────────────
 client<llm> GeminiFlash {
-  provider openai
+  provider "openai-generic"
   options {
-    model "google/gemini-flash-2.5"
+    model "google/gemini-2.5-flash"
     api_key env.OPENROUTER_API_KEY
     base_url "https://openrouter.ai/api/v1"
     temperature 0.2
@@ -41,7 +41,7 @@ client<llm> GeminiFlash {
 
 // ── OpenRouter Fallback: Claude Sonnet ────────────────────────
 client<llm> ClaudeSonnet {
-  provider openai
+  provider "openai-generic"
   options {
     model "anthropic/claude-sonnet-4"
     api_key env.OPENROUTER_API_KEY
@@ -63,6 +63,6 @@ client<llm> VisionFallback {
 client<llm> FastFallback {
   provider fallback
   options {
-    strategy [GPT4oMini, GeminiFlash]
+    strategy [GPT4o, GeminiFlash]
   }
 }

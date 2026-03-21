@@ -10,7 +10,10 @@
 // Quick image safety scan BEFORE full vision inference.
 // Uses a fast/cheap model to minimize latency on blocked content.
 
-function CheckImageSafety(photo: image, filter_level: FilterLevel) -> SafetyCheckResult {
+function CheckImageSafety(
+  photo: image,
+  filter_level: FilterLevel
+) -> ImageSafetyResult {
   client FastFallback
 
   prompt #"
@@ -26,7 +29,6 @@ function CheckImageSafety(photo: image, filter_level: FilterLevel) -> SafetyChec
     - Violence: blood, gore, fighting, injuries
     - Hate: hate symbols, racist imagery, offensive gestures
     - Gambling: cards, chips, slot machines, betting
-    - People: human faces, identifiable persons (privacy protection)
 
     STRICT FILTER additionally blocks:
     - Creepy creatures: spiders, insects, snakes (close-up)
@@ -37,11 +39,11 @@ function CheckImageSafety(photo: image, filter_level: FilterLevel) -> SafetyChec
 
     RESPOND:
     - status: "safe" if image is appropriate for children
-    - status: "blocked" if ANY unsafe content is detected
-    - reason: specific reason if blocked (inappropriate_content or person_detected)
     - confidence: 0.0–1.0 how confident you are in the assessment
 
     {{ ctx.output_format }}
+
+    {{ photo }}
   "#
 }
 

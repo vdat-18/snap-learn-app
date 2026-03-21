@@ -2,6 +2,9 @@
 
 Wraps the existing speech_service.synthesize_speech() for TTS caching,
 and provides URL helpers for the API layer.
+
+TTS is now powered by ElevenLabs (eleven_v3). The synthesize_speech()
+function manages the ElevenLabs client internally — no OpenAI client needed.
 """
 
 from __future__ import annotations
@@ -27,22 +30,19 @@ async def ensure_cached(
     do not propagate.
     """
     try:
-        import openai
-
         from app.services.speech_service import synthesize_speech
         from baml_client.types import Language
 
-        client = openai.AsyncOpenAI()
         cache_path = Path(cache_dir)
 
         for text, lang in [
-            (word_en, Language.en),
-            (word_vi, Language.vi),
-            (word_zh, Language.zh),
+            (word_en, Language.En),
+            (word_vi, Language.Vi),
+            (word_zh, Language.Zh),
         ]:
             if text:
                 try:
-                    await synthesize_speech(text, lang, client, cache_path)
+                    await synthesize_speech(text, lang, cache_path)
                 except Exception:
                     logger.warning("TTS pre-gen failed for '%s' (%s)", text, lang.value, exc_info=True)
     except Exception:

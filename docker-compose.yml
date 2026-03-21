@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -59,6 +57,8 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
       OPENROUTER_VISION_MODEL: ${OPENROUTER_VISION_MODEL:-google/gemini-flash-2.5}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}
+      ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID}
 
       # Security
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production}
@@ -91,7 +91,7 @@ services:
 
     volumes:
       - ./app/be:/app
-      - baml_client:/app/baml_client
+      - ./app/be/baml_client:/app/baml_client
       - backend_uploads:/app/uploads
       - backend_tts_cache:/app/tts_cache
       - backend_logs:/app/logs
@@ -117,8 +117,8 @@ services:
   # Next.js Frontend
   # frontend:
   #   build:
-  #     context: ./app/fe
-  #     dockerfile: Dockerfile
+  #     context: .
+  #     dockerfile: app/fe/Dockerfile
   #   container_name: snaplearn-frontend
   #   environment:
   #     # Next.js
@@ -164,8 +164,6 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
-    driver: local
-  baml_client:
     driver: local
   backend_uploads:
     driver: local

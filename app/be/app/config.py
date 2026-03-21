@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "./uploads"
     TTS_CACHE_DIR: str = "./tts_cache"
     LOG_DIR: str = "./logs"
+    CHROMADB_DIR: str = "./chromadb_data"
 
     # --- Optional: JWT ---
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
@@ -35,6 +36,10 @@ class Settings(BaseSettings):
     PRONUNCIATIONS_PER_DAY_FREE: int = 15
     PRONUNCIATIONS_PER_DAY_PREMIUM: int = 100
     DAILY_TIME_LIMIT_MINUTES: int = 30
+
+    # --- Required: ElevenLabs TTS ---
+    ELEVENLABS_API_KEY: str
+    ELEVENLABS_VOICE_ID: str
 
     # --- Optional: OpenRouter (for BAML fallback) ---
     OPENROUTER_API_KEY: str | None = None

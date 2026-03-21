@@ -3,17 +3,25 @@
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
+
+from dotenv import load_dotenv
+
+# Load .env into os.environ BEFORE any module reads env vars (e.g. BAML clients).
+load_dotenv()
 
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.db.redis import close_redis_pool, init_redis_pool
 from app.db.session import dispose_engine, init_engine
+from app.services.search_service import close_search_engine, init_search_engine
 from app.utils.errors import AppError
 
 logger = structlog.get_logger(__name__)
@@ -31,11 +39,21 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     # --- Startup ---
     await init_engine(settings.ASYNC_DATABASE_URL)
     await init_redis_pool(settings.REDIS_URL)
+
+    # Search engine (sync – ChromaDB + embeddings)
+    vocab_json = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "vocab.json")
+    init_search_engine(
+        openai_api_key=settings.OPENAI_API_KEY,
+        chromadb_dir=settings.CHROMADB_DIR,
+        vocab_json_path=vocab_json,
+    )
+
     logger.info("startup_complete", environment=settings.ENVIRONMENT)
 
     yield
 
     # --- Shutdown ---
+    close_search_engine()
     await close_redis_pool()
     await dispose_engine()
     logger.info("shutdown_complete")
@@ -133,6 +151,24 @@ def create_app() -> FastAPI:
     from app.api.router import api_router
 
     application.include_router(api_router, prefix="/api")
+
+    # -- Serve static files --
+    # Uploaded photos (user-captured images)
+    uploads_dir = settings.UPLOAD_DIR
+    os.makedirs(uploads_dir, exist_ok=True)
+    os.makedirs(settings.CHROMADB_DIR, exist_ok=True)
+    application.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+
+    # Reference vocabulary images (static_images/)
+    static_images_dir = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "static_images"
+    )
+    if os.path.isdir(static_images_dir):
+        application.mount(
+            "/static_images",
+            StaticFiles(directory=static_images_dir),
+            name="static_images",
+        )
 
     return application
 

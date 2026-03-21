@@ -274,9 +274,9 @@ Target users are 6-10 year-olds who may not read fluently.
 | # | Object | Expected Rarity | Demo Purpose | Backup |
 |---|--------|----------------|--------------|--------|
 | 1 | Water bottle | ⚪ Common | Easy opener, reliable identification | Hard-coded fallback |
-| 2 | Headphones | 🟢 Uncommon | Shows rarity jump, good pronunciation word | Hard-coded fallback |
+| 2 | Earbuds | 🟢 Uncommon | Shows rarity jump, good pronunciation word | Hard-coded fallback |
 | 3 | Rubik's cube | 🔵 Rare | Visually striking, unexpected, shows diversity | Hard-coded fallback |
-| 4 | Nón lá (Vietnamese conical hat) | 🟣 Epic / 🟡 Legendary | Cultural moment, judges remember this one | Hard-coded fallback |
+| 4 | Toy excavator | 🟣 Epic / 🟡 Legendary | Every kid loves construction vehicles, judges remember this one | Hard-coded fallback |
 | 5 | (Spare) Potted plant | 🟢 Uncommon | Category diversity, if needed | Hard-coded fallback |
 
 **Pre-test ALL objects** with the Vision API before the demo. Confirm identification and rarity. Swap out any that fail.
@@ -296,17 +296,17 @@ Target users are 6-10 year-olds who may not read fluently.
 - TTS plays Vietnamese, then English
 - Pronounce "water bottle" → ⭐⭐⭐ Perfect! +10 points
 
-**Capture 2: Headphones (Uncommon)**
+**Capture 2: Earbuds (Uncommon)**
 > "Let's try something less common."
-- Card reveals: "Tai nghe / Headphones" — green glow — 🟢 Uncommon, +25 pts
+- Card reveals: "Tai nghe / Earbuds" — green glow — 🟢 Uncommon, +25 pts
 - TTS plays
 - **Deliberately mispronounce** → ⭐ "Almost! Listen again..."
 - TTS replays → Pronounce correctly → ⭐⭐⭐ "Great job!"
 > "Notice the app didn't punish the mistake — it encouraged a retry. This is designed for 6-year-olds building confidence."
 
-**Capture 3: Nón Lá (Epic/Legendary)**
+**Capture 3: Toy Excavator (Epic/Legendary)**
 > "Now watch what happens with something rare."
-- Card reveals: "Nón lá / Conical Hat" — purple pulse or gold explosion — 🟣 Epic, +100 pts
+- Card reveals: "Xe xúc đất / Excavator" — purple pulse or gold explosion — 🟣 Epic, +100 pts
 - Dramatic reveal animation
 > "Rare objects earn more points. Kids are motivated to explore beyond their living room — go to the market, the park, a museum."
 

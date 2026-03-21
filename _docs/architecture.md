@@ -99,7 +99,7 @@ SnapLearn follows a **client-server architecture** with a Next.js PWA frontend c
 
 ### 2.5 External AI services
 
-All LLM-based inference is orchestrated through **BAML**, which provides type-safe function definitions, declarative fallback chains, and auto-generated Pydantic v2 models. Non-LLM APIs (Whisper ASR, TTS) are called directly in Python.
+All LLM-based inference is orchestrated through **BAML**, which provides type-safe function definitions, declarative fallback chains, and auto-generated Pydantic v2 models. Non-LLM APIs (ASR via OpenAI gpt-4o-transcribe, TTS via ElevenLabs eleven_v3) are called directly in Python.
 
 | Service | Provider | Model | Purpose | Orchestration |
 |---|---|---|---|---|
@@ -108,8 +108,8 @@ All LLM-based inference is orchestrated through **BAML**, which provides type-sa
 | **Rarity classification** | OpenAI | GPT-4o-mini | Classify objects into rarity tiers | BAML `FastFallback` chain |
 | **Content safety** | OpenAI | GPT-4o-mini | Pre-flight image + post-flight word safety checks | BAML `FastFallback` chain |
 | **Pronunciation feedback** | OpenAI | GPT-4o-mini | Child-friendly pronunciation encouragement in Vietnamese | BAML `FastFallback` chain |
-| **ASR (speech-to-text)** | OpenAI | Whisper (gpt-4o-transcribe) | Pronunciation judging for EN, VI, ZH | Direct Python API call |
-| **TTS (text-to-speech)** | OpenAI | tts-1 / tts-1-hd | Word pronunciation playback for EN, VI, ZH | Direct Python API call |
+| **ASR (speech-to-text)** | OpenAI | gpt-4o-transcribe | Pronunciation judging for EN, VI, ZH | Direct Python API call |
+| **TTS (text-to-speech)** | ElevenLabs | eleven_v3 | Word pronunciation playback for EN, VI, ZH | Direct Python API call |
 
 > **BAML** defines two fallback chains: `VisionFallback` (GPT-4o → Gemini Flash → Claude Sonnet) for heavy vision tasks, and `FastFallback` (GPT-4o-mini → Gemini Flash) for lightweight tasks. All prompts, types, and provider configs are version-controlled in `.baml` files under `app/be/baml_src/`. See [ai.md § 2](./ai.md) for full BAML documentation.
 
@@ -194,7 +194,7 @@ Client                    Backend                    Speech Services
 
 ```
 GET /api/tts/{vocab_id}/{language}
-  → Returns cached audio file or generates via OpenAI TTS
+  → Returns cached audio file or generates via ElevenLabs TTS
   → Audio is cached to local filesystem for subsequent plays
 ```
 
@@ -604,7 +604,7 @@ Target: **< 4 seconds** from capture button tap to card reveal on a local/LAN co
 | Response to client | < 50ms | JSON response ~2KB |
 | **Total** | **< 3.5s** | |
 
-**TTS latency:** Novel words: OpenAI TTS ~500ms, cached to local filesystem for subsequent plays.
+**TTS latency:** Novel words: ElevenLabs eleven_v3 ~500–1500ms, cached to local filesystem for subsequent plays.
 
 **ASR latency:** OpenAI Whisper API = 1-3s. Acceptable for pronunciation practice flow (child releases PTT button → 1-3s wait → stars appear).
 
@@ -635,9 +635,13 @@ Target: **< 4 seconds** from capture button tap to card reveal on a local/LAN co
 │     ┌──────────────┐       ┌──────────────┐                 │
 │     │ OpenAI API   │       │ OpenRouter   │                 │
 │     │ (GPT-4o,     │       │ (fallback    │                 │
-│     │  Whisper,    │       │  models)     │                 │
-│     │  TTS)        │       │              │                 │
+│     │  gpt-4o-     │       │  models)     │                 │
+│     │  transcribe) │       │              │                 │
 │     └──────────────┘       └──────────────┘                 │
+│                        ┌──────────────┐                     │
+│                        │ ElevenLabs   │                     │
+│                        │ (TTS)        │                     │
+│                        └──────────────┘                     │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -731,7 +735,7 @@ How the architecture rolls out across the 12-week POC:
 | Sprint | Weeks | Architecture components |
 |---|---|---|
 | **1** | 1-2 | Next.js PWA scaffold, Camera API, FastAPI skeleton, OpenAI GPT-4o integration, basic capture endpoint, Postgres schema (User, CapturedVocab), email/password auth with JWT |
-| **2** | 3-4 | Speech service (OpenAI Whisper + TTS), pronunciation endpoint, audio recording/playback on frontend, star rating system, local TTS caching |
+| **2** | 3-4 | Speech service (OpenAI gpt-4o-transcribe ASR + ElevenLabs TTS), pronunciation endpoint, audio recording/playback on frontend, star rating system, local TTS caching |
 | **3** | 5-6 | Collection Book UI + API, category queries, vocab detail, card mastery system |
 | **4** | 7-8 | Mission engine, leaderboard (Redis sorted sets), level progression, XP system, bottom navigation |
 | **5** | 9-10 | Parent dashboard, Parent Gate, parental controls, activity feed |
