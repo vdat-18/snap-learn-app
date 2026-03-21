@@ -11,8 +11,8 @@
 | - | -------------------------------- | -------------- | ----- | ------------------------------------------------------------------------------------------- |
 | 1 | Project title                    | ✅ Done        | -     | "SnapLearn — AI-Powered Vocabulary Camera"                                                 |
 | 2 | Tagline (one sentence)           | ✅ Done        | -     | "Turn passive screen time into active vocabulary building — Pokémon Go for English words" |
-| 3 | The Story (why, how, challenges) | 🔴 Not started |       | 300-500 words, lead with personal story                                                     |
-| 4 | Built With tags                  | 🔴 Not started |       | Flutter, Python, Claude API, Google Cloud STT/TTS, Supabase                                 |
+| 3 | The Story (why, how, challenges) | ✅ Draft       |       | See `_docs/hackathon/project_story.md`                                                      |
+| 4 | Built With tags                  | ✅ Done        |       | Next.js, Python, BAML, GPT-4o, OpenAI Whisper, OpenAI TTS, Supabase, Tailwind CSS, Framer Motion |
 | 5 | Demo video (2-3 min)             | 🔴 Not started |       | YouTube/Vimeo link                                                                          |
 | 6 | GitHub repo link                 | 🟡 Exists      |       | README updated                                                                              |
 | 7 | Track selection                  | ✅ Done        | -     | Edtech (by Etest)                                                                           |
@@ -83,71 +83,9 @@
 
 ## Story Template (Devpost)
 
-```markdown
-## Inspiration
-
-My daughter is two and a half years old. She already grabs my phone and demands 
-to watch YouTube. Every time I hand it over, I feel a pang of guilt — she's 
-absorbing passive content when she should be exploring the world.
-
-I'm not alone. Smartphones are ubiquitous in children's lives. Most kids use them 
-to consume low-value content on TikTok and YouTube. Meanwhile in Vietnam, 
-parents spend $50-200 per month on English tutoring, yet between classes, their 
-kids have zero engaging practice. The result: Vietnam ranks 58th globally in 
-English proficiency despite massive education spending.
-
-We wanted to offer an alternative: use the smartphone to develop their brains, 
-their language skills, starting with vocabulary.
-
-## What it does
-
-SnapLearn turns passive screen time into active vocabulary building. A child 
-points their camera at any object — a water bottle, a cat, a bicycle — snaps a 
-photo, and the AI identifies it in both Vietnamese and English. The child hears 
-the pronunciation, speaks it back, and if the AI understands them, they earn 
-points and add the word to their collection.
-
-It's Pokémon Go for vocabulary. Kids explore the real world, capture words, build 
-a collection, and compete on leaderboards. Rare and unusual objects are worth more, 
-motivating kids to explore beyond their living room.
-
-## How we built it
-
-- **Frontend**: Flutter for cross-platform mobile with camera and microphone access
-- **Backend**: FastAPI (Python) for AI orchestration
-- **Vision**: large Vision Language Model for real-time object identification and translation
-- **Speech**: Text-to-Speech technology for pronunciation playback, Speech-to-Text technology for 
-  pronunciation checking (our "ASR-as-judge" approach — if the speech recognition 
-  understands you, a native speaker would too)
-- **Database**: PostgresDB for user data and leaderboards
-
-## Challenges we ran into
-
-[TO BE FILLED DURING HACKATHON]
-
-## Accomplishments that we're proud of
-
-[TO BE FILLED DURING HACKATHON]
-
-## What we learned
-
-[TO BE FILLED DURING HACKATHON]
-
-## What's next for SnapLearn
-
-The real innovation isn't the vocabulary app — it's the interaction model. When a 
-child snaps a photo, the AI and child now share visual context. The AI doesn't 
-feel like a chatbot waiting for a prompt; it feels like a companion responding to 
-a shared discovery.
-
-Imagine the AI sees the same cat your child does and asks: "Is that your cat? 
-What's its name?" That's where we're going.
-
-Near-term: Chinese language support, daily missions, parent dashboard. 
-Medium-term: school deployments, conversational AI, content expansion.
-Long-term: dedicated hardware devices (SnapBear plush toy for screen-free learning), 
-Vietnamese market launch targeting 8 million kids.
-```
+> **See `_docs/hackathon/project_story.md` for the full, ready-to-paste story.**
+>
+> Copy each section into the corresponding Devpost field. Fill in the `[TO BE FILLED]` sections during the hackathon.
 
 ---
 

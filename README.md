@@ -36,21 +36,23 @@ Kids explore, collect, level up, and compete — Pokémon Go for vocabulary.
 
 | Layer | Technology |
 |-------|-------------|
-| **Frontend** | Flutter + Dart |
+| **Frontend** | Next.js 14 PWA + TypeScript |
+| **Styling** | Tailwind CSS + Framer Motion |
 | **Backend** | FastAPI (Python) |
-| **Vision AI** | Claude Sonnet 3.5 |
-| **Text-to-Speech** | Google Cloud TTS |
-| **Speech-to-Text** | Google Cloud STT |
+| **AI Orchestration** | BAML (type-safe LLM functions with fallback chains) |
+| **Vision AI** | GPT-4o → Gemini Flash → Claude Sonnet |
+| **Text-to-Speech** | OpenAI TTS |
+| **Speech-to-Text** | OpenAI Whisper |
 | **Database** | Supabase (PostgreSQL) |
 
 ## Quick Start
 
 ### Prerequisites
 
-- Flutter SDK 3.x
+- Node.js 18+
 - Python 3.11+
 - Supabase account
-- API keys: Anthropic (Claude), Google Cloud (TTS/STT)
+- API keys: OpenAI (GPT-4o, Whisper, TTS), OpenRouter (fallback)
 
 ### Setup
 
@@ -64,22 +66,21 @@ cd app/be
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env  # Add your API keys
-uvicorn main:app --reload
+cp ../../.env.example .env  # Add your API keys
+uvicorn app.main:app --reload
 
 # Frontend setup (new terminal)
 cd ../fe
-flutter pub get
-flutter run
+npm install
+npm run dev
 ```
 
 ### Environment Variables
 
 ```bash
-# Backend .env
-ANTHROPIC_API_KEY=your_key
-GOOGLE_CLOUD_PROJECT=your_project
-GOOGLE_CLOUD_KEY_FILE=path_to_service_account.json
+# .env
+OPENAI_API_KEY=your_key
+OPENROUTER_API_KEY=your_key
 SUPABASE_URL=your_url
 SUPABASE_ANON_KEY=your_key
 ```
@@ -88,9 +89,9 @@ SUPABASE_ANON_KEY=your_key
 
 ### Core Loop (Hackathon MVP)
 - 📷 **Camera capture** — Point and snap any object
-- 🤖 **AI identification** — Vision API recognizes objects in Vietnamese + English
-- 🔊 **Audio playback** — TTS speaks both languages
-- 🎤 **Pronunciation check** — ASR validates speech ("if the AI understands you, a native speaker would too")
+- 🤖 **AI identification** — Vision API recognizes objects in Vietnamese + English (GPT-4o with fallback chain)
+- 🔊 **Audio playback** — OpenAI TTS speaks both languages
+- 🎤 **Pronunciation check** — Whisper validates speech ("if the AI understands you, a native speaker would too")
 - ⭐ **Rarity & points** — Common → Uncommon → Rare → Epic → Legendary
 - 📖 **Words Vault** — Collection of captured vocabulary cards
 - 🏆 **Leaderboard** — Global ranking

@@ -145,24 +145,27 @@ For the hackathon, we demonstrate this with vocabulary. But the platform can ext
 
 | Layer | Technology | Why |
 |-------|------------|-----|
-| **Frontend** | Flutter + Dart | Cross-platform, camera/mic access, smooth animations |
+| **Frontend** | Next.js 14 PWA + TypeScript | Camera/mic via browser APIs, Framer Motion animations, installable without app store |
+| **Styling** | Tailwind CSS | Rapid iteration, good Vietnamese typography |
 | **Backend** | FastAPI (Python) | AI orchestration, async support |
-| **Vision AI** | Claude Sonnet 3.5 / GPT-4o | Object identification + translation |
-| **TTS** | Google Cloud TTS / Azure Neural | Vietnamese + English voices |
-| **ASR** | Google Cloud STT / Whisper | Pronunciation checking |
+| **AI Orchestration** | BAML (Boundary AI Markup Language) | Type-safe structured LLM outputs, automatic fallback chains |
+| **Vision AI** | GPT-4o → Gemini Flash → Claude Sonnet (fallback chain) | Object identification + translation, triple redundancy |
+| **TTS** | OpenAI TTS | Natural-sounding Vietnamese + English voices |
+| **ASR** | OpenAI Whisper | Pronunciation checking — our "ASR-as-judge" |
 | **Database** | Supabase (PostgreSQL) | Quick setup, built-in auth |
 | **Storage** | Supabase Storage | Photo storage (opt-in) |
 
 ### AI Pipeline
 
 ```
-Photo → Vision API → {object_vi, object_en, category, rarity}
-                           ↓
-       TTS: "Đây là [Vietnamese]. In English: [English word]"
-                           ↓
-              Child speaks → ASR transcribes
-                           ↓
-                  Match check → Stars + points
+Photo → BAML VisionFallback → {object_vi, object_en, category, rarity}
+         (GPT-4o → Gemini       ↓
+          Flash → Claude)   
+                           OpenAI TTS: "Đây là [Vietnamese]. In English: [English word]"
+                                       ↓
+                              Child speaks → OpenAI Whisper transcribes
+                                       ↓
+                              BAML PronunciationFeedback → Stars + points
 ```
 
 ### Vision API Response (JSON)
@@ -396,10 +399,12 @@ See `product_vision.md` for the complete vision document with market research, u
 
 | Decision | Choice | Reason |
 |----------|--------|--------|
-| Framework | Flutter | Cross-platform, smooth animations, camera/mic plugins |
-| Vision API | Claude Sonnet 3.5 | Strong object ID, structured JSON, multi-language output |
-| ASR-as-judge | Google STT | If the ASR understands the child, a native speaker would too — that's our bar |
-| Database | Supabase | Quick setup, built-in auth, PostgreSQL |
+| Frontend | Next.js 14 PWA | Browser-native camera/mic APIs, Framer Motion for card animations, installable without app store |
+| AI orchestration | BAML | Type-safe structured LLM outputs, automatic fallback chains, no glue code |
+| Vision API | GPT-4o (primary) | Best object ID accuracy; Gemini Flash + Claude Sonnet as automatic fallbacks |
+| ASR-as-judge | OpenAI Whisper | If the speech model understands the child, a native speaker would too — that's our bar |
+| TTS | OpenAI TTS | Natural-sounding voices for Vietnamese + English |
+| Database | Supabase | Quick setup, built-in auth, PostgreSQL, realtime for leaderboard |
 | English-only | English | Halves scope while fully demonstrating the concept |
 | Hard-coded fallbacks | 5 demo objects cached | Demo must work flawlessly regardless of WiFi |
 
