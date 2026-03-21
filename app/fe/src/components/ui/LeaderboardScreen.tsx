@@ -21,7 +21,7 @@ const avatarEmoji = (id: string): string => {
 };
 
 const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }) => {
-    const { xp, userName } = useGameStore();
+    const { xp, level, userName } = useGameStore();
     const { playPop } = useSoundEffects();
     const [activeTab, setActiveTab] = useState('global');
     const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(null);
@@ -64,7 +64,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
     };
 
     // Calculate dynamic rank for current user
-    const userRank = [...currentPlayers, { name: userName, points: xp }]
+    const userRank = [...entries, { name: userName, points: xp }]
         .sort((a, b) => b.points - a.points)
         .findIndex(p => p.name === userName) + 1;
 
