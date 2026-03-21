@@ -25,6 +25,13 @@ interface RevealCardProps {
     tts_urls?: { en: string; vi: string; zh: string };
     xpEarned?: number;
     onCardFlyToCollection?: () => void;
+    description_en?: string | null;
+    description_zh?: string | null;
+    description_tts_urls?: { en: string; zh: string };
+    example_sentence_en?: string | null;
+    example_sentence_vi?: string | null;
+    example_sentence_zh?: string | null;
+    fun_fact_vi?: string | null;
 }
 
 const rarityGlowMap: Record<Rarity, string> = {
@@ -60,6 +67,13 @@ const RevealCard: React.FC<RevealCardProps> = ({
     tts_urls,
     xpEarned,
     onCardFlyToCollection,
+    description_en,
+    description_zh,
+    description_tts_urls,
+    example_sentence_en,
+    example_sentence_vi,
+    example_sentence_zh,
+    fun_fact_vi,
 }) => {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState('');
