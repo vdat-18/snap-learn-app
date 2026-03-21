@@ -63,6 +63,7 @@ enum FilterLevel {
 class VisionResult {
   status          string        @description("'success' or 'blocked'")
   object_en       string        @description("English name of the identified object")
+  object_vi       string        @description("Vietnamese name of the identified object")
   phonetic_en     string        @description("IPA pronunciation for English word")
   category        ObjectCategory @description("Object category from 16 predefined categories")
   difficulty_vi   int           @description("Vietnamese difficulty 1-5")
