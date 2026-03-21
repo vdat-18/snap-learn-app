@@ -40,6 +40,8 @@ export default {
       },
       fontFamily: {
         outfit: ["Outfit", "sans-serif"],
+        sans: ["'Be Vietnam Pro'", "Outfit", "system-ui", "sans-serif"],
+        playful: ["Nunito", "sans-serif"],
       },
       borderRadius: {
         'button': '16px',

@@ -62,7 +62,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ isOpen, onClose }) => {
                     animate={{ x: 0 }}
                     exit={{ x: '-100%' }}
                     transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                    className="fixed inset-0 z-[170] bg-snowWhite flex flex-col font-outfit"
+                    className="fixed inset-0 z-[170] bg-snowWhite flex flex-col font-sans"
                 >
                     {/* Header (icon-driven, minimal text) */}
                     <header className="px-6 pt-12 pb-6 flex items-center justify-between border-b border-slate-100">

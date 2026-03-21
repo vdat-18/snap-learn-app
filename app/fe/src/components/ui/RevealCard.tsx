@@ -86,7 +86,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
     const [isFlyingToCollection, setIsFlyingToCollection] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     const { addCollection, target_language, secondary_language } = useGameStore();
-    const { playChime } = useSoundEffects();
+    const { playChime, playPop } = useSoundEffects();
     const rarityLabels: Record<string, string> = {
         'Common': 'Thường nè',
         'Uncommon': 'Đặc biệt đó',
@@ -117,37 +117,14 @@ const RevealCard: React.FC<RevealCardProps> = ({
         // Cancel any ongoing speech
         window.speechSynthesis.cancel();
 
-        const langLabel = target_language === 'zh' ? 'Tiếng Trung là:' : 'Tiếng Anh là:';
         const targetWord = target_language === 'zh' ? word_zh : word_en;
         const targetLang = target_language === 'zh' ? 'zh-CN' : 'en-US';
 
-        // 1. Play Vietnamese word
-        const viUtterance = new SpeechSynthesisUtterance(word_vi);
-        viUtterance.lang = 'vi-VN';
-        viUtterance.rate = 0.9;
-
-        // 2. After VI word finishes, play scaffolding + target language
-        viUtterance.onend = () => {
-            setTimeout(() => {
-                // Scaffolding narration
-                const scaffoldUtterance = new SpeechSynthesisUtterance(langLabel);
-                scaffoldUtterance.lang = 'vi-VN';
-                scaffoldUtterance.rate = 0.9;
-
-                scaffoldUtterance.onend = () => {
-                    // Target language word
-                    const targetUtterance = new SpeechSynthesisUtterance(targetWord);
-                    targetUtterance.lang = targetLang;
-                    targetUtterance.rate = 0.9;
-                    window.speechSynthesis.speak(targetUtterance);
-                };
-
-                window.speechSynthesis.speak(scaffoldUtterance);
-            }, 500);
-        };
-
-        window.speechSynthesis.speak(viUtterance);
-    }, [target_language, word_en, word_vi, word_zh]);
+        const utterance = new SpeechSynthesisUtterance(targetWord);
+        utterance.lang = targetLang;
+        utterance.rate = 0.8; // Slightly slower for better clarity for kids
+        window.speechSynthesis.speak(utterance);
+    }, [target_language, word_en, word_zh]);
 
     // Auto-play TTS sequence when card opens (audio-first principle)
     useEffect(() => {
@@ -180,10 +157,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
 
 
     const startSpeechRecognition = () => {
-        // Don't allow more than 3 attempts
-        if (attemptCount >= 3) {
-            return;
-        }
+        // Reset stars if starting over
+        if (stars === 3) setStars(null);
 
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -349,14 +324,14 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         {/* Multilingual Details — filtered by target_language */}
                         <div className="text-center space-y-3 mb-8">
                             {/* Vietnamese — always shown as scaffold */}
-                            <h2 className="text-2xl font-bold text-lang-vi">{word_vi}</h2>
+                            <h2 className="text-xl font-bold text-lang-vi">{word_vi}</h2>
 
                             <div className="flex flex-col gap-1">
                                 {/* Target Language (Primary) */}
                                 {target_language === 'en' && (
                                     <div className="flex items-center justify-center gap-2">
-                                        <span className="text-lg font-bold text-lang-en">{word_en}</span>
-                                        <span className="text-sm font-medium text-slate-400">{phonetic_en}</span>
+                                        <span className="text-base font-bold text-lang-en">{word_en}</span>
+                                        <span className="text-xs font-medium text-slate-400">{phonetic_en}</span>
                                         <button
                                             onClick={() => {
                                                 const utterance = new SpeechSynthesisUtterance(word_en);
@@ -371,8 +346,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                 )}
                                 {target_language === 'zh' && (
                                     <div className="flex items-center justify-center gap-2">
-                                        <span className="text-lg font-bold text-lang-zh">{word_zh}</span>
-                                        <span className="text-sm font-medium text-slate-400">{pinyin}</span>
+                                        <span className="text-base font-bold text-lang-zh">{word_zh}</span>
+                                        <span className="text-xs font-medium text-slate-400">{pinyin}</span>
                                         <button
                                             onClick={() => {
                                                 const utterance = new SpeechSynthesisUtterance(word_zh);
@@ -443,8 +418,11 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                     <div className="flex flex-col items-center gap-4">
                                         <motion.button
                                             whileTap={{ scale: 0.9 }}
-                                            onClick={startSpeechRecognition}
-                                            disabled={isListening || stars === 3 || attemptCount >= 3}
+                                            onClick={() => {
+                                                playPop();
+                                                startSpeechRecognition();
+                                            }}
+                                            disabled={isListening}
                                             className={`w-20 h-20 rounded-full shadow-level-2 flex items-center justify-center text-3xl transition-all ${stars === 3 ? 'bg-mintGreen text-white' : stars === 2 ? 'bg-skyBlue text-white' : isListening ? 'bg-coralRed text-white animate-pulse' : attemptCount >= 3 ? 'bg-slate-300 text-white cursor-not-allowed' : 'bg-skyBlue text-white hover:bg-skyBlue/90'}`}
                                         >
                                             {stars === 3 ? '✅' : isListening ? '🎤' : '🎤'}

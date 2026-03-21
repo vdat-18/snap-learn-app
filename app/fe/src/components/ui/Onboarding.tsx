@@ -82,17 +82,17 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
         const activeSlide = slides[currentSlide];
         const timer = setTimeout(() => {
             if (activeSlide.id === 'welcome') {
-                mascotSpeak("Chào mừng bé yêu... đến với Snap Learn! Tớ là Cú thông thái... sẽ cùng bé khám phá thế giới nhé!", 'vi-VN');
+                mascotSpeak("Chào mừng bạn đến với vương quốc SnapLearn! Hãy cùng tôi khám phá nhé.", 'vi-VN');
             } else if (activeSlide.id === 'language') {
-                mascotSpeak("Bé muốn học tiếng gì nhất nào? Hãy chọn... một ngôn ngữ... mình yêu thích nhất nhé!", 'vi-VN');
+                mascotSpeak("Bạn hãy lựa chọn ngôn ngữ mà mình muốn học nhất nào.", 'vi-VN');
             } else if (activeSlide.id === 'secondary-language') {
-                mascotSpeak("Bé có muốn học thêm... một ngôn ngữ nữa không? Học song ngữ... sẽ rất là thú vị đấy!", 'vi-VN');
+                mascotSpeak("Học thêm một ngôn ngữ nữa sẽ giúp bạn giỏi hơn đấy. Bạn thấy sao?", 'vi-VN');
             } else if (activeSlide.id === 'camera') {
-                mascotSpeak("Bé hãy mang camera đi xung quanh... chụp bất cứ thứ gì mình thấy... để biến chúng thành... thẻ bài ma thuật nhé!", 'vi-VN');
+                mascotSpeak("Dùng máy ảnh chụp mọi vật xung quanh để thu thập thẻ bài nhé.", 'vi-VN');
             } else if (activeSlide.id === 'pronunciation') {
-                mascotSpeak("Hãy phát âm theo tớ... để thẻ bài có thể Tiến hóa... và mở khóa những bí mật thú vị nha!", 'vi-VN');
+                mascotSpeak("Hãy phát âm chính xác để nâng cấp thẻ bài của bạn.", 'vi-VN');
             } else if (activeSlide.id === 'collection') {
-                mascotSpeak("Bộ sưu tập của bé... đang chờ đợi những thẻ bài hiếm nhất đấy! Cùng bắt đầu khám phá... ngay thôi nào!", 'vi-VN');
+                mascotSpeak("Kho báu thẻ bài đang đợi bạn. Chúng ta bắt đầu thôi!", 'vi-VN');
             }
         }, 500);
         return () => clearTimeout(timer);
@@ -144,7 +144,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
     const isSecondarySlide = activeSlide.type === 'secondary-language-select';
 
     return (
-        <div className={`fixed inset-0 z-[200] flex flex-col transition-all duration-700 bg-gradient-to-b ${activeSlide.bgClass} font-outfit`}>
+        <div className={`fixed inset-0 z-[200] flex flex-col transition-all duration-700 bg-gradient-to-b ${activeSlide.bgClass} font-sans`}>
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-12 pb-4">
                 <button onClick={() => { playPop(); onFinish(); }} className="w-10 h-10 flex items-center justify-center text-deepNavy/40 hover:text-deepNavy">

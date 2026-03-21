@@ -16,12 +16,12 @@ export const triggerHaptic = (pattern: number | number[] = 50) => {
  * Mascot motivational phrases in Vietnamese
  */
 const MOTIVATIONAL_PHRASES = [
-    "Wow! Bé giỏi quá, săn được từ mới rồi này!",
-    "Tuyệt vời! Chúng mình cùng tìm thêm nhé!",
-    "Bé tinh mắt thật đấy, phần thưởng đây rồi!",
-    "Một từ vựng thật thú vị! Bé nhớ phát âm theo nhé!",
-    "Khám phá thế giới thật vui! Bé là nhà thám hiểm tài ba!",
-    "Cố lên bé ơi, bộ sưu tập sắp đầy rồi này!"
+    "Bạn giỏi quá, sưu tập được từ mới rồi này!",
+    "Tuyệt vời! Cùng tìm thêm những thẻ bài khác nhé!",
+    "Bạn tinh mắt thật, phần thưởng thuộc về bạn!",
+    "Một từ vựng mới rất thú vị, hãy nhớ phát âm nhé!",
+    "Khám phá thế giới thật vui, bạn là một nhà thám hiểm tài ba!",
+    "Cố lên nhé, bộ sưu tập sắp hoàn thiện rồi!"
 ];
 
 /**
@@ -60,11 +60,8 @@ export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = '
             // console.log(`[Mascot] Using Voice: ${selectedVoice.name}`);
         }
 
-        // Pitch adjustment for child-friendly voice
-        // Note: Some high-quality Google voices ignore pitch, but we set it anyway
-        if (lang === 'vi-VN') utterance.pitch = 1.2;
-        else if (lang === 'en-US') utterance.pitch = 1.1;
-        else utterance.pitch = 1.0;
+        // Standard natural pitch (no high-pitched child voice)
+        utterance.pitch = 1.0;
 
         window.speechSynthesis.speak(utterance);
 

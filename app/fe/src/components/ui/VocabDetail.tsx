@@ -65,7 +65,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, isOpen, onClose }) => {
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
-                    className="fixed inset-0 z-[180] bg-snowWhite flex flex-col font-outfit"
+                    className="fixed inset-0 z-[180] bg-snowWhite flex flex-col font-sans"
                 >
                     {/* Header */}
                     <header className="px-6 pt-12 pb-4 flex items-center justify-between">

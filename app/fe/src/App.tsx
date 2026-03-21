@@ -38,6 +38,7 @@ const App: React.FC = () => {
   const [bookBounce, setBookBounce] = useState(false);
   const [devMode, setDevMode] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [isCategoryViewOpen, setIsCategoryViewOpen] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -70,16 +71,16 @@ const App: React.FC = () => {
 
     const timer = setTimeout(() => {
       if (isBookOpen) {
-        mascotSpeak("Tất cả những người bạn thẻ bài... mà chúng mình đã gặp... đều ở trong cuốn album này này!", 'vi-VN');
+        mascotSpeak("Kho báu thẻ bài của bạn đây!", 'vi-VN');
       } else if (isQuestOpen) {
-        mascotSpeak("Có rất nhiều thử thách thú vị... đang chờ bé đấy! Chúng mình cùng vượt qua... để nhận quà thật to nhé!", 'vi-VN');
+        mascotSpeak("Làm nhiệm vụ để nhận quà nhé!", 'vi-VN');
       } else if (isRankOpen) {
-        mascotSpeak("Gặp gỡ những nhà thám hiểm... tài ba giống bé này! Chúng mình cùng cố gắng... để đứng vị trí cao nhất nhé!", 'vi-VN');
+        mascotSpeak("Bạn hãy xem ai giỏi nhất nào!", 'vi-VN');
       } else if (isProfileOpen) {
-        mascotSpeak("Đây là vương quốc nhỏ của bé... nơi lưu giữ... những chiếc huy hiệu... thật đáng tự hào đấy!", 'vi-VN');
+        mascotSpeak("Góc cá nhân của bạn đây!", 'vi-VN');
       } else {
         // Camera / Main Screen
-        mascotSpeak("Nơi này có nhiều bí mật quá... bé hãy dùng máy ảnh... tìm xem những người bạn từ vựng... đang trốn ở đâu nhé!", 'vi-VN');
+        mascotSpeak("Bạn hãy dùng máy ảnh tìm từ mới nhé!", 'vi-VN');
       }
     }, 800);
     return () => clearTimeout(timer);
@@ -256,7 +257,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden font-outfit select-none">
+    <div className="relative w-full h-screen bg-black overflow-hidden select-none">
 
       <AnimatePresence>
         {/* 1. TOP HUD (Head-Up Display) */}
@@ -272,7 +273,7 @@ const App: React.FC = () => {
                   <span className="text-[14px]">⭐</span>
                   <span className="text-[12px] font-black text-white leading-none">Cấp {level}</span>
                 </div>
-                <span className="text-base font-black text-white drop-shadow-md leading-none">{userName}</span>
+                <span className="text-sm font-black text-white drop-shadow-md leading-none">{userName}</span>
               </div>
             </div>
           </div>
@@ -281,9 +282,9 @@ const App: React.FC = () => {
             {/* Stats - Visual only */}
             <div className="flex items-center gap-2 bg-black/30 backdrop-blur-lg pl-2 pr-4 py-2 rounded-[24px] border border-white/20 shadow-xl">
               <div className="w-10 h-10 rounded-full bg-sunshineYellow flex items-center justify-center shadow-[0_4px_0_rgb(161,98,7)] border-t-2 border-white/40">
-                <span className="text-xl">⚡</span>
+                <span className="text-lg">⚡</span>
               </div>
-              <span className="text-lg font-black text-white leading-none">85</span>
+              <span className="text-base font-black text-white leading-none">85</span>
             </div>
 
             <button
@@ -382,7 +383,7 @@ const App: React.FC = () => {
         </div>
 
         {/* Mobile Nav Bar - ONLY visible on sub-pages (Book, Quest, Rank, Me) */}
-        {!showSplash && hasSeenOnboarding && userName && (isBookOpen || isQuestOpen || isRankOpen || isProfileOpen) && (
+        {!showSplash && hasSeenOnboarding && userName && (isBookOpen || isQuestOpen || isRankOpen || isProfileOpen) && !isCategoryViewOpen && (
           <nav className="fixed bottom-0 left-0 right-0 p-4 pb-8 flex justify-center z-[200] pointer-events-none">
             <div className="bg-white/90 backdrop-blur-xl rounded-[32px] shadow-level-3 border-2 border-white px-2 py-3 flex items-center justify-around pointer-events-auto w-[92%] max-w-md mx-auto">
               <NavItem
@@ -428,7 +429,7 @@ const App: React.FC = () => {
                     setIsProfileOpen(false);
                     setIsRevealOpen(false);
                     playPop();
-                    mascotSpeak("Nơi này có nhiều bí mật quá... bé hãy dùng máy ảnh... tìm xem những người bạn từ vựng... đang trốn ở đâu nhé!", 'vi-VN');
+                    mascotSpeak("Nơi này có nhiều bí mật quá... Bạn hãy dùng máy ảnh tìm xem những người bạn từ vựng đang trốn ở đâu nhé!", 'vi-VN');
                   } else {
                     // Action: Capture!
                     handleCaptureClick();
@@ -450,7 +451,7 @@ const App: React.FC = () => {
               />
               <NavItem
                 image="/icon-me.png"
-                label="Góc của Bé"
+                label="Của tôi"
                 onClick={() => {
                   // Global Switch: Open Profile, Close Others
                   setIsProfileOpen(true);
@@ -466,7 +467,11 @@ const App: React.FC = () => {
         )}
       </AnimatePresence>
 
-      <CollectionBook isOpen={isBookOpen} onClose={() => setIsBookOpen(false)} />
+      <CollectionBook
+        isOpen={isBookOpen}
+        onClose={() => setIsBookOpen(false)}
+        onCategorySelectChange={(isSelected) => setIsCategoryViewOpen(isSelected)}
+      />
       <QuestScreen isOpen={isQuestOpen} onClose={() => setIsQuestOpen(false)} />
       <ProfileScreen isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
       <LeaderboardScreen isOpen={isRankOpen} onClose={() => setIsRankOpen(false)} />

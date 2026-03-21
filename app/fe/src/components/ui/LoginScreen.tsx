@@ -28,7 +28,7 @@ const LoginScreen: React.FC = () => {
     // Auto-play TTS greeting on mount (audio-first principle)
     useEffect(() => {
         const timer = setTimeout(() => {
-            mascotSpeak('Xin chào bé yêu! Tên gọi ở nhà của bé là gì? Hãy chọn một linh vật nhé!');
+            mascotSpeak('Chào bạn! Bạn tên gì và thích bạn thú nào?');
         }, 800);
         return () => clearTimeout(timer);
     }, []);
@@ -42,13 +42,13 @@ const LoginScreen: React.FC = () => {
     const handleStartClick = () => {
         if (!name.trim()) {
             setNameError(true);
-            mascotSpeak('Bé ơi, đừng quên điền tên của mình vào nhé!');
+            mascotSpeak('Bạn ơi, đừng quên điền tên của mình vào nhé!');
             return;
         }
         setNameError(false);
         setIsJoining(true);
         playPop();
-        mascotSpeak(`Xin chào bé ${name}! Chúng mình cùng bắt đầu khám phá nào!`);
+        mascotSpeak(`Xin chào ${name}! Chúng mình cùng bắt đầu khám phá nào!`);
         setTimeout(() => {
             setUserName(name.trim());
             setUserAvatar(selectedAvatar.emoji);
@@ -61,7 +61,7 @@ const LoginScreen: React.FC = () => {
     };
 
     return (
-        <div className="fixed inset-0 z-[300] bg-gradient-to-b from-sky-300 via-sky-400 to-blue-500 flex flex-col items-center justify-center p-6 font-outfit overflow-hidden">
+        <div className="fixed inset-0 z-[300] bg-gradient-to-b from-sky-300 via-sky-400 to-blue-500 flex flex-col items-center justify-center p-6 font-sans overflow-hidden">
 
             {/* Decorative floating bubbles */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -95,7 +95,7 @@ const LoginScreen: React.FC = () => {
                     transition={{ delay: 0.1 }}
                     className="text-center mb-8"
                 >
-                    <h1 className="text-3xl font-black text-white drop-shadow-lg tracking-tight">SnapLearn</h1>
+                    <h1 className="text-2xl font-black text-white drop-shadow-lg tracking-tight">SnapLearn</h1>
                     <p className="text-white/80 font-bold text-xs tracking-widest uppercase mt-1">Khám phá · Học · Vui</p>
                 </motion.div>
 
@@ -107,7 +107,7 @@ const LoginScreen: React.FC = () => {
                     className="relative mb-6 group cursor-pointer"
                     onClick={() => {
                         playPop();
-                        mascotSpeak('Xin chào bé yêu! Tên gọi ở nhà của bé là gì? Hãy chọn một linh vật nhé!');
+                        mascotSpeak('Chào bạn! Bạn tên gì và thích bạn thú nào?');
                     }}
                 >
                     <div className="w-36 h-36 bg-white rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.2)] flex items-center justify-center border-8 border-white/60 relative">
@@ -165,7 +165,7 @@ const LoginScreen: React.FC = () => {
                     <div className="relative">
                         <input
                             type="text"
-                            placeholder="✏️  Tên gọi ở nhà của bé..."
+                            placeholder="✏️  Bạn tên là gì nhỉ?..."
                             value={name}
                             onChange={handleNameChange}
                             onKeyDown={(e) => e.key === 'Enter' && handleStartClick()}
@@ -182,7 +182,7 @@ const LoginScreen: React.FC = () => {
                             animate={{ opacity: 1, y: 0 }}
                             className="text-white font-black text-sm mt-2 ml-2 drop-shadow"
                         >
-                            👆 Điền tên vào nhé bé!
+                            👆 Điền tên vào nhé bạn!
                         </motion.p>
                     )}
                 </motion.div>
@@ -235,7 +235,7 @@ const LoginScreen: React.FC = () => {
                     transition={{ delay: 1 }}
                     onClick={() => {
                         playPop();
-                        mascotSpeak('Xin chào bé yêu! Tên gọi ở nhà của bé là gì? Hãy chọn một linh vật nhé!');
+                        mascotSpeak('Chào bạn! Bạn tên gì và thích bạn thú nào?');
                     }}
                     className="mt-6 flex items-center gap-2 text-white/70 font-bold text-sm active:text-white transition-colors"
                 >

@@ -27,7 +27,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ isOpen, onClose }
                     animate={{ y: 0 }}
                     exit={{ y: '100%' }}
                     transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                    className="fixed inset-0 z-[150] bg-snowWhite flex flex-col font-outfit"
+                    className="fixed inset-0 z-[150] bg-snowWhite flex flex-col font-sans"
                 >
                     {/* Header */}
                     <header className="px-6 pt-12 pb-6 flex items-center justify-between border-b border-slate-100">

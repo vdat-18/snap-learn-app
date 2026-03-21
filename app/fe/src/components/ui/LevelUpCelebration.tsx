@@ -12,7 +12,7 @@ const LevelUpCelebration: React.FC = () => {
         if (levelUpMessage) {
             playChime();
             triggerHaptic(200);
-            mascotSpeak(`Chúc mừng bé đã lên cấp ${levelUpMessage.newLevel}!`, "vi-VN");
+            mascotSpeak(`Chúc mừng bạn đã lên cấp ${levelUpMessage.newLevel}!`, "vi-VN");
         }
     }, [levelUpMessage, playChime]);
 

@@ -9,6 +9,7 @@ import VocabDetail from './VocabDetail';
 interface CollectionBookProps {
     isOpen: boolean;
     onClose: () => void;
+    onCategorySelectChange?: (isSelected: boolean) => void;
 }
 
 const categories = [
@@ -20,11 +21,18 @@ const categories = [
     { id: 'Transportation', name: 'Giao thông', icon: '🚗', total: 12 },
 ];
 
-const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
+const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCategorySelectChange }) => {
     const { collections } = useGameStore();
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedWord, setSelectedWord] = useState<CapturedWord | null>(null);
     const { playPop, playChime } = useSoundEffects();
+
+    // Notify parent about category selection to show/hide nav
+    React.useEffect(() => {
+        if (onCategorySelectChange) {
+            onCategorySelectChange(isOpen && !!selectedCategory);
+        }
+    }, [selectedCategory, isOpen, onCategorySelectChange]);
 
     const getCategoryProgress = (catId: string) => {
         return collections.filter(w => w.category === catId).length;
@@ -42,7 +50,7 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose }) => {
                     animate={{ x: 0 }}
                     exit={{ x: '100%' }}
                     transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                    className="fixed inset-0 z-[150] bg-snowWhite flex flex-col font-outfit overflow-hidden"
+                    className="fixed inset-0 z-[150] bg-snowWhite flex flex-col font-sans overflow-hidden"
                 >
                     {/* Header */}
                     <header className="px-6 pt-12 pb-6 flex items-center justify-between border-b border-slate-100">

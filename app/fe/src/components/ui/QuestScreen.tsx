@@ -22,7 +22,7 @@ const QuestScreen: React.FC<QuestScreenProps> = ({ isOpen, onClose }) => {
                     animate={{ y: 0 }}
                     exit={{ y: '100%' }}
                     transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                    className="fixed inset-0 z-[160] bg-snowWhite flex flex-col font-outfit overflow-hidden"
+                    className="fixed inset-0 z-[160] bg-snowWhite flex flex-col font-sans overflow-hidden"
                 >
                     {/* Background Decorative Sparkles */}
                     <div className="absolute inset-0 pointer-events-none opacity-20">

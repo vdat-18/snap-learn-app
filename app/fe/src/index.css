@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
 @tailwind base;
@@ -8,18 +9,18 @@
 
   html,
   body {
-    @apply h-full overflow-hidden font-outfit bg-snowWhite text-deepNavy selection:bg-skyBlue selection:text-white;
+    @apply h-full overflow-hidden font-sans bg-snowWhite text-deepNavy selection:bg-skyBlue selection:text-white;
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Accessibility/UX specific to mobile children */
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    @apply font-bold tracking-tight;
+    font-family: 'Nunito', sans-serif;
+    @apply font-extrabold tracking-normal;
   }
 }
 
