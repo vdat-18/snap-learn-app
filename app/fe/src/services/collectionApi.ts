@@ -1,9 +1,10 @@
 import api from './api';
 
-// --- Types ---
+// --- Types (aligned with backend schemas/collection.py) ---
 
 export interface CategoryProgress {
     name: string;
+    display_name: string;
     icon: string;
     captured: number;
     total: number;
@@ -15,9 +16,26 @@ export interface CollectionOverview {
     categories: CategoryProgress[];
 }
 
+export interface VocabCard {
+    id: string;
+    word_en: string;
+    word_vi: string;
+    word_zh: string;
+    pinyin: string | null;
+    phonetic_en: string | null;
+    category: string;
+    rarity_tier: string;
+    mastery_en: number;
+    mastery_vi: number;
+    mastery_zh: number;
+    evolved: boolean;
+    photo_url: string | null;
+    captured_at: string;
+}
+
 export interface CategoryDetail {
     category: string;
-    captured_words: any[];
+    captured_words: VocabCard[];
     undiscovered_count: number;
 }
 
@@ -26,17 +44,22 @@ export interface VocabDetail {
     word_en: string;
     word_vi: string;
     word_zh: string;
-    pinyin: string;
-    phonetic_en: string;
+    pinyin: string | null;
+    phonetic_en: string | null;
     category: string;
     rarity_tier: string;
-    fun_fact_vi: string;
-    sentence_en?: string;
-    sentence_vi?: string;
-    mastery: number;
+    fun_fact_vi: string | null;
+    example_sentence_en: string | null;
+    example_sentence_vi: string | null;
+    example_sentence_zh: string | null;
+    mastery_en: number;
+    mastery_vi: number;
+    mastery_zh: number;
     evolved: boolean;
-    practice_count: number;
-    photo_url: string;
+    photo_url: string | null;
+    confidence: number;
+    captured_at: string;
+    last_practiced_at: string | null;
 }
 
 // --- Collection API ---

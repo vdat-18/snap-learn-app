@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowLeft, Star, Lock, Sparkles, Loader2 } from 'lucide-react';
-import { useGameStore } from '../../store/gameStore';
+import { X, ArrowLeft, Star, Lock, Sparkles } from 'lucide-react';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
-import { collectionApi, type CollectionOverview, type CategoryDetail } from '../../services/collectionApi';
+import { collectionApi, type CollectionOverview, type CategoryDetail, type CategoryProgress } from '../../services/collectionApi';
 import { CollectionSkeleton } from './Skeleton';
-// TODO: Remove once server provides full category vocab reference data via collectionApi.getCategoryDetail()
-import { MOCK_REFERENCE_VOCAB } from '../../store/mockData';
 import VocabDetail from './VocabDetail';
 import TradingCard from './TradingCard';
 
@@ -16,29 +13,16 @@ interface CollectionBookProps {
     onCategorySelectChange?: (isSelected: boolean) => void;
 }
 
-const categories = [
-    { id: 'Animals', name: 'Động vật', icon: '/icon-cat-animals.png' },
-    { id: 'Food', name: 'Đồ ăn', icon: '/icon-cat-food.png' },
-    { id: 'Nature', name: 'Tự nhiên', icon: '🌿' },
-    { id: 'School', name: 'Trường học', icon: '🏫' },
-    { id: 'Home', name: 'Nhà cửa', icon: '🏠' },
-    { id: 'Vehicles', name: 'Giao thông', icon: '🚗' },
-];
-
 const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCategorySelectChange }) => {
-    const { collections } = useGameStore();
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-    const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
-    const selectedWord = collections.find(w => w.id === selectedWordId) || null;
+    const [selectedCategory, setSelectedCategory] = useState<CategoryProgress | null>(null);
+    const [selectedVocabId, setSelectedVocabId] = useState<string | null>(null);
     const { playPop, playChime } = useSoundEffects();
 
-    // Server data state
-    const [serverCategories, setServerCategories] = useState<CollectionOverview | null>(null);
+    const [serverData, setServerData] = useState<CollectionOverview | null>(null);
     const [categoryDetail, setCategoryDetail] = useState<CategoryDetail | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [fetchError, setFetchError] = useState(false);
 
-    // Notify parent about category selection to show/hide nav
     React.useEffect(() => {
         if (onCategorySelectChange) {
             onCategorySelectChange(isOpen && !!selectedCategory);
@@ -49,45 +33,32 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
         setIsLoading(true);
         setFetchError(false);
         collectionApi.getCollection()
-            .then(data => setServerCategories(data))
+            .then(data => setServerData(data))
             .catch(() => setFetchError(true))
             .finally(() => setIsLoading(false));
     };
 
-    const loadCategory = (catId: string) => {
+    const loadCategory = (catName: string) => {
         setIsLoading(true);
         setFetchError(false);
         setCategoryDetail(null);
-        collectionApi.getCategoryDetail(catId)
+        collectionApi.getCategoryDetail(catName)
             .then(data => setCategoryDetail(data))
             .catch(() => setFetchError(true))
             .finally(() => setIsLoading(false));
     };
 
-    // Fetch collection overview when opened
     useEffect(() => {
         if (isOpen && !selectedCategory) {
             loadCollection();
         }
     }, [isOpen, selectedCategory]);
 
-    // Fetch category detail when a category is selected
     useEffect(() => {
         if (selectedCategory) {
-            loadCategory(selectedCategory);
+            loadCategory(selectedCategory.name);
         }
     }, [selectedCategory]);
-
-    const getCategoryProgress = (catId: string) => {
-        // Prefer server data, fallback to local collections
-        if (serverCategories) {
-            const cat = serverCategories.categories.find(c => c.name === catId || c.name.toLowerCase() === catId.toLowerCase());
-            if (cat) return { captured: cat.captured, total: cat.total };
-        }
-        const captured = collections.filter(w => w.category === catId).length;
-        const total = MOCK_REFERENCE_VOCAB.filter(w => w.category === catId).length;
-        return { captured, total };
-    };
 
     return (
         <AnimatePresence>
@@ -115,12 +86,8 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                 <h1 className="text-lg font-black text-deepNavy tracking-tight flex items-center gap-3">
                                     {selectedCategory ? (
                                         <>
-                                            {categories.find(c => c.id === selectedCategory)?.icon.startsWith('/') ? (
-                                                <img src={categories.find(c => c.id === selectedCategory)?.icon} alt="" className="w-8 h-8 object-contain mix-blend-multiply" />
-                                            ) : (
-                                                <span>{categories.find(c => c.id === selectedCategory)?.icon}</span>
-                                            )}
-                                            {categories.find(c => c.id === selectedCategory)?.name}
+                                            <span className="text-2xl">{selectedCategory.icon}</span>
+                                            {selectedCategory.display_name}
                                         </>
                                     ) : (
                                         <>
@@ -135,7 +102,7 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                     )}
                                 </h1>
                                 <p className="text-xs font-black text-sky-400 uppercase tracking-widest mt-0.5">
-                                    {serverCategories ? `${serverCategories.total_words} Thẻ bài đã bắt` : `${collections.length} Thẻ bài đã bắt`}
+                                    {serverData ? `${serverData.total_words} Thẻ bài đã bắt` : 'Đang tải...'}
                                 </p>
                             </div>
                         </div>
@@ -152,7 +119,7 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                 <p className="text-base font-black text-deepNavy">Ối! Không tải được dữ liệu</p>
                                 <p className="text-sm text-slate-400 font-bold">Kiểm tra kết nối mạng rồi thử lại nhé!</p>
                                 <button
-                                    onClick={() => selectedCategory ? loadCategory(selectedCategory) : loadCollection()}
+                                    onClick={() => selectedCategory ? loadCategory(selectedCategory.name) : loadCollection()}
                                     className="bg-skyBlue text-white px-6 py-3 rounded-2xl font-black text-sm shadow-level-2"
                                 >
                                     🔄 Thử lại
@@ -160,34 +127,31 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                             </div>
                         )}
 
-                        {!isLoading && !fetchError && !selectedCategory && (
-                            /* Category Grid */
+                        {!isLoading && !fetchError && !selectedCategory && serverData && (
+                            /* Category Grid — server-sorted by most captured first */
                             <div className="grid grid-cols-2 gap-5 pb-20">
-                                {categories.map((cat, i) => {
-                                    const { captured: count, total } = getCategoryProgress(cat.id);
-                                    const progressPercent = total > 0 ? (count / total) * 100 : 0;
+                                {serverData.categories.map((cat, i) => {
+                                    const progressPercent = cat.total > 0 ? (cat.captured / cat.total) * 100 : 0;
 
                                     return (
                                         <motion.button
-                                            key={cat.id}
+                                            key={cat.name}
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: i * 0.05 }}
                                             whileTap={{ scale: 0.95 }}
-                                            onClick={() => { playPop(); setSelectedCategory(cat.id); }}
-                                            className="bg-white rounded-[32px] p-5 shadow-level-2 border-b-[6px] border-slate-100 flex flex-col items-center text-center group relative overflow-hidden"
+                                            onClick={() => { playPop(); setSelectedCategory(cat); }}
+                                            className={`bg-white rounded-[32px] p-5 shadow-level-2 border-b-[6px] border-slate-100 flex flex-col items-center text-center group relative overflow-hidden ${
+                                                cat.captured === 0 ? 'opacity-50' : ''
+                                            }`}
                                         >
                                             <div className="w-24 h-24 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
-                                                {cat.icon.startsWith('/') ? (
-                                                    <img src={cat.icon} alt={cat.name} className="w-full h-full object-contain mix-blend-multiply" />
-                                                ) : (
-                                                    <span className="text-5xl drop-shadow-lg">{cat.icon}</span>
-                                                )}
+                                                <span className="text-5xl drop-shadow-lg">{cat.icon}</span>
                                             </div>
-                                            <h3 className="font-black text-deepNavy text-base mb-1">{cat.name}</h3>
+                                            <h3 className="font-black text-deepNavy text-base mb-1">{cat.display_name}</h3>
                                             <div className="w-full mt-2">
                                                 <div className="flex justify-between text-[10px] font-black text-slate-400 mb-1.5 px-1">
-                                                    <span>{count}/{total}</span>
+                                                    <span>{cat.captured}/{cat.total}</span>
                                                     <span>{Math.round(progressPercent)}%</span>
                                                 </div>
                                                 <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
@@ -204,73 +168,65 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                             </div>
                         )}
 
-                        {!isLoading && !fetchError && selectedCategory && (
+                        {!isLoading && !fetchError && selectedCategory && categoryDetail && (
                             /* Vocab Word Grid - Trading Card Style */
                             <div className="grid grid-cols-3 gap-4 pb-24">
-                                {(MOCK_REFERENCE_VOCAB.filter(w => w.category === selectedCategory) as any[]).map((refWord) => {
-                                    const word = collections.find(w => w.word_en === refWord.word_en);
-                                    const isCaptured = !!word;
-                                    const isEvolved = word?.isEvolved;
-
-                                    const rarityColors: any = {
-                                        'Common': 'from-mintGreen/20 to-mintGreen/5',
-                                        'Uncommon': 'from-skyBlue/20 to-skyBlue/5',
-                                        'Rare': 'from-sunshineYellow/20 to-sunshineYellow/5',
-                                        'Legendary': 'from-coralRed/20 to-coralRed/5'
+                                {categoryDetail.captured_words.map((card) => {
+                                    const rarityColors: Record<string, string> = {
+                                        'common': 'from-mintGreen/20 to-mintGreen/5',
+                                        'uncommon': 'from-skyBlue/20 to-skyBlue/5',
+                                        'rare': 'from-sunshineYellow/20 to-sunshineYellow/5',
+                                        'epic': 'from-lavenderPurple/20 to-lavenderPurple/5',
+                                        'legendary': 'from-coralRed/20 to-coralRed/5',
                                     };
 
-                                    const rarityLabels: any = {
-                                        'Common': 'Thường nè',
-                                        'Uncommon': 'Đặc biệt đó',
-                                        'Rare': 'Hiếm quá đi',
-                                        'Legendary': 'Huyền thoại luôn'
+                                    const rarityLabels: Record<string, string> = {
+                                        'common': 'Thường nè',
+                                        'uncommon': 'Đặc biệt đó',
+                                        'rare': 'Hiếm quá đi',
+                                        'epic': 'Siêu hiếm',
+                                        'legendary': 'Huyền thoại luôn',
                                     };
 
-                                    if (!isCaptured) {
-                                        return (
-                                            <div
-                                                key={refWord.id}
-                                                className="relative aspect-[3/4] rounded-[24px] bg-slate-100 border-[3px] border-slate-200 shadow-inner overflow-hidden flex flex-col items-center justify-center opacity-60"
-                                            >
-                                                <Lock className="w-6 h-6 text-slate-400 mb-2" />
-                                                <span className="text-[10px] font-black text-slate-400 tracking-wider">BÍ MẬT</span>
-                                                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[8px] font-black bg-slate-300 text-white shadow-md uppercase">
-                                                    {rarityLabels[refWord.rarity_tier] || 'Thường'}
-                                                </div>
-                                            </div>
-                                        );
-                                    }
+                                    const tier = card.rarity_tier.toLowerCase();
+                                    const masteryMax = Math.max(card.mastery_en, card.mastery_vi, card.mastery_zh);
 
                                     return (
                                         <TradingCard
-                                            key={word.id}
-                                            onClick={() => { playChime(); setSelectedWordId(word.id); }}
-                                            className={`relative aspect-[3/4] rounded-[24px] bg-gradient-to-br ${rarityColors[word.rarity] || 'bg-white'} border-[3px] border-white shadow-level-2 overflow-hidden flex flex-col`}
+                                            key={card.id}
+                                            onClick={() => { playChime(); setSelectedVocabId(card.id); }}
+                                            className={`relative aspect-[3/4] rounded-[24px] bg-gradient-to-br ${rarityColors[tier] || 'bg-white'} border-[3px] border-white shadow-level-2 overflow-hidden flex flex-col`}
                                         >
                                             <div className="flex-1 w-full relative p-2">
                                                 <div className="w-full h-full rounded-[18px] overflow-hidden bg-white/50 backdrop-blur-sm shadow-inner">
-                                                    <img src={word.image} alt={word.word_en} className="w-full h-full object-cover" />
+                                                    {card.photo_url ? (
+                                                        <img src={card.photo_url} alt={card.word_en} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-4xl bg-slate-50">📷</div>
+                                                    )}
                                                 </div>
-                                                {isEvolved && (
+                                                {card.evolved && (
                                                     <div className="absolute top-3 left-3 bg-sunshineYellow p-1 rounded-full shadow-lg">
                                                         <Sparkles className="w-4 h-4 text-deepNavy" />
                                                     </div>
                                                 )}
-                                                <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[8px] font-black text-white shadow-md uppercase tracking-wide ${word.rarity === 'Legendary' ? 'bg-coralRed' :
-                                                    word.rarity === 'Rare' ? 'bg-sunshineYellow text-deepNavy' :
-                                                        word.rarity === 'Uncommon' ? 'bg-skyBlue' : 'bg-mintGreen'
-                                                    }`}>
-                                                    {rarityLabels[word.rarity]}
+                                                <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[8px] font-black text-white shadow-md uppercase tracking-wide ${
+                                                    tier === 'legendary' ? 'bg-coralRed' :
+                                                    tier === 'epic' ? 'bg-lavenderPurple' :
+                                                    tier === 'rare' ? 'bg-sunshineYellow text-deepNavy' :
+                                                    tier === 'uncommon' ? 'bg-skyBlue' : 'bg-mintGreen'
+                                                }`}>
+                                                    {rarityLabels[tier] || 'Thường'}
                                                 </div>
                                             </div>
                                             <div className="px-2 pb-3 pt-1 text-center bg-white/40 backdrop-blur">
-                                                <h4 className="font-black text-deepNavy leading-tight text-[10px] truncate mb-0.5">{word.word_vi}</h4>
-                                                <p className="text-[8px] font-bold text-sky-500 leading-none">{word.word_en}</p>
+                                                <h4 className="font-black text-deepNavy leading-tight text-[10px] truncate mb-0.5">{card.word_vi}</h4>
+                                                <p className="text-[8px] font-bold text-sky-500 leading-none">{card.word_en}</p>
                                                 <div className="flex justify-center mt-1.5 gap-0.5">
                                                     {[1, 2, 3].map(s => (
                                                         <Star
                                                             key={s}
-                                                            className={`w-2.5 h-2.5 ${s <= word.stars ? 'text-sunshineYellow fill-sunshineYellow' : 'text-slate-200 fill-slate-200'}`}
+                                                            className={`w-2.5 h-2.5 ${s <= masteryMax ? 'text-sunshineYellow fill-sunshineYellow' : 'text-slate-200 fill-slate-200'}`}
                                                         />
                                                     ))}
                                                 </div>
@@ -278,15 +234,26 @@ const CollectionBook: React.FC<CollectionBookProps> = ({ isOpen, onClose, onCate
                                         </TradingCard>
                                     );
                                 })}
+
+                                {/* Undiscovered placeholder cards */}
+                                {Array.from({ length: categoryDetail.undiscovered_count }).map((_, i) => (
+                                    <div
+                                        key={`undiscovered-${i}`}
+                                        className="relative aspect-[3/4] rounded-[24px] bg-slate-100 border-[3px] border-slate-200 shadow-inner overflow-hidden flex flex-col items-center justify-center opacity-60"
+                                    >
+                                        <Lock className="w-6 h-6 text-slate-400 mb-2" />
+                                        <span className="text-[10px] font-black text-slate-400 tracking-wider">BÍ MẬT</span>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
 
-                    {selectedWord && (
+                    {selectedVocabId && (
                         <VocabDetail
-                            key={selectedWord.id}
-                            word={selectedWord}
-                            onClose={() => setSelectedWordId(null)}
+                            key={selectedVocabId}
+                            vocabId={selectedVocabId}
+                            onClose={() => setSelectedVocabId(null)}
                         />
                     )}
                 </motion.div>
