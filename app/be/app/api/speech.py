@@ -271,6 +271,85 @@ async def get_description_tts(
     )
 
 
+# ── On-demand TTS: synthesize arbitrary text ─────────────────
+
+
+class SynthesizeRequest(BaseModel):
+    text: str
+    language: str  # "en", "vi", or "zh"
+
+
+@router.post("/tts/synthesize")
+async def synthesize_tts(
+    body: SynthesizeRequest,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> Response:
+    """Synthesize TTS audio for arbitrary text via ElevenLabs.
+
+    Accepts a text string and language, returns MP3 audio.
+    Uses the shared TTS cache — if the text was previously synthesized,
+    the cached result is returned instantly.
+
+    No authentication required — used for description narration on capture.
+    """
+    if body.language not in ("en", "vi", "zh"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Language must be 'en', 'vi', or 'zh'.",
+        )
+
+    if not body.text or not body.text.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Text must not be empty.",
+        )
+
+    # Limit text length to prevent abuse (descriptions are typically < 500 chars)
+    if len(body.text) > 1000:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Text must be 1000 characters or less.",
+        )
+
+    cache_root = Path(settings.TTS_CACHE_DIR)
+    text_hash = hashlib.sha256(body.text.encode()).hexdigest()[:16]
+    lang_dir = cache_root / body.language
+    cache_file = lang_dir / f"{text_hash}.mp3"
+
+    response_headers = {
+        "Content-Disposition": f'inline; filename="tts_{body.language}_{text_hash}.mp3"',
+        "Cache-Control": "public, max-age=86400",
+    }
+
+    # Cache hit — return immediately
+    if cache_file.exists():
+        audio_bytes = cache_file.read_bytes()
+        return Response(
+            content=audio_bytes,
+            media_type="audio/mpeg",
+            headers=response_headers,
+        )
+
+    # Cache miss — stream from ElevenLabs
+    from baml_client.types import Language as BamlLanguage
+
+    lang_enum_map = {
+        "en": BamlLanguage.En,
+        "vi": BamlLanguage.Vi,
+        "zh": BamlLanguage.Zh,
+    }
+
+    return StreamingResponse(
+        synthesize_speech_stream(
+            text=body.text,
+            language=lang_enum_map[body.language],
+            cache_dir=cache_root,
+        ),
+        media_type="audio/mpeg",
+        headers=response_headers,
+    )
+
+
 # ── Admin: TTS Cache Management ──────────────────────────────
 
 

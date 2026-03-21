@@ -25,6 +25,7 @@ interface RevealCardProps {
     tts_urls?: { en: string; vi: string; zh: string };
     xpEarned?: number;
     onCardFlyToCollection?: () => void;
+    description_vi?: string | null;
     description_en?: string | null;
     description_zh?: string | null;
     description_tts_urls?: { en: string; zh: string };
@@ -67,6 +68,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
     tts_urls,
     xpEarned,
     onCardFlyToCollection,
+    description_vi,
     description_en,
     description_zh,
     description_tts_urls,
@@ -101,13 +103,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
         'Epic': 'Siêu hiếm',
         'Legendary': 'Huyền thoại luôn'
     };
-
-    // Get description for the target language
-    const descriptionMap: Record<string, string | null | undefined> = {
-        en: description_en,
-        zh: description_zh,
-    };
-    const targetDescription = descriptionMap[target_language || 'en'] || null;
 
     // Helper: track blob URLs for cleanup
     const trackBlobUrl = useCallback((url: string) => {
@@ -181,7 +176,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
         }
     }, [target_language, word_en, word_zh, tts_urls, vocabId, trackBlobUrl]);
 
-    // Full TTS sequence: description narration → pause → word TTS
+    // Full TTS sequence: Vietnamese description narration → pause → word TTS
     const playTTSSequence = useCallback(async () => {
         window.speechSynthesis.cancel();
         setIsTTSLoading(true);
@@ -190,40 +185,37 @@ const RevealCard: React.FC<RevealCardProps> = ({
         abortControllerRef.current = abortController;
         const signal = abortController.signal;
 
-        const ttsLangKey = target_language === 'zh' ? 'zh' : 'en';
-        const targetLangCode = target_language === 'zh' ? 'zh-CN' : 'en-US';
-
         try {
-            // Step 1: Try to play description TTS (if available)
-            if (targetDescription && vocabId) {
+            // Step 1: Play Vietnamese description TTS (mascot explains in child's native language)
+            if (description_vi) {
                 let descriptionPlayed = false;
 
-                // Try ElevenLabs TTS for description
-                if (description_tts_urls && description_tts_urls[ttsLangKey]) {
-                    try {
-                        const blobUrl = await speechApi.getDescriptionTTSAudio(vocabId, ttsLangKey, signal);
-                        if (signal.aborted) return;
-                        trackBlobUrl(blobUrl);
-                        const audio = new Audio(blobUrl);
-                        await new Promise<void>((resolve, reject) => {
-                            audio.onended = () => resolve();
-                            audio.onerror = () => reject(new Error('Audio playback error'));
-                            audio.play().catch(reject);
-                        });
-                        descriptionPlayed = true;
-                    } catch (err) {
-                        if (signal.aborted) return;
-                        // Fall through to Web Speech fallback
-                    }
+                // Call POST /api/tts/synthesize with description_vi text
+                try {
+                    console.log('[TTS] Calling synthesizeTTS with description_vi:', description_vi.substring(0, 50) + '...');
+                    const blobUrl = await speechApi.synthesizeTTS(description_vi, 'vi', signal);
+                    if (signal.aborted) return;
+                    console.log('[TTS] Got blob URL:', blobUrl);
+                    trackBlobUrl(blobUrl);
+                    const audio = new Audio(blobUrl);
+                    await new Promise<void>((resolve, reject) => {
+                        audio.onended = () => { console.log('[TTS] Description audio ended'); resolve(); };
+                        audio.onerror = (e) => { console.error('[TTS] Audio playback error:', e); reject(new Error('Audio playback error')); };
+                        audio.play().catch((e) => { console.error('[TTS] Audio play() rejected:', e); reject(e); });
+                    });
+                    descriptionPlayed = true;
+                } catch (err) {
+                    console.error('[TTS] synthesizeTTS failed:', err);
+                    if (signal.aborted) return;
+                    // Fall through to Web Speech fallback
                 }
 
-                // Fallback: Web Speech API for description with 2s timeout
-                if (!descriptionPlayed && targetDescription && !signal.aborted) {
+                // Fallback: Web Speech API for Vietnamese description with 2s timeout
+                if (!descriptionPlayed && !signal.aborted) {
                     try {
                         await new Promise<void>((resolve) => {
                             const timeout = setTimeout(resolve, 2000);
-                            mascotSpeak(targetDescription, targetLangCode);
-                            // Listen for speech end or timeout
+                            mascotSpeak(description_vi, 'vi-VN');
                             const checkEnd = setInterval(() => {
                                 if (!window.speechSynthesis.speaking) {
                                     clearInterval(checkEnd);
@@ -243,7 +235,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                 }
             }
 
-            // Step 3: Play word TTS
+            // Step 3: Play word TTS (in target learning language)
             if (!signal.aborted) {
                 setIsTTSLoading(false);
                 await playWordTTS(signal);
@@ -257,7 +249,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
         } finally {
             setIsTTSLoading(false);
         }
-    }, [target_language, targetDescription, description_tts_urls, vocabId, playWordTTS, trackBlobUrl]);
+    }, [description_vi, playWordTTS, trackBlobUrl]);
 
     // Auto-play TTS when card opens
     useEffect(() => {
@@ -304,18 +296,16 @@ const RevealCard: React.FC<RevealCardProps> = ({
 
     // Cleanup on close: abort TTS fetches, cancel speechSynthesis, revoke blob URLs
     useEffect(() => {
-        return () => {
-            // Abort in-flight TTS fetches
+        if (!isOpen) {
+            // Card just closed — abort any in-flight TTS fetches
             if (abortControllerRef.current) {
                 abortControllerRef.current.abort();
                 abortControllerRef.current = null;
             }
-            // Cancel Web Speech API
             window.speechSynthesis.cancel();
-            // Clean up blob URLs
             blobUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
             blobUrlsRef.current = [];
-        };
+        }
     }, [isOpen]);
 
     // Real speech recognition via MediaRecorder + backend API
@@ -571,8 +561,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             {!imageUrl && <div className="w-full h-full flex items-center justify-center text-4xl relative z-10">📸</div>}
                         </div>
 
-                        {/* Mascot Description Speech Bubble */}
-                        {targetDescription && (
+                        {/* Mascot Description Speech Bubble (Vietnamese) */}
+                        {description_vi && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -587,7 +577,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                             <img src="/owl-mascot.png" alt="Mascot" className="w-8 h-8 object-contain" />
                                         </div>
                                         <p className="text-sm font-medium text-slate-700 leading-relaxed flex-1">
-                                            {targetDescription}
+                                            {description_vi}
                                         </p>
                                     </div>
                                 </div>
