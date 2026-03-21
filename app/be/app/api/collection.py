@@ -1,4 +1,9 @@
-"""Collection browsing routes — GET /collection, /collection/{category}, /vocab/{id}."""
+"""Collection browsing routes — GET /collection, /collection/{category}, /vocab/{id}.
+
+The collection displays **achievement cards** — vocab that the child has
+pronounced correctly (mastery > 0 in at least one language).  Card images
+come from the static reference database, not the user's camera photos.
+"""
 
 from __future__ import annotations
 
@@ -6,7 +11,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_current_child, get_db
@@ -18,9 +23,26 @@ from app.schemas.collection import (
     VocabCard,
     VocabDetailResponse,
 )
-from app.utils.constants import CATEGORY_ICONS, CATEGORY_TOTALS
+from app.utils.constants import (
+    CATEGORY_DISPLAY_NAMES,
+    CATEGORY_ICONS,
+    CATEGORY_TOTALS,
+)
+from app.utils.vocab_image import lookup_vocab_image
 
 router = APIRouter(tags=["collection"])
+
+# Reusable filter: at least one language has been mastered (stars == 3)
+_has_mastery = or_(
+    CapturedVocab.mastery_en > 0,
+    CapturedVocab.mastery_vi > 0,
+    CapturedVocab.mastery_zh > 0,
+)
+
+
+def _pretty_category_name(raw: str) -> str:
+    """Convert a raw category key like 'body_parts' to 'Body Parts'."""
+    return raw.replace("_", " ").title()
 
 
 @router.get("/collection", response_model=CollectionResponse)
@@ -28,35 +50,49 @@ async def get_collection(
     child_id: Annotated[UUID, Depends(get_current_child)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> CollectionResponse:
-    """Get the child's vocab collection overview with per-category progress."""
+    """Get the child's achievement collection overview.
 
-    # Count total words
+    Only vocab with mastery > 0 (correctly pronounced) is counted.
+    Categories are sorted by mastered-card count descending.
+    """
+
     total_result = await db.execute(
-        select(func.count()).where(CapturedVocab.child_id == child_id)
+        select(func.count()).where(
+            CapturedVocab.child_id == child_id,
+            _has_mastery,
+        )
     )
     total_words = total_result.scalar() or 0
 
-    # Count per category
     cat_result = await db.execute(
         select(CapturedVocab.category, func.count())
-        .where(CapturedVocab.child_id == child_id)
+        .where(CapturedVocab.child_id == child_id, _has_mastery)
         .group_by(CapturedVocab.category)
     )
-    captured_counts = {row[0]: row[1] for row in cat_result.all()}
+    captured_counts: dict[str, int] = {row[0]: row[1] for row in cat_result.all()}
 
-    # Build category summaries
+    all_cat_keys = set(CATEGORY_TOTALS.keys()) | set(captured_counts.keys())
+
     categories: list[CategorySummary] = []
-    for cat_name, cat_total in CATEGORY_TOTALS.items():
+    for cat_name in all_cat_keys:
         captured = captured_counts.get(cat_name, 0)
+        cat_total = CATEGORY_TOTALS.get(cat_name, captured)
         categories.append(
             CategorySummary(
                 name=cat_name,
-                icon=CATEGORY_ICONS.get(cat_name, "❓"),
+                display_name=CATEGORY_DISPLAY_NAMES.get(
+                    cat_name, _pretty_category_name(cat_name)
+                ),
+                icon=CATEGORY_ICONS.get(cat_name, "📦"),
                 captured=captured,
-                total=cat_total,
-                progress=round(captured / cat_total, 2) if cat_total > 0 else 0.0,
+                total=max(cat_total, captured),
+                progress=(
+                    round(captured / cat_total, 2) if cat_total > 0 else 0.0
+                ),
             )
         )
+
+    categories.sort(key=lambda c: c.captured, reverse=True)
 
     return CollectionResponse(total_words=total_words, categories=categories)
 
@@ -67,19 +103,17 @@ async def get_category(
     child_id: Annotated[UUID, Depends(get_current_child)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> CategoryDetailResponse:
-    """Get all captured vocab cards in a specific category."""
+    """Get mastered vocab cards in a specific category.
 
-    if category not in CATEGORY_TOTALS:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Category '{category}' not found.",
-        )
+    Card images are resolved from the static reference database.
+    """
 
     result = await db.execute(
         select(CapturedVocab)
         .where(
             CapturedVocab.child_id == child_id,
             CapturedVocab.category == category,
+            _has_mastery,
         )
         .order_by(CapturedVocab.created_at.desc())
     )
@@ -99,13 +133,13 @@ async def get_category(
             mastery_vi=v.mastery_vi,
             mastery_zh=v.mastery_zh,
             evolved=v.evolved,
-            photo_url=v.photo_url,
+            photo_url=lookup_vocab_image(v.word_en),
             captured_at=v.created_at,
         )
         for v in vocabs
     ]
 
-    total = CATEGORY_TOTALS.get(category, 0)
+    total = CATEGORY_TOTALS.get(category, len(captured_words))
     undiscovered = max(0, total - len(captured_words))
 
     return CategoryDetailResponse(
@@ -121,7 +155,7 @@ async def get_vocab_detail(
     child_id: Annotated[UUID, Depends(get_current_child)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> VocabDetailResponse:
-    """Get full detail for a single vocab card."""
+    """Get full detail for a single achievement card."""
 
     result = await db.execute(
         select(CapturedVocab).where(
@@ -153,7 +187,7 @@ async def get_vocab_detail(
         mastery_vi=vocab.mastery_vi,
         mastery_zh=vocab.mastery_zh,
         evolved=vocab.evolved,
-        photo_url=vocab.photo_url,
+        photo_url=lookup_vocab_image(vocab.word_en),
         confidence=vocab.confidence,
         captured_at=vocab.created_at,
         last_practiced_at=None,

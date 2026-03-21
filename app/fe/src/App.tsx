@@ -35,6 +35,7 @@ const App: React.FC = () => {
     vocabId: string;
     tts_urls: { en: string; vi: string; zh: string };
     xp_earned: number;
+    description_vi: string | null;
   } | null>(null);
 
   const [isAIProcessing, setIsAIProcessing] = useState(false);
@@ -255,6 +256,7 @@ const App: React.FC = () => {
         vocabId: vc.id,
         tts_urls: response.tts_urls || { en: '', vi: '', zh: '' },
         xp_earned: response.xp_earned || 0,
+        description_vi: vc.description_vi || null,
       };
 
       setCapturedResult(result);
@@ -558,6 +560,7 @@ const App: React.FC = () => {
           vocabId={capturedResult.vocabId}
           tts_urls={capturedResult.tts_urls}
           xpEarned={capturedResult.xp_earned}
+          description_vi={capturedResult.description_vi}
           onCardFlyToCollection={() => { setIsBookOpen(true); playPop(); }}
         />
       )}

@@ -25,6 +25,7 @@ interface RevealCardProps {
     tts_urls?: { en: string; vi: string; zh: string };
     xpEarned?: number;
     onCardFlyToCollection?: () => void;
+    description_vi?: string | null;
     description_en?: string | null;
     description_zh?: string | null;
     description_tts_urls?: { en: string; zh: string };
@@ -67,6 +68,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
     tts_urls,
     xpEarned,
     onCardFlyToCollection,
+    description_vi,
     description_en,
     description_zh,
     description_tts_urls,
@@ -87,6 +89,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
     const [hasTriggeredXP, setHasTriggeredXP] = useState(false);
     const [isTTSLoading, setIsTTSLoading] = useState(false);
     const [showExamples, setShowExamples] = useState(false);
+    const [achievementImageUrl, setAchievementImageUrl] = useState<string | null>(null);
+    const [showAchievementFlip, setShowAchievementFlip] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
@@ -101,13 +105,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
         'Epic': 'Siêu hiếm',
         'Legendary': 'Huyền thoại luôn'
     };
-
-    // Get description for the target language
-    const descriptionMap: Record<string, string | null | undefined> = {
-        en: description_en,
-        zh: description_zh,
-    };
-    const targetDescription = descriptionMap[target_language || 'en'] || null;
 
     // Helper: track blob URLs for cleanup
     const trackBlobUrl = useCallback((url: string) => {
@@ -181,7 +178,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
         }
     }, [target_language, word_en, word_zh, tts_urls, vocabId, trackBlobUrl]);
 
-    // Full TTS sequence: description narration → pause → word TTS
+    // Full TTS sequence: Vietnamese description narration → pause → word TTS
     const playTTSSequence = useCallback(async () => {
         window.speechSynthesis.cancel();
         setIsTTSLoading(true);
@@ -190,40 +187,37 @@ const RevealCard: React.FC<RevealCardProps> = ({
         abortControllerRef.current = abortController;
         const signal = abortController.signal;
 
-        const ttsLangKey = target_language === 'zh' ? 'zh' : 'en';
-        const targetLangCode = target_language === 'zh' ? 'zh-CN' : 'en-US';
-
         try {
-            // Step 1: Try to play description TTS (if available)
-            if (targetDescription && vocabId) {
+            // Step 1: Play Vietnamese description TTS (mascot explains in child's native language)
+            if (description_vi) {
                 let descriptionPlayed = false;
 
-                // Try ElevenLabs TTS for description
-                if (description_tts_urls && description_tts_urls[ttsLangKey]) {
-                    try {
-                        const blobUrl = await speechApi.getDescriptionTTSAudio(vocabId, ttsLangKey, signal);
-                        if (signal.aborted) return;
-                        trackBlobUrl(blobUrl);
-                        const audio = new Audio(blobUrl);
-                        await new Promise<void>((resolve, reject) => {
-                            audio.onended = () => resolve();
-                            audio.onerror = () => reject(new Error('Audio playback error'));
-                            audio.play().catch(reject);
-                        });
-                        descriptionPlayed = true;
-                    } catch (err) {
-                        if (signal.aborted) return;
-                        // Fall through to Web Speech fallback
-                    }
+                // Call POST /api/tts/synthesize with description_vi text
+                try {
+                    console.log('[TTS] Calling synthesizeTTS with description_vi:', description_vi.substring(0, 50) + '...');
+                    const blobUrl = await speechApi.synthesizeTTS(description_vi, 'vi', signal);
+                    if (signal.aborted) return;
+                    console.log('[TTS] Got blob URL:', blobUrl);
+                    trackBlobUrl(blobUrl);
+                    const audio = new Audio(blobUrl);
+                    await new Promise<void>((resolve, reject) => {
+                        audio.onended = () => { console.log('[TTS] Description audio ended'); resolve(); };
+                        audio.onerror = (e) => { console.error('[TTS] Audio playback error:', e); reject(new Error('Audio playback error')); };
+                        audio.play().catch((e) => { console.error('[TTS] Audio play() rejected:', e); reject(e); });
+                    });
+                    descriptionPlayed = true;
+                } catch (err) {
+                    console.error('[TTS] synthesizeTTS failed:', err);
+                    if (signal.aborted) return;
+                    // Fall through to Web Speech fallback
                 }
 
-                // Fallback: Web Speech API for description with 2s timeout
-                if (!descriptionPlayed && targetDescription && !signal.aborted) {
+                // Fallback: Web Speech API for Vietnamese description with 2s timeout
+                if (!descriptionPlayed && !signal.aborted) {
                     try {
                         await new Promise<void>((resolve) => {
                             const timeout = setTimeout(resolve, 2000);
-                            mascotSpeak(targetDescription, targetLangCode);
-                            // Listen for speech end or timeout
+                            mascotSpeak(description_vi, 'vi-VN');
                             const checkEnd = setInterval(() => {
                                 if (!window.speechSynthesis.speaking) {
                                     clearInterval(checkEnd);
@@ -243,7 +237,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                 }
             }
 
-            // Step 3: Play word TTS
+            // Step 3: Play word TTS (in target learning language)
             if (!signal.aborted) {
                 setIsTTSLoading(false);
                 await playWordTTS(signal);
@@ -257,7 +251,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
         } finally {
             setIsTTSLoading(false);
         }
-    }, [target_language, targetDescription, description_tts_urls, vocabId, playWordTTS, trackBlobUrl]);
+    }, [description_vi, playWordTTS, trackBlobUrl]);
 
     // Auto-play TTS when card opens
     useEffect(() => {
@@ -278,6 +272,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
             setShowAutoCloseMessage(false);
             setIsFlyingToCollection(false);
             setHasTriggeredXP(false);
+            setAchievementImageUrl(null);
+            setShowAchievementFlip(false);
 
             if (xpEarned && xpEarned > 0) {
                 setTimeout(() => {
@@ -304,18 +300,16 @@ const RevealCard: React.FC<RevealCardProps> = ({
 
     // Cleanup on close: abort TTS fetches, cancel speechSynthesis, revoke blob URLs
     useEffect(() => {
-        return () => {
-            // Abort in-flight TTS fetches
+        if (!isOpen) {
+            // Card just closed — abort any in-flight TTS fetches
             if (abortControllerRef.current) {
                 abortControllerRef.current.abort();
                 abortControllerRef.current = null;
             }
-            // Cancel Web Speech API
             window.speechSynthesis.cancel();
-            // Clean up blob URLs
             blobUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
             blobUrlsRef.current = [];
-        };
+        }
     }, [isOpen]);
 
     // Real speech recognition via MediaRecorder + backend API
@@ -366,21 +360,30 @@ const RevealCard: React.FC<RevealCardProps> = ({
                         const newAttemptCount = attemptCount + 1;
                         setAttemptCount(newAttemptCount);
 
-                        // Only set stars and show options if it's a perfect match (3 stars)
                         if (scoredStars === 3) {
                             setStars(scoredStars);
-                            // If evolved, trigger celebration
+
+                            if (result.image_url) {
+                                setAchievementImageUrl(result.image_url);
+                                setTimeout(() => setShowAchievementFlip(true), 300);
+                            }
+
                             if (result.evolved) {
                                 triggerLegendaryBurst();
                                 playChime();
+                            } else if (cardRef.current) {
+                                const rect = cardRef.current.getBoundingClientRect();
+                                triggerSparkles(
+                                    rect.left + rect.width / 2,
+                                    rect.top + rect.height / 3,
+                                );
                             }
-                            
+
                             handleSaveCollection(scoredStars, newAttemptCount);
                             setTimeout(() => {
                                 setShowPostRevealOptions(true);
-                            }, 1500);
+                            }, 2200);
                         } else {
-                            // Clear stars on incorrect attempt to force them to try again
                             setStars(null);
                         }
                     } catch (err) {
@@ -498,8 +501,14 @@ const RevealCard: React.FC<RevealCardProps> = ({
                             ) : null}
                         </div>
 
-                        {/* Captured Image with Glow & Effects */}
-                        <div className={`aspect-square w-full rounded-card overflow-hidden bg-slate-100 mb-6 border-4 border-white relative ${rarityGlowMap[rarity]}`}>
+                        {/* Card Image — flips from camera photo to achievement card on 3 stars */}
+                        <div className={`aspect-square w-full rounded-card overflow-hidden bg-slate-100 mb-6 border-4 relative ${
+                            showAchievementFlip
+                                ? 'border-sunshineYellow shadow-[0_0_30px_rgba(255,210,52,0.6)]'
+                                : `border-white ${rarityGlowMap[rarity]}`
+                        }`}
+                            style={{ perspective: '1200px' }}
+                        >
                             {/* Background beams for Rare+ */}
                             {(rarity === 'Rare' || rarity === 'Epic' || rarity === 'Legendary') && (
                                 <motion.div
@@ -517,29 +526,69 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                 </motion.div>
                             )}
 
-                            <motion.img
-                                initial={{ scale: 1.2, filter: 'blur(10px)' }}
-                                animate={{ scale: 1, filter: 'blur(0px)' }}
-                                transition={{ duration: 0.8, ease: "easeOut" }}
-                                src={imageUrl}
-                                alt={word_en}
-                                className="w-full h-full object-cover relative z-10"
-                            />
+                            {/* Flip container */}
+                            <motion.div
+                                className="w-full h-full relative"
+                                animate={{ rotateY: showAchievementFlip ? 180 : 0 }}
+                                transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+                                style={{ transformStyle: 'preserve-3d' }}
+                            >
+                                {/* Front face — camera photo */}
+                                <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden' }}>
+                                    <motion.img
+                                        initial={{ scale: 1.2, filter: 'blur(10px)' }}
+                                        animate={{ scale: 1, filter: 'blur(0px)' }}
+                                        transition={{ duration: 0.8, ease: "easeOut" }}
+                                        src={imageUrl}
+                                        alt={word_en}
+                                        className="w-full h-full object-cover"
+                                    />
+                                    {!imageUrl && <div className="w-full h-full flex items-center justify-center text-4xl">📸</div>}
+                                </div>
 
-                            {/* Shiny Effect for High Rarity */}
-                            {(rarity === 'Epic' || rarity === 'Legendary') && (
+                                {/* Back face — achievement card image */}
+                                <div
+                                    className="absolute inset-0 bg-gradient-to-br from-amber-50 to-white"
+                                    style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                                >
+                                    {achievementImageUrl && (
+                                        <img
+                                            src={achievementImageUrl}
+                                            alt={word_en}
+                                            className="w-full h-full object-contain p-4"
+                                        />
+                                    )}
+                                </div>
+                            </motion.div>
+
+                            {/* Achievement badge overlay — shown after flip */}
+                            <AnimatePresence>
+                                {showAchievementFlip && (
+                                    <motion.div
+                                        initial={{ scale: 0, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ delay: 0.6, type: 'spring', stiffness: 300, damping: 15 }}
+                                        className="absolute top-3 right-3 z-30 bg-sunshineYellow text-deepNavy px-3 py-1.5 rounded-full font-black text-[11px] uppercase tracking-wider shadow-lg border-2 border-white"
+                                    >
+                                        THẺ BÀI ✨
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Shiny sweep for high rarity or achievement */}
+                            {(rarity === 'Epic' || rarity === 'Legendary' || showAchievementFlip) && (
                                 <motion.div
                                     initial={{ x: '-100%', opacity: 0 }}
                                     animate={{ x: '100%', opacity: [0, 0.5, 0] }}
-                                    transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
-                                    className="absolute inset-0 z-20 bg-gradient-to-r from-transparent via-white/50 to-transparent skew-x-12"
+                                    transition={{ duration: 1.5, repeat: Infinity, repeatDelay: showAchievementFlip ? 2 : 3 }}
+                                    className="absolute inset-0 z-20 bg-gradient-to-r from-transparent via-white/50 to-transparent skew-x-12 pointer-events-none"
                                 />
                             )}
 
-                            {/* Floating Particles for Legendary */}
-                            {rarity === 'Legendary' && (
+                            {/* Floating particles for Legendary or achievement */}
+                            {(rarity === 'Legendary' || showAchievementFlip) && (
                                 <div className="absolute inset-0 z-30 pointer-events-none">
-                                    {[...Array(5)].map((_, i) => (
+                                    {[...Array(showAchievementFlip ? 8 : 5)].map((_, i) => (
                                         <motion.div
                                             key={i}
                                             initial={{ y: 0, opacity: 0 }}
@@ -550,18 +599,16 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                                 delay: Math.random() * 2,
                                                 ease: "easeOut"
                                             }}
-                                            className="absolute w-2 h-2 bg-yellow-300 rounded-full blur-[1px]"
+                                            className={`absolute w-2 h-2 rounded-full blur-[1px] ${showAchievementFlip ? 'bg-sunshineYellow' : 'bg-yellow-300'}`}
                                             style={{ left: `${Math.random() * 100}%`, top: '80%' }}
                                         />
                                     ))}
                                 </div>
                             )}
-
-                            {!imageUrl && <div className="w-full h-full flex items-center justify-center text-4xl relative z-10">📸</div>}
                         </div>
 
-                        {/* Mascot Description Speech Bubble */}
-                        {targetDescription && (
+                        {/* Mascot Description Speech Bubble (Vietnamese) */}
+                        {description_vi && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -576,7 +623,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                                             <img src="/owl-mascot.png" alt="Mascot" className="w-8 h-8 object-contain" />
                                         </div>
                                         <p className="text-sm font-medium text-slate-700 leading-relaxed flex-1">
-                                            {targetDescription}
+                                            {description_vi}
                                         </p>
                                     </div>
                                 </div>

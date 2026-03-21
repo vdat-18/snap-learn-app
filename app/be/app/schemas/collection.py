@@ -27,6 +27,7 @@ class VocabCard(BaseModel):
 
 class CategorySummary(BaseModel):
     name: str
+    display_name: str
     icon: str
     captured: int
     total: int

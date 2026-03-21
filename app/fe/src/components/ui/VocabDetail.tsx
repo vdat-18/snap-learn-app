@@ -1,39 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Volume2, BookOpen, Mic } from 'lucide-react';
-import { useGameStore, type CapturedWord } from '../../store/gameStore';
+import { X, Volume2, BookOpen, Mic, Loader2 } from 'lucide-react';
+import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from '../../utils/feedbackUtils';
 import { speechApi } from '../../services/speechApi';
-// TODO: Remove once collectionApi.getVocabDetail() returns fun_fact_vi and sentence data
-import { MOCK_REFERENCE_VOCAB } from '../../store/mockData';
+import { collectionApi, type VocabDetail as VocabDetailData } from '../../services/collectionApi';
 import BackgroundParallax from './BackgroundParallax';
 
 interface VocabDetailProps {
-    word: CapturedWord | null;
+    vocabId: string;
     onClose: () => void;
 }
 
-const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
+const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
     const { practiceWord, target_language } = useGameStore();
     const { playPop, playChime } = useSoundEffects();
     const [isPracticing, setIsPracticing] = useState(false);
     const [justEvolved, setJustEvolved] = useState(false);
-
     const [practiceStatus, setPracticeStatus] = useState<'idle' | 'listening' | 'success' | 'fail'>('idle');
 
-    if (!word) return null;
+    const [vocab, setVocab] = useState<VocabDetailData | null>(null);
+    const [isLoadingDetail, setIsLoadingDetail] = useState(true);
+    const [detailError, setDetailError] = useState(false);
 
-    const wordEnLower = (word.word_en || '').toLowerCase();
-    const refVocab = MOCK_REFERENCE_VOCAB.find((v: any) =>
-        v.word_en && v.word_en.toLowerCase() === wordEnLower
-    );
+    useEffect(() => {
+        setIsLoadingDetail(true);
+        setDetailError(false);
+        collectionApi.getVocabDetail(vocabId)
+            .then(data => setVocab(data))
+            .catch(() => setDetailError(true))
+            .finally(() => setIsLoadingDetail(false));
+    }, [vocabId]);
+
+    if (isLoadingDetail) {
+        return (
+            <motion.div
+                initial={{ y: '100%', opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: '100%', opacity: 0 }}
+                className="fixed inset-0 z-[180] bg-white flex flex-col items-center justify-center font-sans"
+            >
+                <Loader2 className="w-10 h-10 text-skyBlue animate-spin" />
+                <p className="mt-4 text-sm font-bold text-slate-400">Đang tải...</p>
+            </motion.div>
+        );
+    }
+
+    if (detailError || !vocab) {
+        return (
+            <motion.div
+                initial={{ y: '100%', opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: '100%', opacity: 0 }}
+                className="fixed inset-0 z-[180] bg-white flex flex-col items-center justify-center font-sans gap-4"
+            >
+                <span className="text-5xl">😴</span>
+                <p className="text-base font-black text-deepNavy">Không tải được thẻ bài</p>
+                <button onClick={onClose} className="bg-skyBlue text-white px-6 py-3 rounded-2xl font-black text-sm shadow-level-2">
+                    Quay lại
+                </button>
+            </motion.div>
+        );
+    }
+
+    const masteryMax = Math.max(vocab.mastery_en, vocab.mastery_vi, vocab.mastery_zh);
 
     const handlePractice = async () => {
         setIsPracticing(true);
 
         try {
-            // Record audio via MediaRecorder
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const mediaRecorder = new MediaRecorder(stream);
             const audioChunks: Blob[] = [];
@@ -52,13 +88,13 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                     const language = target_language === 'zh' ? 'zh' : 'en';
 
                     try {
-                        const result = await speechApi.pronounce(word.id, language, base64);
+                        const result = await speechApi.pronounce(vocab.id, language, base64);
 
-                        // Update local practice word state
-                        practiceWord(word.id, result.stars);
+                        practiceWord(vocab.id, result.stars);
 
                         if (result.evolved) {
                             setJustEvolved(true);
+                            setVocab(prev => prev ? { ...prev, evolved: true } : prev);
                             playChime();
                             triggerHaptic(200);
                         } else {
@@ -67,8 +103,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                         }
                     } catch (err) {
                         console.error('Practice API error:', err);
-                        // Fallback: still count as local practice
-                        practiceWord(word.id, 1);
+                        practiceWord(vocab.id, 1);
                         playPop();
                         triggerHaptic(50);
                     } finally {
@@ -78,12 +113,10 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                 reader.readAsDataURL(audioBlob);
             };
 
-            // Play TTS first, then record
-            mascotSpeak(word.word_en, 'en-US');
+            mascotSpeak(vocab.word_en, 'en-US');
 
             setTimeout(() => {
                 mediaRecorder.start();
-                // Record for 3 seconds
                 setTimeout(() => {
                     if (mediaRecorder.state === 'recording') {
                         mediaRecorder.stop();
@@ -92,10 +125,9 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
             }, 1200);
         } catch (err) {
             console.error('Microphone error:', err);
-            // Fallback to local practice without mic
-            mascotSpeak(word.word_en, 'en-US');
+            mascotSpeak(vocab.word_en, 'en-US');
             setTimeout(() => {
-                practiceWord(word.id, 1);
+                practiceWord(vocab.id, 1);
                 playPop();
                 triggerHaptic(50);
                 setIsPracticing(false);
@@ -103,14 +135,15 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
         }
     };
 
-    const progressPercent = Math.min((word.practiceCount / 3) * 100, 100);
+    const progressPercent = Math.min((masteryMax / 3) * 100, 100);
 
+    const tier = vocab.rarity_tier.toLowerCase();
     const rarityLabels: Record<string, string> = {
-        'Common': 'Thường nè',
-        'Uncommon': 'Đặc biệt đó',
-        'Rare': 'Hiếm quá đi',
-        'Epic': 'Siêu hiếm',
-        'Legendary': 'Huyền thoại luôn'
+        'common': 'Thường nè',
+        'uncommon': 'Đặc biệt đó',
+        'rare': 'Hiếm quá đi',
+        'epic': 'Siêu hiếm',
+        'legendary': 'Huyền thoại luôn',
     };
 
     return (
@@ -124,9 +157,10 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                 <button onClick={onClose} className="p-2 -ml-2">
                     <X className="w-8 h-8 text-deepNavy" />
                 </button>
-                <div className={`px-4 py-1.5 rounded-full border-2 text-[9px] font-black uppercase tracking-widest ${word.rarity === 'Legendary' ? 'bg-amber-100 border-amber-400 text-amber-600' : 'bg-slate-100 border-slate-300 text-slate-500'
-                    }`}>
-                    {rarityLabels[word.rarity] || 'Thường'} {word.isEvolved && '• TIẾN HÓA ✨'}
+                <div className={`px-4 py-1.5 rounded-full border-2 text-[9px] font-black uppercase tracking-widest ${
+                    tier === 'legendary' ? 'bg-amber-100 border-amber-400 text-amber-600' : 'bg-slate-100 border-slate-300 text-slate-500'
+                }`}>
+                    {rarityLabels[tier] || 'Thường'} {vocab.evolved && '• TIẾN HÓA ✨'}
                 </div>
                 <div className="w-12 h-12" />
             </header>
@@ -135,14 +169,17 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                 <div className="flex-1 overflow-y-auto px-6 pb-10">
                     <div className="relative mb-8">
                         <motion.div
-                            className={`rounded-[40px] overflow-hidden shadow-level-3 border-8 border-white aspect-square relative ${word.isEvolved ? 'ring-8 ring-sunshineYellow/20' : ''}`}
-                            animate={word.isEvolved ? { scale: [1, 1.02, 1] } : {}}
+                            className={`rounded-[40px] overflow-hidden shadow-level-3 border-8 border-white aspect-square relative ${vocab.evolved ? 'ring-8 ring-sunshineYellow/20' : ''}`}
+                            animate={vocab.evolved ? { scale: [1, 1.02, 1] } : {}}
                             transition={{ repeat: Infinity, duration: 3 }}
                         >
-                            <img src={word.image} alt={word.word_en} className="w-full h-full object-cover" />
-                            {word.isEvolved && <div className="absolute inset-0 bg-gradient-to-t from-sunshineYellow/20 to-transparent" />}
+                            {vocab.photo_url ? (
+                                <img src={vocab.photo_url} alt={vocab.word_en} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-6xl bg-slate-50">📷</div>
+                            )}
+                            {vocab.evolved && <div className="absolute inset-0 bg-gradient-to-t from-sunshineYellow/20 to-transparent" />}
 
-                            {/* Status Overlay */}
                             <AnimatePresence>
                                 {(practiceStatus === 'success' || practiceStatus === 'fail') && (
                                     <motion.div
@@ -168,36 +205,33 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                         </motion.div>
                     </div>
 
-
                     <div className="flex items-center justify-center gap-3 mb-6">
                         <span className="text-xl">🇻🇳</span>
-                        <span className="text-2xl font-black text-deepNavy">{word.word_vi || ''}</span>
-                        <button onClick={() => mascotSpeak(word.word_vi, 'vi-VN')} className="p-3 rounded-full bg-deepNavy/5 text-deepNavy active:scale-95 transition-all">
+                        <span className="text-2xl font-black text-deepNavy">{vocab.word_vi}</span>
+                        <button onClick={() => mascotSpeak(vocab.word_vi, 'vi-VN')} className="p-3 rounded-full bg-deepNavy/5 text-deepNavy active:scale-95 transition-all">
                             <Volume2 className="w-6 h-6" />
                         </button>
                     </div>
 
-
-
                     <section className="bg-white rounded-[32px] p-6 shadow-level-2 mb-6 border-b-4 border-slate-100">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-bold">🌱 Lớn lên nào!</h3>
-                            <span className="text-base font-black text-skyBlue">{word.practiceCount}/3</span>
+                            <span className="text-base font-black text-skyBlue">{masteryMax}/3</span>
                         </div>
                         <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
-                            <motion.div animate={{ width: `${progressPercent}%` }} className={`h-full rounded-full ${word.isEvolved ? 'bg-sunshineYellow' : 'bg-skyBlue'}`} />
+                            <motion.div animate={{ width: `${progressPercent}%` }} className={`h-full rounded-full ${vocab.evolved ? 'bg-sunshineYellow' : 'bg-skyBlue'}`} />
                         </div>
                     </section>
 
-                    <section className={`rounded-[32px] p-6 ${word.isEvolved ? 'bg-lavenderPurple/10' : 'bg-slate-50 opacity-60'}`}>
-                        <h3 className="font-black uppercase text-sm mb-4">Bí mật thẻ bài {word.isEvolved ? '✨' : '🔒'}</h3>
-                        {word.isEvolved ? (
+                    <section className={`rounded-[32px] p-6 ${vocab.evolved ? 'bg-lavenderPurple/10' : 'bg-slate-50 opacity-60'}`}>
+                        <h3 className="font-black uppercase text-sm mb-4">Bí mật thẻ bài {vocab.evolved ? '✨' : '🔒'}</h3>
+                        {vocab.evolved ? (
                             <div className="space-y-4">
-                                <p className="font-bold text-indigo-900/80">{refVocab?.fun_fact_vi || "Bí ẩn..."}</p>
-                                {refVocab?.sentence_en && (
+                                <p className="font-bold text-indigo-900/80">{vocab.fun_fact_vi || "Bí ẩn..."}</p>
+                                {vocab.example_sentence_en && (
                                     <div className="bg-white/50 p-4 rounded-2xl border border-white">
-                                        <p className="font-black text-skyBlue text-sm">{refVocab.sentence_en}</p>
-                                        <p className="text-xs text-slate-500">{refVocab.sentence_vi}</p>
+                                        <p className="font-black text-skyBlue text-sm">{vocab.example_sentence_en}</p>
+                                        <p className="text-xs text-slate-500">{vocab.example_sentence_vi}</p>
                                     </div>
                                 )}
                             </div>
@@ -205,8 +239,8 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                             <div className="flex justify-center py-4 text-slate-300"><BookOpen /></div>
                         )}
                     </section>
-                </div >
-            </BackgroundParallax >
+                </div>
+            </BackgroundParallax>
 
             <div className="p-6 bg-white border-t border-slate-100 px-8">
                 <motion.button
@@ -239,7 +273,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                     ) : (
                         <>
                             <Mic className="w-6 h-6" />
-                            <span>{word.practiceCount >= 3 ? 'LUYỆN TẬP THÊM' : 'LUYỆN TẬP ĐỂ TIẾN HÓA'}</span>
+                            <span>{masteryMax >= 3 ? 'LUYỆN TẬP THÊM' : 'LUYỆN TẬP ĐỂ TIẾN HÓA'}</span>
                         </>
                     )}
                 </motion.button>
@@ -303,13 +337,17 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ word, onClose }) => {
                                     "brightness(1.5) contrast(1.2) hue-rotate(90deg)",
                                     "brightness(2) contrast(1.5) hue-rotate(180deg)",
                                     "brightness(3) contrast(2) saturate(3)",
-                                    "brightness(10)", // Explosion point
-                                    "brightness(1) contrast(1.1) saturate(1.2)"   // Final evolved state
+                                    "brightness(10)",
+                                    "brightness(1) contrast(1.1) saturate(1.2)"
                                 ]
                             }}
                             transition={{ duration: 3, times: [0, 0.3, 0.5, 0.6, 0.7, 0.8], ease: "easeInOut" }}
                         >
-                            <img src={word.image} alt={word.word_en} className="w-full h-full object-cover" />
+                            {vocab.photo_url ? (
+                                <img src={vocab.photo_url} alt={vocab.word_en} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-6xl bg-slate-50">📷</div>
+                            )}
                             {/* Permanent Evolved Glow Overlay */}
                             <motion.div
                                 initial={{ opacity: 0 }}

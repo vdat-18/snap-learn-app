@@ -355,12 +355,11 @@ async def synthesize_speech_stream(
     voice_id, speed = _tts_voice_and_speed(language)
     client = _get_elevenlabs_client()
 
-    audio_stream = await client.text_to_speech.stream(
+    audio_stream = client.text_to_speech.stream(
         text=text,
         voice_id=voice_id,
         model_id=ELEVENLABS_MODEL,
         output_format=TTS_OUTPUT_FORMAT,
-        optimize_streaming_latency=3,
         voice_settings={
             "speed": speed,
         },

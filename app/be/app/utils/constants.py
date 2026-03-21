@@ -74,6 +74,26 @@ CATEGORY_ICONS: dict[str, str] = {
     "technology": "💻",
 }
 
+# Vietnamese display names for categories
+CATEGORY_DISPLAY_NAMES: dict[str, str] = {
+    "animals": "Động vật",
+    "food": "Đồ ăn",
+    "nature": "Tự nhiên",
+    "household": "Nhà cửa",
+    "school": "Trường học",
+    "vehicles": "Giao thông",
+    "clothing": "Quần áo",
+    "body_parts": "Cơ thể",
+    "toys": "Đồ chơi",
+    "tools": "Dụng cụ",
+    "buildings": "Công trình",
+    "weather": "Thời tiết",
+    "colors": "Màu sắc",
+    "instruments": "Nhạc cụ",
+    "sports": "Thể thao",
+    "technology": "Công nghệ",
+}
+
 # Reference totals per category for collection progress
 CATEGORY_TOTALS: dict[str, int] = {
     "animals": 50,
