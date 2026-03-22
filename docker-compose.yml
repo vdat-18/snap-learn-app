@@ -92,8 +92,8 @@ services:
     volumes:
       - ./app/be:/app
       - ./app/be/baml_client:/app/baml_client
+      - ./app/be/tts_cache:/app/tts_cache
       - backend_uploads:/app/uploads
-      - backend_tts_cache:/app/tts_cache
       - backend_logs:/app/logs
 
     depends_on:
