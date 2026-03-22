@@ -30,6 +30,7 @@ export interface MascotManifest {
 
 let cachedManifest: MascotManifest | null = null;
 let manifestLoading: Promise<MascotManifest | null> | null = null;
+let preloadedLangs: Set<string> = new Set();
 
 /**
  * Get the cached manifest (null if not yet loaded or load failed).
@@ -105,24 +106,22 @@ async function _doFetchManifest(): Promise<MascotManifest | null> {
  */
 export function preloadCriticalAudio(lang: string = 'vi'): void {
     if (!cachedManifest) return;
+    if (preloadedLangs.has(lang)) return;
+    preloadedLangs.add(lang);
 
-    // Critical keys: splash screen, camera default, camera return
     const criticalKeys = ['app_shell__6', 'app_shell__4', 'app_shell__5'];
 
     for (const key of criticalKeys) {
         const textToKey = cachedManifest.textToKey;
-        // Verify this key actually exists in the manifest
         const hasKey = Object.values(textToKey).includes(key);
         if (!hasKey) continue;
 
         const url = getMascotAudioUrl(key, lang);
 
-        // Preload by creating an Audio element
         try {
             const audio = new Audio();
             audio.preload = 'auto';
             audio.src = url;
-            // Don't need to keep reference — browser caches the request
             console.log(`[MascotAudio] Preloading: ${key}/${lang}`);
         } catch (error) {
             console.warn(`[MascotAudio] Preload failed for ${key}:`, error);

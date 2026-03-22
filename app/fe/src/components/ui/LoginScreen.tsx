@@ -36,18 +36,11 @@ const LoginScreen: React.FC = () => {
 
     const { playPop } = useSoundEffects();
 
-    // Generate random email and Auto-play TTS greeting on mount
+    // Generate random email on mount
     useEffect(() => {
         const randomString = Math.random().toString(36).substring(2, 8);
         setEmail(`${randomString}@gmail.com`);
-
-        const timer = setTimeout(() => {
-            if (step === 'auth') {
-                mascotSpeak('Chào bạn! Hãy đăng nhập hoặc tạo tài khoản mới nhé!');
-            }
-        }, 800);
-        return () => clearTimeout(timer);
-    }, [step]);
+    }, []);
 
     const handleAvatarSelect = (avatar: typeof avatars[0]) => {
         playPop();

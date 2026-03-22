@@ -5,6 +5,10 @@ import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from '../../utils/feedbackUtils';
 import { speechApi } from '../../services/speechApi';
+import {
+    createPronunciationMediaRecorder,
+    pronunciationBlobType,
+} from '../../utils/pronunciationRecording';
 import { collectionApi, type VocabDetail as VocabDetailData } from '../../services/collectionApi';
 import BackgroundParallax from './BackgroundParallax';
 
@@ -72,7 +76,7 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const mediaRecorder = new MediaRecorder(stream);
+            const mediaRecorder = createPronunciationMediaRecorder(stream);
             const audioChunks: Blob[] = [];
 
             mediaRecorder.ondataavailable = (event) => {
@@ -82,7 +86,9 @@ const VocabDetail: React.FC<VocabDetailProps> = ({ vocabId, onClose }) => {
             mediaRecorder.onstop = async () => {
                 stream.getTracks().forEach(track => track.stop());
 
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const audioBlob = new Blob(audioChunks, {
+                    type: pronunciationBlobType(mediaRecorder),
+                });
                 const reader = new FileReader();
                 reader.onload = async () => {
                     const base64 = (reader.result as string).split(',')[1];

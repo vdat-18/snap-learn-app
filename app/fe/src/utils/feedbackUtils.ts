@@ -76,10 +76,8 @@ export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = '
         state: 'talking'
     });
 
-    // Force interrupt: stop any currently playing audio
-    if (forceInterrupt) {
-        _stopCurrentAudio();
-    }
+    // Always stop previous audio to prevent overlap
+    _stopCurrentAudio();
 
     // Try pre-generated audio first, fall back to Web Speech API
     if (audioKey) {
@@ -106,10 +104,17 @@ function _playPreGeneratedAudio(
 
     const audio = new Audio(url);
     currentAudio = audio;
+    let didFallback = false;
+
+    const fallbackOnce = () => {
+        if (didFallback || currentAudio !== audio) return;
+        didFallback = true;
+        _speakWithWebSpeechAPI(phrase, feLang, forceInterrupt);
+    };
 
     audio.addEventListener('error', () => {
         console.warn(`[MascotTTS] Pre-generated audio failed for ${key}/${beLang} — falling back to Web Speech API`);
-        _speakWithWebSpeechAPI(phrase, feLang, forceInterrupt);
+        fallbackOnce();
     });
 
     audio.addEventListener('ended', () => {
@@ -121,14 +126,23 @@ function _playPreGeneratedAudio(
     audio.play().then(() => {
         console.log(`[MascotTTS] Playing pre-generated: ${key}/${beLang}`);
     }).catch((err) => {
+        if (currentAudio !== audio) {
+            console.log(`[MascotTTS] Audio interrupted for ${key}/${beLang} — skipping fallback`);
+            return;
+        }
         console.warn(`[MascotTTS] Audio play() failed for ${key}/${beLang}:`, err);
-        _speakWithWebSpeechAPI(phrase, feLang, forceInterrupt);
+        fallbackOnce();
     });
 }
 
 /**
- * Stop currently playing audio (both Audio element and Web Speech API).
+ * Stop currently playing mascot audio (both Audio element and Web Speech API).
+ * Exported for component cleanup (e.g. unmount).
  */
+export function stopMascotAudio(): void {
+    _stopCurrentAudio();
+}
+
 function _stopCurrentAudio(): void {
     // Stop Audio element
     if (currentAudio) {

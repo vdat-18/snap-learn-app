@@ -6,6 +6,10 @@ import { ArrowLeft } from 'lucide-react';
 import { triggerSparkles, triggerLegendaryBurst } from '../../utils/confetti';
 import { mascotSpeak } from '../../utils/feedbackUtils';
 import { speechApi } from '../../services/speechApi';
+import {
+    createPronunciationMediaRecorder,
+    pronunciationBlobType,
+} from '../../utils/pronunciationRecording';
 import { triggerXPFly } from './XPFlyManager';
 
 export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
@@ -303,7 +307,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
         try {
             // Start recording
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const mediaRecorder = new MediaRecorder(stream);
+            const mediaRecorder = createPronunciationMediaRecorder(stream);
             mediaRecorderRef.current = mediaRecorder;
             audioChunksRef.current = [];
 
@@ -318,7 +322,9 @@ const RevealCard: React.FC<RevealCardProps> = ({
                 stream.getTracks().forEach(track => track.stop());
 
                 // Convert to base64
-                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                const audioBlob = new Blob(audioChunksRef.current, {
+                    type: pronunciationBlobType(mediaRecorder),
+                });
                 const reader = new FileReader();
                 reader.onload = async () => {
                     const base64 = (reader.result as string).split(',')[1];

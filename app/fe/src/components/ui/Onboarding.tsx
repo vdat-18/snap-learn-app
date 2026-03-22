@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight } from 'lucide-react';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
-import { mascotSpeak } from '../../utils/feedbackUtils';
+import { mascotSpeak, stopMascotAudio } from '../../utils/feedbackUtils';
 
 interface OnboardingProps {
     onFinish: () => void;
@@ -64,16 +64,24 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
             else if (activeSlide.id === 'pronunciation') mascotSpeak("Phát âm chuẩn để thẻ tiến hóa!", 'vi-VN', true);
             else if (activeSlide.id === 'collection') mascotSpeak("Kho báu đang chờ. Bắt đầu thôi!", 'vi-VN', true);
         }, 500);
-        return () => clearTimeout(timer);
+        return () => {
+            clearTimeout(timer);
+            stopMascotAudio();
+        };
     }, [currentSlide]);
+
+    const handleFinish = () => {
+        stopMascotAudio();
+        playPop();
+        onFinish();
+    };
 
     const nextSlide = () => {
         if (currentSlide < slides.length - 1) {
             playPop();
             setCurrentSlide(currentSlide + 1);
         } else {
-            playPop();
-            onFinish();
+            handleFinish();
         }
     };
 
@@ -90,11 +98,11 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
         <div className={`fixed inset-0 z-[200] flex flex-col transition-all duration-700 bg-gradient-to-b ${activeSlide.bgClass} font-sans`}>
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-12 pb-4">
-                <button onClick={() => { playPop(); onFinish(); }} className="w-10 h-10 flex items-center justify-center text-deepNavy/40 hover:text-deepNavy">
+                <button onClick={handleFinish} className="w-10 h-10 flex items-center justify-center text-deepNavy/40 hover:text-deepNavy">
                     <X className="w-8 h-8" />
                 </button>
                 <h1 className="text-deepNavy font-black text-xl tracking-tight">SnapLearn</h1>
-                <button onClick={() => { playPop(); onFinish(); }} className="text-deepNavy/40 font-bold text-base hover:text-deepNavy px-2">
+                <button onClick={handleFinish} className="text-deepNavy/40 font-bold text-base hover:text-deepNavy px-2">
                     Bỏ qua
                 </button>
             </div>

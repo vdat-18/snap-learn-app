@@ -140,6 +140,8 @@ async def get_mascot_audio(
     cache_dir = _mascot_cache_dir(settings)
     audio_path = cache_dir / language / f"{key}.mp3"
 
+    print(f'checking audio path: {audio_path}')
+
     if not audio_path.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

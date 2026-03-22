@@ -9,6 +9,7 @@ Pronunciation matching and feedback are deterministic (no LLM call).
 from __future__ import annotations
 
 import hashlib
+import io
 import logging
 import os
 import random
@@ -20,6 +21,8 @@ import openai
 from baml_client import b
 from baml_client.types import Language, PronunciationResult
 from elevenlabs import AsyncElevenLabs
+
+from app.utils.audio import openai_transcription_filename
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +76,13 @@ async def transcribe_audio(
     """
     lang_code = language.value  # "en", "vi", "zh"
 
+    # BytesIO + filename from magic bytes — correct container for Safari MP4 vs Chrome WebM
+    upload = io.BytesIO(audio_bytes)
+    upload.name = openai_transcription_filename(audio_bytes)
+
     response = await openai_client.audio.transcriptions.create(
         model="gpt-4o-transcribe",
-        file=("audio.webm", audio_bytes, "audio/webm"),
+        file=upload,
         language=lang_code if lang_code != "zh" else "zh",
         response_format="text",
     )
@@ -251,7 +258,7 @@ def _tts_cache_path(
 ) -> Path:
     """Return the cache file path for a given text/language pair, creating dirs."""
     cache_root = cache_dir or TTS_CACHE_DIR
-    lang_dir = cache_root / language.value
+    lang_dir = cache_root / language.value.lower()
     lang_dir.mkdir(parents=True, exist_ok=True)
     text_hash = hashlib.sha256(text.encode()).hexdigest()[:16]
     return lang_dir / f"{text_hash}.mp3"

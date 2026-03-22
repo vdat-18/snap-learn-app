@@ -10,7 +10,10 @@ from pydantic import BaseModel, Field
 class PronounceRequest(BaseModel):
     vocab_id: UUID
     language: str = Field(..., pattern="^(en|vi)$")
-    audio_base64: str = Field(..., description="Base64-encoded WebM or WAV audio")
+    audio_base64: str = Field(
+        ...,
+        description="Base64-encoded audio (WebM, MP4/M4A, WAV, etc. — must match recorder output)",
+    )
     attempt_number: int = Field(1, ge=1, le=3, description="Which attempt (1-3)")
 
 
