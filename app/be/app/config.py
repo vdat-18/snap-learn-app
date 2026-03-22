@@ -37,9 +37,10 @@ class Settings(BaseSettings):
     PRONUNCIATIONS_PER_DAY_PREMIUM: int = 100
     DAILY_TIME_LIMIT_MINUTES: int = 30
 
-    # --- Required: ElevenLabs TTS ---
-    ELEVENLABS_API_KEY: str
-    ELEVENLABS_VOICE_ID: str
+    # --- Optional: ElevenLabs TTS (primary provider) ---
+    # If not set, the service will skip ElevenLabs and use OpenAI TTS as primary
+    ELEVENLABS_API_KEY: str | None = None
+    ELEVENLABS_VOICE_ID: str | None = None
 
     # --- Optional: OpenRouter (for BAML fallback) ---
     OPENROUTER_API_KEY: str | None = None

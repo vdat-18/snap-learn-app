@@ -2,7 +2,7 @@
 SnapLearn Speech Service
 ========================
 ASR uses OpenAI gpt-4o-transcribe via the OpenAI SDK directly.
-TTS uses ElevenLabs eleven_v3 via the elevenlabs SDK.
+TTS uses ElevenLabs eleven_v3 as primary, with OpenAI TTS as automatic fallback.
 Pronunciation matching and feedback are deterministic (no LLM call).
 """
 
@@ -38,8 +38,23 @@ TTS_OUTPUT_FORMAT = "mp3_44100_128"
 TTS_CACHE_DIR = Path("tts_cache")
 TTS_CACHE_TTL_DAYS = 90
 
+# ── OpenAI TTS Fallback Configuration ────────────────────────
+OPENAI_TTS_MODEL = "tts-1"
+# OpenAI voices: alloy, echo, fable, onyx, nova, shimmer
+# "nova" is clear and natural; works well across all supported languages
+OPENAI_TTS_VOICE = "nova"
+# Map ElevenLabs speed (0.7–0.9) to OpenAI speed range (0.25–4.0)
+OPENAI_TTS_SPEED: dict[Language, float] = {
+    Language.En: 0.9,
+    Language.Vi: 0.85,
+    Language.Zh: 0.8,
+}
+
 # ── ElevenLabs async client (module-level singleton) ─────────
 _elevenlabs_client: AsyncElevenLabs | None = None
+
+# ── OpenAI TTS async client (module-level singleton) ─────────
+_openai_tts_client: openai.AsyncOpenAI | None = None
 
 
 def _get_elevenlabs_client() -> AsyncElevenLabs:
@@ -49,10 +64,53 @@ def _get_elevenlabs_client() -> AsyncElevenLabs:
         api_key = os.environ.get("ELEVENLABS_API_KEY", "")
         if not api_key:
             raise RuntimeError(
-                "ELEVENLABS_API_KEY environment variable is required for TTS"
+                "ELEVENLABS_API_KEY environment variable is not set"
             )
         _elevenlabs_client = AsyncElevenLabs(api_key=api_key)
     return _elevenlabs_client
+
+
+def _get_openai_tts_client() -> openai.AsyncOpenAI:
+    """Lazily initialise and return the OpenAI async client for TTS fallback."""
+    global _openai_tts_client
+    if _openai_tts_client is None:
+        api_key = os.environ.get("OPENAI_API_KEY", "")
+        if not api_key:
+            raise RuntimeError(
+                "OPENAI_API_KEY environment variable is required for TTS fallback"
+            )
+        _openai_tts_client = openai.AsyncOpenAI(api_key=api_key)
+    return _openai_tts_client
+
+
+async def _synthesize_openai_tts(text: str, language: Language) -> bytes:
+    """
+    Generate TTS audio via OpenAI TTS (fallback provider).
+
+    Args:
+        text: Text to synthesize
+        language: Target language (affects playback speed)
+
+    Returns:
+        MP3 audio bytes
+    """
+    client = _get_openai_tts_client()
+    speed = OPENAI_TTS_SPEED.get(language, 0.9)
+
+    response = await client.audio.speech.create(
+        model=OPENAI_TTS_MODEL,
+        voice=OPENAI_TTS_VOICE,  # type: ignore[arg-type]
+        input=text,
+        response_format="mp3",
+        speed=speed,
+    )
+    audio_bytes = response.content
+    logger.info(
+        "OpenAI TTS fallback generated %d bytes for language=%s",
+        len(audio_bytes),
+        language.value,
+    )
+    return audio_bytes
 
 
 # ── ASR (OpenAI gpt-4o-transcribe) ──────────────────────────
@@ -281,10 +339,12 @@ async def synthesize_speech(
     cache_dir: Optional[Path] = None,
 ) -> bytes:
     """
-    Generate TTS audio via ElevenLabs with local filesystem caching.
+    Generate TTS audio with local filesystem caching.
 
-    Buffers the full response before returning — use for background
-    pre-generation where latency is not user-facing.
+    Tries ElevenLabs first; automatically falls back to OpenAI TTS if
+    ElevenLabs is unavailable or returns an error.  Buffers the full
+    response before returning — use for background pre-generation where
+    latency is not user-facing.
 
     Args:
         text: Text to synthesize
@@ -301,28 +361,41 @@ async def synthesize_speech(
         logger.debug("TTS cache hit: %s", cache_file)
         return cache_file.read_bytes()
 
-    # Cache miss: generate via ElevenLabs
-    voice_id, speed = _tts_voice_and_speed(language)
-
-    client = _get_elevenlabs_client()
-    audio_iterator = client.text_to_speech.convert(
-        text=text,
-        voice_id=voice_id,
-        model_id=ELEVENLABS_MODEL,
-        output_format=TTS_OUTPUT_FORMAT,
-        voice_settings={
-            "speed": speed,
-        },
-    )
-
-    # Collect audio bytes from the async iterator
-    audio_chunks: list[bytes] = []
-    async for chunk in audio_iterator:
-        audio_chunks.append(chunk)
-    audio_bytes = b"".join(audio_chunks)
+    # Cache miss: try ElevenLabs first
+    audio_bytes: bytes | None = None
+    try:
+        voice_id, speed = _tts_voice_and_speed(language)
+        client = _get_elevenlabs_client()
+        audio_iterator = client.text_to_speech.convert(
+            text=text,
+            voice_id=voice_id,
+            model_id=ELEVENLABS_MODEL,
+            output_format=TTS_OUTPUT_FORMAT,
+            voice_settings={"speed": speed},
+        )
+        audio_chunks: list[bytes] = []
+        async for chunk in audio_iterator:
+            audio_chunks.append(chunk)
+        audio_bytes = b"".join(audio_chunks)
+        logger.info(
+            "ElevenLabs TTS generated: %s (%d bytes)", cache_file, len(audio_bytes),
+        )
+    except Exception as elevenlabs_error:
+        logger.warning(
+            "ElevenLabs TTS failed (%s), falling back to OpenAI TTS",
+            elevenlabs_error,
+        )
+        try:
+            audio_bytes = await _synthesize_openai_tts(text, language)
+        except Exception as openai_error:
+            logger.error("OpenAI TTS fallback also failed: %s", openai_error)
+            raise RuntimeError(
+                f"All TTS providers failed. ElevenLabs: {elevenlabs_error}; "
+                f"OpenAI: {openai_error}"
+            ) from openai_error
 
     cache_file.write_bytes(audio_bytes)
-    logger.info("TTS generated and cached: %s (%d bytes)", cache_file, len(audio_bytes))
+    logger.info("TTS cached: %s (%d bytes)", cache_file, len(audio_bytes))
 
     return audio_bytes
 
@@ -333,14 +406,16 @@ async def synthesize_speech_stream(
     cache_dir: Optional[Path] = None,
 ) -> AsyncIterator[bytes]:
     """
-    Stream TTS audio from ElevenLabs, yielding chunks as they arrive.
+    Stream TTS audio, yielding chunks as they arrive.
 
-    Uses the ElevenLabs streaming endpoint with ``optimize_streaming_latency=3``
-    for minimum time-to-first-byte.  Each chunk is yielded to the caller
-    *and* accumulated so the full audio is written to the filesystem cache
-    once the stream completes (tee pattern).
+    Tries ElevenLabs streaming first.  If ElevenLabs fails *before* any
+    audio chunk is yielded (connection error, auth failure, quota exceeded,
+    etc.) the function transparently falls back to OpenAI TTS, buffering
+    the result and yielding it as a single chunk.  If ElevenLabs has
+    already started streaming and fails mid-way, the error is re-raised
+    (partial streams cannot be recovered from).
 
-    On cache hit the entire file is yielded in a single chunk (already fast).
+    On cache hit the entire file is yielded in a single chunk.
 
     Args:
         text: Text to synthesize
@@ -358,29 +433,66 @@ async def synthesize_speech_stream(
         yield cache_file.read_bytes()
         return
 
-    # Cache miss — stream from ElevenLabs
-    voice_id, speed = _tts_voice_and_speed(language)
-    client = _get_elevenlabs_client()
-
-    audio_stream = client.text_to_speech.stream(
-        text=text,
-        voice_id=voice_id,
-        model_id=ELEVENLABS_MODEL,
-        output_format=TTS_OUTPUT_FORMAT,
-        voice_settings={
-            "speed": speed,
-        },
-    )
-
-    # Tee: yield each chunk to the HTTP response AND accumulate for cache
+    # Cache miss — try ElevenLabs streaming first
+    elevenlabs_started = False  # True after the first chunk has been yielded
+    elevenlabs_error: Exception | None = None
     cache_chunks: list[bytes] = []
-    async for chunk in audio_stream:
-        cache_chunks.append(chunk)
-        yield chunk
 
-    # Persist to cache after the full stream has been sent
-    audio_bytes = b"".join(cache_chunks)
+    try:
+        voice_id, speed = _tts_voice_and_speed(language)
+        client = _get_elevenlabs_client()
+
+        audio_stream = client.text_to_speech.stream(
+            text=text,
+            voice_id=voice_id,
+            model_id=ELEVENLABS_MODEL,
+            output_format=TTS_OUTPUT_FORMAT,
+            voice_settings={"speed": speed},
+        )
+
+        async for chunk in audio_stream:
+            elevenlabs_started = True
+            cache_chunks.append(chunk)
+            yield chunk
+
+        # Persist to cache after the full stream has been sent
+        audio_bytes = b"".join(cache_chunks)
+        cache_file.write_bytes(audio_bytes)
+        logger.info(
+            "ElevenLabs TTS streamed and cached: %s (%d bytes)",
+            cache_file,
+            len(audio_bytes),
+        )
+        return
+
+    except Exception as exc:
+        if elevenlabs_started:
+            # Already yielded partial data — cannot recover gracefully
+            logger.error(
+                "ElevenLabs TTS stream failed mid-way after %d chunks: %s",
+                len(cache_chunks),
+                exc,
+            )
+            raise
+        elevenlabs_error = exc
+        logger.warning(
+            "ElevenLabs TTS stream failed before first chunk (%s), "
+            "falling back to OpenAI TTS",
+            exc,
+        )
+
+    # OpenAI TTS fallback — buffer and yield as single chunk
+    try:
+        audio_bytes = await _synthesize_openai_tts(text, language)
+    except Exception as openai_error:
+        logger.error("OpenAI TTS fallback also failed: %s", openai_error)
+        raise RuntimeError(
+            f"All TTS providers failed. ElevenLabs: {elevenlabs_error}; "
+            f"OpenAI: {openai_error}"
+        ) from openai_error
+
     cache_file.write_bytes(audio_bytes)
     logger.info(
-        "TTS streamed and cached: %s (%d bytes)", cache_file, len(audio_bytes),
+        "OpenAI TTS fallback cached: %s (%d bytes)", cache_file, len(audio_bytes),
     )
+    yield audio_bytes
