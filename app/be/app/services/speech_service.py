@@ -39,9 +39,9 @@ TTS_CACHE_DIR = Path("tts_cache")
 TTS_CACHE_TTL_DAYS = 90
 
 # ── OpenAI TTS Fallback Configuration ────────────────────────
-OPENAI_TTS_MODEL = "tts-1"
-# OpenAI voices: alloy, echo, fable, onyx, nova, shimmer
-# "nova" is clear and natural; works well across all supported languages
+OPENAI_TTS_MODEL = "gpt-4o-mini-tts"
+# gpt-4o-mini-tts voices: alloy, ash, ballad, coral, echo, fable, nova, onyx,
+# sage, shimmer, verse, marin, cedar — "nova" is clear and natural
 OPENAI_TTS_VOICE = "nova"
 # Map ElevenLabs speed (0.7–0.9) to OpenAI speed range (0.25–4.0)
 OPENAI_TTS_SPEED: dict[Language, float] = {
