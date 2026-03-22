@@ -159,13 +159,17 @@ function _stopCurrentAudio(): void {
 function _speakWithBackendTTS(phrase: string, lang: 'vi-VN' | 'en-US' | 'zh-CN', _forceInterrupt: boolean): void {
     const beLang = LANG_CODE_MAP[lang] || 'vi';
 
+    // Mark that we're starting a new TTS request — clear any stale reference
+    // (e.g. a failed pre-generated audio element that triggered this fallback)
+    _stopCurrentAudio();
+
     // Fire-and-forget async — callers remain synchronous
     (async () => {
         try {
             console.log(`[MascotTTS:Backend] Synthesizing: "${phrase.substring(0, 40)}..." (${beLang})`);
             const blobUrl = await speechApi.synthesizeTTS(phrase, beLang);
 
-            // If audio was interrupted/replaced while we were fetching, bail out
+            // If another audio started while we were fetching, bail out
             if (currentAudio !== null) {
                 URL.revokeObjectURL(blobUrl);
                 return;

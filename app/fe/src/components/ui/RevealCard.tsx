@@ -201,21 +201,15 @@ const RevealCard: React.FC<RevealCardProps> = ({
                 } catch (err) {
                     console.error('[TTS] synthesizeTTS failed:', err);
                     if (signal.aborted) return;
-                    // Fall through to backend TTS fallback
+                    // Fall through to mascotSpeak fallback
                 }
 
-                // Fallback: retry via backend TTS synthesis
+                // Fallback: use mascotSpeak (tries pre-generated audio, then backend TTS)
                 if (!descriptionPlayed && !signal.aborted) {
                     try {
-                        const blobUrl = await speechApi.synthesizeTTS(description_vi, 'vi', signal);
-                        if (signal.aborted) return;
-                        trackBlobUrl(blobUrl);
-                        const audio = new Audio(blobUrl);
-                        await new Promise<void>((resolve, reject) => {
-                            audio.onended = () => resolve();
-                            audio.onerror = () => reject(new Error('Fallback audio error'));
-                            audio.play().catch(reject);
-                        });
+                        mascotSpeak(description_vi, 'vi-VN');
+                        // mascotSpeak is fire-and-forget; wait a reasonable time for playback
+                        await new Promise(resolve => setTimeout(resolve, 3000));
                     } catch {
                         // Continue to word TTS
                     }
