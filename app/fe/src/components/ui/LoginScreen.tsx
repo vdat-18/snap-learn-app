@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
-import { mascotSpeak } from '../../utils/feedbackUtils';
 import { authApi } from '../../services/authApi';
 import { AppError } from '../../services/api';
-import { Rocket, Volume2 } from 'lucide-react';
+import { Rocket } from 'lucide-react';
 
 // Animal avatars for child selection — static config, no backend needed
 const avatars: { id: string; emoji: string; sound: string }[] = [
@@ -45,7 +44,6 @@ const LoginScreen: React.FC = () => {
     const handleAvatarSelect = (avatar: typeof avatars[0]) => {
         playPop();
         setSelectedAvatar(avatar);
-        mascotSpeak(avatar.sound);
     };
 
     const handleAuthSubmit = async () => {
@@ -71,11 +69,9 @@ const LoginScreen: React.FC = () => {
                 const child = response.children[0];
                 setChild(child.id, child);
                 setOnboardingSeen(); // Skip onboarding if child already exists
-                mascotSpeak(`Chào mừng trở lại! Chúng mình cùng khám phá tiếp nhé!`);
             } else {
                 // No children — show child creation form
                 setStep('create-child');
-                mascotSpeak('Tuyệt vời! Bây giờ hãy tạo hồ sơ cho bé nhé!');
             }
         } catch (err) {
             if (err instanceof AppError) {
@@ -91,7 +87,6 @@ const LoginScreen: React.FC = () => {
     const handleCreateChild = async () => {
         if (!childName.trim()) {
             setNameError(true);
-            mascotSpeak('Bạn ơi, đừng quên điền tên của mình vào nhé!');
             return;
         }
         setNameError(false);
@@ -105,7 +100,6 @@ const LoginScreen: React.FC = () => {
                 'en' // Defaulting to en for child creation since they choose language in LanguageSelectScreen later. Alternatively we can rely on what language they select later.
             );
             setChild(child.id, child);
-            mascotSpeak(`Xin chào ${childName}! Chúng mình cùng bắt đầu khám phá nào!`);
         } catch (err) {
             if (err instanceof AppError) {
                 setAuthError(err.message_vi);
@@ -279,20 +273,6 @@ const LoginScreen: React.FC = () => {
                         </AnimatePresence>
                     </motion.button>
                 </motion.div>
-
-                {/* TTS hint */}
-                <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1 }}
-                    onClick={() => {
-                        playPop();
-                        mascotSpeak('Chào bạn! Hãy đăng nhập hoặc tạo tài khoản mới nhé!');
-                    }}
-                    className="mt-6 flex items-center gap-2 text-white/70 font-bold text-sm active:text-white transition-colors"
-                >
-                    <Volume2 className="w-4 h-4" /> Nghe lại hướng dẫn
-                </motion.button>
 
                 <p className="mt-8 text-[10px] font-black text-white/40 uppercase tracking-[3px]">
                     SnapLearn • LotusHack 2026

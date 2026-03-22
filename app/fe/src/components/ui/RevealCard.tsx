@@ -239,48 +239,52 @@ const RevealCard: React.FC<RevealCardProps> = ({
         }
     }, [description_vi, playWordTTS, trackBlobUrl]);
 
-    // Auto-play TTS when card opens
-    useEffect(() => {
-        if (isOpen && !hasPlayedAudio) {
-            setHasPlayedAudio(true);
-            playTTSSequence();
+    // Helper function to trigger rarity-specific reaction
+    const triggerRarityReaction = useCallback(() => {
+        if (rarity === 'Legendary') {
+            triggerLegendaryBurst();
+            playChime();
+            mascotSpeak("TRỜI ƠI! BẠN VỪA BẮT ĐƯỢC THẺ HUYỀN THOẠI RỒI NÈ!", 'vi-VN', true);
+        } else if (rarity === 'Epic') {
+            triggerSparkles(window.innerWidth / 2, window.innerHeight / 3);
+            playChime();
+            mascotSpeak("UAAAA! THẺ SIÊU HIẾM NÈ! ĐỒ QUÝ LẮM ĐÓ!", 'vi-VN', true);
+        } else if (rarity === 'Rare') {
+            mascotSpeak("Oa! Đồ hiếm nha!", 'vi-VN', true);
+        } else if (rarity === 'Uncommon') {
+            mascotSpeak("Ồ! Cái này đặc biệt đó nha!", 'vi-VN', true);
+        } else {
+            mascotSpeak(); // Random phrase
         }
-    }, [isOpen, hasPlayedAudio, playTTSSequence]);
+    }, [rarity, playChime]);
 
-    // Reset state when card opens
+    // Reset state when card opens AND coordinate audio playback
     useEffect(() => {
         if (isOpen) {
             setStars(null);
             setTranscript('');
             setFeedbackText('');
-            setHasPlayedAudio(false);
             setAttemptCount(0);
             setIsFlyingToCollection(false);
             setHasTriggeredXP(false);
             setAchievementImageUrl(null);
             setShowAchievementFlip(false);
 
-            if (rarity === 'Legendary') {
-                setTimeout(() => {
-                    triggerLegendaryBurst();
-                    playChime();
-                    mascotSpeak("TRỜI ƠI! BẠN VỪA BẮT ĐƯỢC THẺ HUYỀN THOẠI RỒI NÈ!", 'vi-VN', true);
-                }, 500);
-            } else if (rarity === 'Epic') {
-                setTimeout(() => {
-                    triggerSparkles(window.innerWidth / 2, window.innerHeight / 3);
-                    playChime();
-                    mascotSpeak("UAAAA! THẺ SIÊU HIẾM NÈ! ĐỒ QUÝ LẮM ĐÓ!", 'vi-VN', true);
-                }, 400);
-            } else if (rarity === 'Rare') {
-                mascotSpeak("Oa! Đồ hiếm nha!", 'vi-VN', true);
-            } else if (rarity === 'Uncommon') {
-                mascotSpeak("Ồ! Cái này đặc biệt đó nha!", 'vi-VN', true);
-            } else {
-                mascotSpeak(); // Random phrase
+            // Only auto-play TTS if not already played
+            if (!hasPlayedAudio) {
+                setHasPlayedAudio(true);
+
+                // Play TTS sequence FIRST (description + word), THEN rarity reaction
+                playTTSSequence().then(() => {
+                    // TTS completed, now play rarity reaction
+                    triggerRarityReaction();
+                }).catch(() => {
+                    // TTS failed, still play rarity reaction
+                    triggerRarityReaction();
+                });
             }
         }
-    }, [isOpen, rarity, playChime]);
+    }, [isOpen, hasPlayedAudio, playTTSSequence, triggerRarityReaction]);
 
     // Cleanup on close: abort TTS fetches, cancel speechSynthesis, revoke blob URLs
     useEffect(() => {
