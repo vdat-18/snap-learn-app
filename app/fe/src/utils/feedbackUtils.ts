@@ -1,5 +1,6 @@
 import { useGameStore } from '../store/gameStore';
 import { getTextToKeyMap, getMascotAudioUrl, getRandomMotivationalEntries } from '../services/mascotAudioApi';
+import { speechApi } from '../services/speechApi';
 
 /**
  * Triggers a vibration on supported devices (Android/WebXR)
@@ -42,7 +43,7 @@ const LANG_CODE_MAP: Record<string, string> = {
 let currentAudio: HTMLAudioElement | null = null;
 
 /**
- * Speak text using pre-generated ElevenLabs audio (primary) or Web Speech API (fallback).
+ * Speak text using pre-generated ElevenLabs audio (primary) or backend TTS API (fallback).
  *
  * The function signature is backward-compatible — no changes needed in call sites.
  */
@@ -79,19 +80,19 @@ export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = '
     // Always stop previous audio to prevent overlap
     _stopCurrentAudio();
 
-    // Try pre-generated audio first, fall back to Web Speech API
+    // Try pre-generated audio first, fall back to backend TTS
     if (audioKey) {
         _playPreGeneratedAudio(audioKey, beLang, phrase, lang, forceInterrupt);
     } else {
-        // No matching key — use Web Speech API directly
-        console.log(`[MascotTTS] No pre-generated audio for: "${phrase.substring(0, 40)}..." — using Web Speech API`);
-        _speakWithWebSpeechAPI(phrase, lang, forceInterrupt);
+        // No matching key — use backend TTS directly
+        console.log(`[MascotTTS] No pre-generated audio for: "${phrase.substring(0, 40)}..." — using backend TTS`);
+        _speakWithBackendTTS(phrase, lang, forceInterrupt);
     }
 };
 
 /**
  * Play pre-generated audio from the backend.
- * Falls back to Web Speech API on error.
+ * Falls back to backend TTS on error.
  */
 function _playPreGeneratedAudio(
     key: string,
@@ -109,11 +110,11 @@ function _playPreGeneratedAudio(
     const fallbackOnce = () => {
         if (didFallback || currentAudio !== audio) return;
         didFallback = true;
-        _speakWithWebSpeechAPI(phrase, feLang, forceInterrupt);
+        _speakWithBackendTTS(phrase, feLang, forceInterrupt);
     };
 
     audio.addEventListener('error', () => {
-        console.warn(`[MascotTTS] Pre-generated audio failed for ${key}/${beLang} — falling back to Web Speech API`);
+        console.warn(`[MascotTTS] Pre-generated audio failed for ${key}/${beLang} — falling back to backend TTS`);
         fallbackOnce();
     });
 
@@ -136,7 +137,7 @@ function _playPreGeneratedAudio(
 }
 
 /**
- * Stop currently playing mascot audio (both Audio element and Web Speech API).
+ * Stop currently playing mascot audio.
  * Exported for component cleanup (e.g. unmount).
  */
 export function stopMascotAudio(): void {
@@ -144,73 +145,54 @@ export function stopMascotAudio(): void {
 }
 
 function _stopCurrentAudio(): void {
-    // Stop Audio element
     if (currentAudio) {
         currentAudio.pause();
         currentAudio.currentTime = 0;
         currentAudio = null;
     }
-
-    // Also cancel Web Speech API
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-    }
 }
 
 /**
- * Fallback: Speak text using Web Speech API (TTS).
- * This is the original implementation, kept as fallback.
+ * Fallback: Speak text using backend TTS API (ElevenLabs / OpenAI).
+ * Fire-and-forget — errors are logged but don't propagate.
  */
-function _speakWithWebSpeechAPI(phrase: string, lang: 'vi-VN' | 'en-US' | 'zh-CN', forceInterrupt: boolean): void {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+function _speakWithBackendTTS(phrase: string, lang: 'vi-VN' | 'en-US' | 'zh-CN', _forceInterrupt: boolean): void {
+    const beLang = LANG_CODE_MAP[lang] || 'vi';
 
-    const startSpeak = () => {
-        // Force engine to resume
-        window.speechSynthesis.resume();
+    // Fire-and-forget async — callers remain synchronous
+    (async () => {
+        try {
+            console.log(`[MascotTTS:Backend] Synthesizing: "${phrase.substring(0, 40)}..." (${beLang})`);
+            const blobUrl = await speechApi.synthesizeTTS(phrase, beLang);
 
-        // Optional interrupt (can cause skipping if triggered too fast)
-        if (forceInterrupt) {
-            window.speechSynthesis.cancel();
-        }
-
-        console.log(`[MascotTTS:WebSpeech] Speaking: ${phrase} (${lang})`);
-
-        const utterance = new SpeechSynthesisUtterance(phrase);
-        utterance.lang = lang;
-        utterance.rate = 1.0;
-
-        const voices = window.speechSynthesis.getVoices();
-        let selectedVoice = voices.find(v =>
-            v.lang.replace('_', '-').includes(lang) &&
-            (v.name.includes('Google') || v.name.includes('Natural'))
-        ) || voices.find(v => v.lang.replace('_', '-').includes(lang)) ||
-            voices.find(v => v.lang.startsWith(lang.split('-')[0]));
-
-        if (selectedVoice) {
-            utterance.voice = selectedVoice;
-        }
-
-        utterance.pitch = 1.1;
-
-        // Small delay for stability before calling speak
-        setTimeout(() => {
-            window.speechSynthesis.speak(utterance);
-        }, 50);
-
-        // Extra insurance for Desktop Chrome
-        setTimeout(() => {
-            if (window.speechSynthesis.paused) {
-                window.speechSynthesis.resume();
+            // If audio was interrupted/replaced while we were fetching, bail out
+            if (currentAudio !== null) {
+                URL.revokeObjectURL(blobUrl);
+                return;
             }
-        }, 150);
-    };
 
-    if (window.speechSynthesis.getVoices().length === 0) {
-        window.speechSynthesis.addEventListener('voiceschanged', () => {
-            startSpeak();
-        }, { once: true });
-        window.speechSynthesis.getVoices();
-    } else {
-        startSpeak();
-    }
+            const audio = new Audio(blobUrl);
+            currentAudio = audio;
+
+            audio.addEventListener('ended', () => {
+                if (currentAudio === audio) {
+                    currentAudio = null;
+                }
+                URL.revokeObjectURL(blobUrl);
+            });
+
+            audio.addEventListener('error', () => {
+                console.warn(`[MascotTTS:Backend] Audio playback error for: "${phrase.substring(0, 40)}..."`);
+                if (currentAudio === audio) {
+                    currentAudio = null;
+                }
+                URL.revokeObjectURL(blobUrl);
+            });
+
+            await audio.play();
+            console.log(`[MascotTTS:Backend] Playing synthesized audio for: "${phrase.substring(0, 40)}..."`);
+        } catch (err) {
+            console.warn(`[MascotTTS:Backend] TTS synthesis failed for: "${phrase.substring(0, 40)}..."`, err);
+        }
+    })();
 }

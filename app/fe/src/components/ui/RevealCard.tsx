@@ -4,7 +4,7 @@ import { useGameStore } from '../../store/gameStore';
 import { useSoundEffects } from '../../hooks/useSoundEffects';
 import { ArrowLeft } from 'lucide-react';
 import { triggerSparkles, triggerLegendaryBurst } from '../../utils/confetti';
-import { mascotSpeak } from '../../utils/feedbackUtils';
+import { mascotSpeak, stopMascotAudio } from '../../utils/feedbackUtils';
 import { speechApi } from '../../services/speechApi';
 import {
     createPronunciationMediaRecorder,
@@ -124,7 +124,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
     // TTS playback — word only (for manual speaker button tap)
     const playWordTTS = useCallback(async (signal?: AbortSignal) => {
         const targetWord = target_language === 'zh' ? word_zh : word_en;
-        const targetLang = target_language === 'zh' ? 'zh-CN' : 'en-US';
         const ttsLangKey = target_language === 'zh' ? 'zh' : 'en';
 
         // Try server TTS URL from capture response first
@@ -137,7 +136,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                 return;
             } catch (err) {
                 if (signal?.aborted) return;
-                // Fall through to Web Speech API
+                // Fall through to backend TTS
             }
         }
 
@@ -151,22 +150,29 @@ const RevealCard: React.FC<RevealCardProps> = ({
                 return;
             } catch (err) {
                 if (signal?.aborted) return;
-                // Fall through to Web Speech API
+                // Fall through to backend TTS
             }
         }
 
-        // Fallback: Web Speech API
+        // Fallback: Backend TTS synthesis
         if (!signal?.aborted) {
-            const utterance = new SpeechSynthesisUtterance(targetWord);
-            utterance.lang = targetLang;
-            utterance.rate = 0.8;
-            window.speechSynthesis.speak(utterance);
+            try {
+                const blobUrl = await speechApi.synthesizeTTS(targetWord, ttsLangKey, signal);
+                if (signal?.aborted) return;
+                trackBlobUrl(blobUrl);
+                const audio = new Audio(blobUrl);
+                await audio.play();
+            } catch (err) {
+                if (!signal?.aborted) {
+                    console.warn('[TTS] All TTS methods failed for word:', targetWord, err);
+                }
+            }
         }
     }, [target_language, word_en, word_zh, tts_urls, vocabId, trackBlobUrl]);
 
     // Full TTS sequence: Vietnamese description narration → pause → word TTS
     const playTTSSequence = useCallback(async () => {
-        window.speechSynthesis.cancel();
+        stopMascotAudio();
         setIsTTSLoading(true);
 
         const abortController = new AbortController();
@@ -195,22 +201,20 @@ const RevealCard: React.FC<RevealCardProps> = ({
                 } catch (err) {
                     console.error('[TTS] synthesizeTTS failed:', err);
                     if (signal.aborted) return;
-                    // Fall through to Web Speech fallback
+                    // Fall through to backend TTS fallback
                 }
 
-                // Fallback: Web Speech API for Vietnamese description with 2s timeout
+                // Fallback: retry via backend TTS synthesis
                 if (!descriptionPlayed && !signal.aborted) {
                     try {
-                        await new Promise<void>((resolve) => {
-                            const timeout = setTimeout(resolve, 2000);
-                            mascotSpeak(description_vi, 'vi-VN');
-                            const checkEnd = setInterval(() => {
-                                if (!window.speechSynthesis.speaking) {
-                                    clearInterval(checkEnd);
-                                    clearTimeout(timeout);
-                                    resolve();
-                                }
-                            }, 100);
+                        const blobUrl = await speechApi.synthesizeTTS(description_vi, 'vi', signal);
+                        if (signal.aborted) return;
+                        trackBlobUrl(blobUrl);
+                        const audio = new Audio(blobUrl);
+                        await new Promise<void>((resolve, reject) => {
+                            audio.onended = () => resolve();
+                            audio.onerror = () => reject(new Error('Fallback audio error'));
+                            audio.play().catch(reject);
                         });
                     } catch {
                         // Continue to word TTS
@@ -286,7 +290,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
         }
     }, [isOpen, hasPlayedAudio, playTTSSequence, triggerRarityReaction]);
 
-    // Cleanup on close: abort TTS fetches, cancel speechSynthesis, revoke blob URLs
+    // Cleanup on close: abort TTS fetches, stop audio, revoke blob URLs
     useEffect(() => {
         if (!isOpen) {
             // Card just closed — abort any in-flight TTS fetches
@@ -294,7 +298,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                 abortControllerRef.current.abort();
                 abortControllerRef.current = null;
             }
-            window.speechSynthesis.cancel();
+            stopMascotAudio();
             blobUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
             blobUrlsRef.current = [];
         }

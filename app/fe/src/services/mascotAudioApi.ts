@@ -95,7 +95,7 @@ async function _doFetchManifest(): Promise<MascotManifest | null> {
 
         return data;
     } catch (error) {
-        console.warn('[MascotAudio] Failed to fetch manifest, falling back to Web Speech API:', error);
+        console.warn('[MascotAudio] Failed to fetch manifest, falling back to backend TTS:', error);
         return null;
     }
 }

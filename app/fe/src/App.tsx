@@ -96,7 +96,7 @@ const App: React.FC = () => {
     hydrateFromStorage();
   }, [hydrateFromStorage]);
 
-  // Load mascot audio manifest on mount (best-effort, fallback to Web Speech API)
+  // Load mascot audio manifest on mount (best-effort, fallback to backend TTS)
   useEffect(() => {
     fetchManifest().then((manifest) => {
       if (manifest) {
