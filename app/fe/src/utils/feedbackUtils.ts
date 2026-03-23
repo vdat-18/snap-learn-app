@@ -1,6 +1,7 @@
 import { useGameStore } from '../store/gameStore';
 import { getTextToKeyMap, getMascotAudioUrl, getRandomMotivationalEntries } from '../services/mascotAudioApi';
 import { speechApi } from '../services/speechApi';
+import { playAudioFromUrl, stopCurrentAudioContext } from './audioContext';
 
 /**
  * Triggers a vibration on supported devices (Android/WebXR)
@@ -38,9 +39,11 @@ const LANG_CODE_MAP: Record<string, string> = {
 };
 
 /**
- * Currently playing Audio element (for interrupt support).
+ * Track whether audio is currently playing (for interrupt support).
+ * Incremented each time a new audio starts; if the value changes
+ * during an async gap, the stale playback should bail out.
  */
-let currentAudio: HTMLAudioElement | null = null;
+let playbackGeneration = 0;
 
 /**
  * Speak text using pre-generated ElevenLabs audio (primary) or backend TTS API (fallback).
@@ -91,7 +94,7 @@ export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = '
 };
 
 /**
- * Play pre-generated audio from the backend.
+ * Play pre-generated audio from the backend via shared AudioContext.
  * Falls back to backend TTS on error.
  */
 function _playPreGeneratedAudio(
@@ -102,38 +105,22 @@ function _playPreGeneratedAudio(
     forceInterrupt: boolean,
 ): void {
     const url = getMascotAudioUrl(key, beLang);
+    const gen = ++playbackGeneration;
 
-    const audio = new Audio(url);
-    currentAudio = audio;
-    let didFallback = false;
-
-    const fallbackOnce = () => {
-        if (didFallback || currentAudio !== audio) return;
-        didFallback = true;
-        _speakWithBackendTTS(phrase, feLang, forceInterrupt);
-    };
-
-    audio.addEventListener('error', () => {
-        console.warn(`[MascotTTS] Pre-generated audio failed for ${key}/${beLang} — falling back to backend TTS`);
-        fallbackOnce();
-    });
-
-    audio.addEventListener('ended', () => {
-        if (currentAudio === audio) {
-            currentAudio = null;
+    (async () => {
+        try {
+            await playAudioFromUrl(url);
+            console.log(`[MascotTTS] Playing pre-generated: ${key}/${beLang}`);
+        } catch (err) {
+            // If we've been superseded by newer playback, don't fallback
+            if (playbackGeneration !== gen) {
+                console.log(`[MascotTTS] Audio interrupted for ${key}/${beLang} — skipping fallback`);
+                return;
+            }
+            console.warn(`[MascotTTS] Pre-generated audio failed for ${key}/${beLang} — falling back to backend TTS`, err);
+            _speakWithBackendTTS(phrase, feLang, forceInterrupt);
         }
-    });
-
-    audio.play().then(() => {
-        console.log(`[MascotTTS] Playing pre-generated: ${key}/${beLang}`);
-    }).catch((err) => {
-        if (currentAudio !== audio) {
-            console.log(`[MascotTTS] Audio interrupted for ${key}/${beLang} — skipping fallback`);
-            return;
-        }
-        console.warn(`[MascotTTS] Audio play() failed for ${key}/${beLang}:`, err);
-        fallbackOnce();
-    });
+    })();
 }
 
 /**
@@ -145,11 +132,8 @@ export function stopMascotAudio(): void {
 }
 
 function _stopCurrentAudio(): void {
-    if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-        currentAudio = null;
-    }
+    playbackGeneration++;
+    stopCurrentAudioContext();
 }
 
 /**
@@ -159,9 +143,9 @@ function _stopCurrentAudio(): void {
 function _speakWithBackendTTS(phrase: string, lang: 'vi-VN' | 'en-US' | 'zh-CN', _forceInterrupt: boolean): void {
     const beLang = LANG_CODE_MAP[lang] || 'vi';
 
-    // Mark that we're starting a new TTS request — clear any stale reference
-    // (e.g. a failed pre-generated audio element that triggered this fallback)
+    // Mark that we're starting a new TTS request — clear any stale playback
     _stopCurrentAudio();
+    const gen = ++playbackGeneration;
 
     // Fire-and-forget async — callers remain synchronous
     (async () => {
@@ -170,31 +154,14 @@ function _speakWithBackendTTS(phrase: string, lang: 'vi-VN' | 'en-US' | 'zh-CN',
             const blobUrl = await speechApi.synthesizeTTS(phrase, beLang);
 
             // If another audio started while we were fetching, bail out
-            if (currentAudio !== null) {
+            if (playbackGeneration !== gen) {
                 URL.revokeObjectURL(blobUrl);
                 return;
             }
 
-            const audio = new Audio(blobUrl);
-            currentAudio = audio;
-
-            audio.addEventListener('ended', () => {
-                if (currentAudio === audio) {
-                    currentAudio = null;
-                }
-                URL.revokeObjectURL(blobUrl);
-            });
-
-            audio.addEventListener('error', () => {
-                console.warn(`[MascotTTS:Backend] Audio playback error for: "${phrase.substring(0, 40)}..."`);
-                if (currentAudio === audio) {
-                    currentAudio = null;
-                }
-                URL.revokeObjectURL(blobUrl);
-            });
-
-            await audio.play();
+            await playAudioFromUrl(blobUrl);
             console.log(`[MascotTTS:Backend] Playing synthesized audio for: "${phrase.substring(0, 40)}..."`);
+            URL.revokeObjectURL(blobUrl);
         } catch (err) {
             console.warn(`[MascotTTS:Backend] TTS synthesis failed for: "${phrase.substring(0, 40)}..."`, err);
         }

@@ -14,6 +14,7 @@ import XPFlyManager from './components/ui/XPFlyManager';
 import { useGameStore } from './store/gameStore';
 import { useSoundEffects } from './hooks/useSoundEffects';
 import { triggerHaptic, mascotSpeak } from './utils/feedbackUtils';
+import { unlockAudioContext } from './utils/audioContext';
 import { captureApi } from './services/captureApi';
 import { fetchManifest, preloadCriticalAudio } from './services/mascotAudioApi';
 import { Scan, WifiOff, RefreshCw, Image } from 'lucide-react';
@@ -283,6 +284,7 @@ const App: React.FC = () => {
     if (!videoRef.current || !canvasRef.current) return;
 
     playShutter();
+    unlockAudioContext();
     triggerHaptic(50);
     setIsFlashing(true);
     setTimeout(() => setIsFlashing(false), 150);

@@ -1,24 +1,15 @@
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
+import { getAudioContext, unlockAudioContext } from '../utils/audioContext';
 
 export const useSoundEffects = () => {
-  const audioContext = useRef<AudioContext | null>(null);
-
-  const initAudioContext = () => {
-    if (!audioContext.current) {
-      audioContext.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
-    if (audioContext.current.state === 'suspended') {
-      audioContext.current.resume();
-    }
-  };
 
   /**
    * Play a synth 'Pop' sound for UI interactions
    */
   const playPop = useCallback(() => {
     try {
-      initAudioContext();
-      const ctx = audioContext.current!;
+      unlockAudioContext();
+      const ctx = getAudioContext();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
@@ -44,8 +35,8 @@ export const useSoundEffects = () => {
    */
   const playShutter = useCallback(() => {
     try {
-      initAudioContext();
-      const ctx = audioContext.current!;
+      unlockAudioContext();
+      const ctx = getAudioContext();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
@@ -71,19 +62,19 @@ export const useSoundEffects = () => {
    */
   const playEpicLevelUp = useCallback(() => {
     try {
-      initAudioContext();
-      const ctx = audioContext.current!;
+      unlockAudioContext();
+      const ctx = getAudioContext();
 
       const playNote = (freq: number, time: number, duration: number, type: OscillatorType = 'square') => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(freq, ctx.currentTime + time);
-        
+
         gain.gain.setValueAtTime(0, ctx.currentTime + time);
         gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + time + duration * 0.1);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + time + duration);
-        
+
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(ctx.currentTime + time);
@@ -95,10 +86,10 @@ export const useSoundEffects = () => {
       playNote(523.25, 0.15, 0.2);  // C5
       playNote(659.25, 0.3, 0.2);   // E5
       playNote(783.99, 0.45, 0.8);  // G5 (held)
-      
+
       // Counter harmony
       playNote(261.63, 0.45, 0.8, 'sine'); // C4 underneath
-      
+
     } catch (e) {
       console.warn('Audio context failed', e);
     }
@@ -109,8 +100,8 @@ export const useSoundEffects = () => {
    */
   const playChime = useCallback(() => {
     try {
-      initAudioContext();
-      const ctx = audioContext.current!;
+      unlockAudioContext();
+      const ctx = getAudioContext();
 
       const playNote = (freq: number, time: number) => {
         const osc = ctx.createOscillator();

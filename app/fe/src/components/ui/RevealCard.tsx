@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { triggerSparkles, triggerLegendaryBurst } from '../../utils/confetti';
 import { mascotSpeak, stopMascotAudio } from '../../utils/feedbackUtils';
 import { speechApi } from '../../services/speechApi';
+import { playAudioFromUrl } from '../../utils/audioContext';
 import {
     createPronunciationMediaRecorder,
     pronunciationBlobType,
@@ -131,8 +132,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
             try {
                 const blobUrl = await speechApi.getTTSAudio(vocabId || '', ttsLangKey, signal);
                 trackBlobUrl(blobUrl);
-                const audio = new Audio(blobUrl);
-                await audio.play();
+                await playAudioFromUrl(blobUrl);
                 return;
             } catch (err) {
                 if (signal?.aborted) return;
@@ -145,8 +145,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
             try {
                 const blobUrl = await speechApi.getTTSAudio(vocabId, ttsLangKey, signal);
                 trackBlobUrl(blobUrl);
-                const audio = new Audio(blobUrl);
-                await audio.play();
+                await playAudioFromUrl(blobUrl);
                 return;
             } catch (err) {
                 if (signal?.aborted) return;
@@ -160,8 +159,7 @@ const RevealCard: React.FC<RevealCardProps> = ({
                 const blobUrl = await speechApi.synthesizeTTS(targetWord, ttsLangKey, signal);
                 if (signal?.aborted) return;
                 trackBlobUrl(blobUrl);
-                const audio = new Audio(blobUrl);
-                await audio.play();
+                await playAudioFromUrl(blobUrl);
             } catch (err) {
                 if (!signal?.aborted) {
                     console.warn('[TTS] All TTS methods failed for word:', targetWord, err);
@@ -191,12 +189,8 @@ const RevealCard: React.FC<RevealCardProps> = ({
                     if (signal.aborted) return;
                     console.log('[TTS] Got blob URL:', blobUrl);
                     trackBlobUrl(blobUrl);
-                    const audio = new Audio(blobUrl);
-                    await new Promise<void>((resolve, reject) => {
-                        audio.onended = () => { console.log('[TTS] Description audio ended'); resolve(); };
-                        audio.onerror = (e) => { console.error('[TTS] Audio playback error:', e); reject(new Error('Audio playback error')); };
-                        audio.play().catch((e) => { console.error('[TTS] Audio play() rejected:', e); reject(e); });
-                    });
+                    await playAudioFromUrl(blobUrl);
+                    console.log('[TTS] Description audio ended');
                     descriptionPlayed = true;
                 } catch (err) {
                     console.error('[TTS] synthesizeTTS failed:', err);
