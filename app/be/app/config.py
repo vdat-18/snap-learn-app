@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
-    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8000,http://localhost:5173"
     UPLOAD_DIR: str = "./uploads"
     TTS_CACHE_DIR: str = "./tts_cache"
     LOG_DIR: str = "./logs"

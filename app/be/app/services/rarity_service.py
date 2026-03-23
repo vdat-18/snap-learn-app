@@ -19,7 +19,9 @@ logger = logging.getLogger(__name__)
 RARITY_XP = {
     RarityTier.Common: 10,
     RarityTier.Uncommon: 25,
+    RarityTier.Rare: 50,
     RarityTier.Epic: 100,
+    RarityTier.Legendary: 250,
 }
 
 # ── Category Diversity Multipliers ─────────────────────────────
