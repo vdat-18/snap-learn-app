@@ -245,8 +245,6 @@ const RevealCard: React.FC<RevealCardProps> = ({
             mascotSpeak("Oa! Đồ hiếm nha!", 'vi-VN', true);
         } else if (rarity === 'Uncommon') {
             mascotSpeak("Ồ! Cái này đặc biệt đó nha!", 'vi-VN', true);
-        } else {
-            mascotSpeak(); // Random phrase
         }
     }, [rarity, playChime]);
 

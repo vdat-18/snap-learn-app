@@ -1,5 +1,5 @@
 import { useGameStore } from '../store/gameStore';
-import { getTextToKeyMap, getMascotAudioUrl, getRandomMotivationalEntries } from '../services/mascotAudioApi';
+import { getTextToKeyMap, getMascotAudioUrl } from '../services/mascotAudioApi';
 import { speechApi } from '../services/speechApi';
 import { playAudioFromUrl, stopCurrentAudioContext } from './audioContext';
 
@@ -15,19 +15,6 @@ export const triggerHaptic = (pattern: number | number[] = 50) => {
         }
     }
 };
-
-/**
- * Mascot motivational phrases in Vietnamese (Short & Sweet)
- * Used as fallback when manifest is not loaded.
- */
-const MOTIVATIONAL_PHRASES = [
-    "Oa! Quà xịn đây rồi nè!",
-    "Tuyệt quá! Tìm thêm từ nữa đi!",
-    "Bạn tinh mắt thật! Tiếp thôi!",
-    "Từ này hay quá! Tập nói nha!",
-    "Bạn nhạy bén thật! Sâu ơi!",
-    "Sắp đầy kho báu rồi! Cố lên!"
-];
 
 /**
  * Map FE language codes to BE language codes.
@@ -54,25 +41,12 @@ export const mascotSpeak = (text?: string, lang: 'vi-VN' | 'en-US' | 'zh-CN' = '
     const textToKey = getTextToKeyMap();
     const beLang = LANG_CODE_MAP[lang] || 'vi';
 
-    // Determine the phrase to speak
-    let phrase: string;
-    let audioKey: string | undefined;
+    // If no text provided, do nothing
+    if (!text) return;
 
-    if (!text) {
-        // No text: pick a random motivational phrase
-        const motivationalEntries = getRandomMotivationalEntries();
-        if (motivationalEntries.length > 0) {
-            const entry = motivationalEntries[Math.floor(Math.random() * motivationalEntries.length)];
-            phrase = entry.vi; // Display text is always Vietnamese
-            audioKey = entry.key;
-        } else {
-            // Fallback to hardcoded phrases if manifest not loaded
-            phrase = MOTIVATIONAL_PHRASES[Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)];
-        }
-    } else {
-        phrase = text;
-        audioKey = textToKey[text];
-    }
+    // Determine the phrase to speak
+    const phrase: string = text;
+    const audioKey: string | undefined = textToKey[text];
 
     // Update UI first (always, regardless of audio source)
     useGameStore.getState().setMascotMessage({
