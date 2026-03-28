@@ -15,6 +15,7 @@ snap-learn-app/
 │   ├── ai/                 # AI scripts and utilities
 │   ├── be/                 # Backend (Python/FastAPI)
 │   └── fe/                 # Frontend (React/TypeScript/Vite)
+|   └── ios/snap_learn/     # IOS (SwiftUI)
 ├── _docs/                  # Documentation and assets
 ├── openspec/               # OpenSpec design documents
 ├── docker-compose.*.yml    # Docker orchestration
